@@ -45,11 +45,13 @@ object LineChartDemo {
         .x(Utils.randomInts(15, 10).sorted)
         .y(Utils.randomInts(15, 10))
         .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180,0,0)))
+        .name("Reds")
 
       val data2 = data
         .x(Utils.randomInts(10, 10).sorted)
         .y(Utils.randomInts(10, 10).sorted)
         .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.cross))
+        .name("Blues")
 
       val config: Config = Config.displayModeBar(false)
 

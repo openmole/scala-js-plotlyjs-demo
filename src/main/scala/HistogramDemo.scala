@@ -31,9 +31,11 @@ object HistogramDemo {
 
     val data1 = histogramData
       .x(Utils.randomInts(500))
+      .name("First serie")
 
     val data2 = histogramData
       .x(Utils.randomInts(500))
+      .name("Second serie")
 
     Plotly.newPlot(plotDiv, js.Array(data1, data2))
     div(plotDiv.render).render

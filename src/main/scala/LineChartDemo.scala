@@ -38,7 +38,7 @@ object LineChartDemo {
         .yaxis(plotlyaxis.title("Production"))
 
       val data = PlotData
-        .mode(PlotMode.MARKERS + PlotMode.LINES)
+        .set(plotlymode.markers.lines)
         .set(plotlymarker.set(plotlysymbol.square))
 
       val data1 = data

@@ -38,7 +38,7 @@ object ScatterDemo {
         .x(Utils.randomDoubles())
         .y(Utils.randomDoubles())
         .customdata(colorDim.map{_.toString})
-        .mode(PlotMode.MARKERS)
+        .set(plotlymode.markers)
           .`type`("scatter")
         .set(plotlymarker
             .set(plotlysizemode.area)

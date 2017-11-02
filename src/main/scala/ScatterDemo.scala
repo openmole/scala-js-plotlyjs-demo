@@ -50,7 +50,7 @@ object ScatterDemo {
         .set(plotlycolorscale.jet)
       )
 
-    val config: Config = Config.displayModeBar(false)
+    val config = Config.displayModeBar(false)
     Plotly.plot(plotDiv, js.Array(data), config = config)
 
 

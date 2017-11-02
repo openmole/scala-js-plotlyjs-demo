@@ -4,6 +4,7 @@ import com.definitelyscala.plotlyjs._
 import com.definitelyscala.plotlyjs.all._
 import com.definitelyscala.plotlyjs.PlotlyImplicits._
 import com.definitelyscala.plotlyjs.plotlyConts._
+import org.querki.jsext.JSOptionBuilder
 import org.scalajs.dom.raw.Element
 
 import scalatags.JsDom.all._
@@ -31,7 +32,7 @@ object LineChartDemo {
 
       val plotDiv = div.render
 
-      val layout: Layout = Layout
+      val layout = Layout
         .title("My line plot")
         .showlegend(true)
         .xaxis(plotlyaxis.title("Time"))
@@ -53,7 +54,7 @@ object LineChartDemo {
         .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.cross))
         .name("Blues")
 
-      val config: Config = Config.displayModeBar(false)
+      val config = Config.displayModeBar(false)
 
       val plot = Plotly.newPlot(plotDiv,
         js.Array(data1, data2),

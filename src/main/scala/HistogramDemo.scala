@@ -1,6 +1,7 @@
 package plotlyjs.demo
 
 import com.definitelyscala.plotlyjs._
+import com.definitelyscala.plotlyjs.all._
 
 import scalatags.JsDom.all._
 import scala.scalajs._
@@ -27,7 +28,7 @@ object HistogramDemo {
   val sc = sourcecode.Text {
     val plotDiv = div.render
 
-    val histogramData = PlotData.`type`("histogram")
+    val histogramData = PlotData.set(plotlytype.histogram)
 
     val data1 = histogramData
       .x(Utils.randomInts(500))

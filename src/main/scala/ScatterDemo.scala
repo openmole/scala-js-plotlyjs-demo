@@ -1,4 +1,5 @@
 package plotlyjs.demo
+
 import com.definitelyscala.plotlyjs._
 import com.definitelyscala.plotlyjs.all._
 import com.definitelyscala.plotlyjs.PlotlyImplicits._
@@ -27,41 +28,43 @@ import rx._
  */
 object ScatterDemo {
 
-    val sc = sourcecode.Text {
+  val sc = sourcecode.Text {
     val hoverText = Var("")
 
-      val plotDiv = div.render
+    val plotDiv = div.render
 
-      val colorDim = Utils.randomDoubles()
+    val colorDim = Utils.randomDoubles()
 
-      val data = PlotData
-        .x(Utils.randomDoubles())
-        .y(Utils.randomDoubles())
-        .customdata(colorDim.map{_.toString})
-        .set(plotlymode.markers)
-          .`type`("scatter")
-        .set(plotlymarker
-            .set(plotlysizemode.area)
-            .size(colorDim)
-            .set(plotlycolor.array(colorDim))
-            .set(plotlycolorscale.jet)
-        )
-
-      val config: Config = Config.displayModeBar(false)
-      Plotly.plot(plotDiv, js.Array(data), config = config)
-
-
-      plotDiv.on(PlotEvent.HOVER, (d: PointsData) => {
-        hoverText() = d.points.map { p => s"${p.x} ${p.y} ${p.customdata}" }.mkString(" and ")
+    val data = PlotData
+      .x(Utils.randomDoubles())
+      .y(Utils.randomDoubles())
+      .customdata(colorDim.map {
+        _.toString
       })
+      .set(plotlymode.markers)
+      .set(plotlytype.scatter)
+      .set(plotlymarker
+        .set(plotlysizemode.area)
+        .size(colorDim)
+        .set(plotlycolor.array(colorDim))
+        .set(plotlycolorscale.jet)
+      )
 
-      div(
-        plotDiv,
-        div(Rx {
-          hoverText()
-        })
-      ).render
-    }
+    val config: Config = Config.displayModeBar(false)
+    Plotly.plot(plotDiv, js.Array(data), config = config)
+
+
+    plotDiv.on(PlotEvent.HOVER, (d: PointsData) => {
+      hoverText() = d.points.map { p => s"${p.x} ${p.y} ${p.customdata}" }.mkString(" and ")
+    })
+
+    div(
+      plotDiv,
+      div(Rx {
+        hoverText()
+      })
+    ).render
+  }
 
 
   val elementDemo = new ElementDemo {
@@ -72,4 +75,4 @@ object ScatterDemo {
     def element: Element = sc.value
   }
 
-  }
+}

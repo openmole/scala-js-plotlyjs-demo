@@ -49,7 +49,8 @@ object PlotlyDemo {
     val demos = Seq(
       LineChartDemo.elementDemo,
       HistogramDemo.elementDemo,
-      ScatterDemo.elementDemo
+      ScatterDemo.elementDemo,
+      BoxDemo.elementDemo
     )
 
     JSDependency.withJS(JSDependency.BOOTSTRAP_NATIVE) {

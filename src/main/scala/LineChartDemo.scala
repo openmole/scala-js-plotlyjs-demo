@@ -44,7 +44,7 @@ object LineChartDemo {
 
       val data1 = data
         .x(Utils.randomInts(15, 10).sorted)
-        .y(Utils.randomInts(15, 10))
+        .y(Utils.randomDoubles(15, 10))
         .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180,0,0)))
         .name("Reds")
 
@@ -56,7 +56,7 @@ object LineChartDemo {
 
       val config = Config.displayModeBar(false)
 
-      val plot = Plotly.newPlot(plotDiv,
+      Plotly.newPlot(plotDiv,
         js.Array(data1, data2),
         layout,
         config)

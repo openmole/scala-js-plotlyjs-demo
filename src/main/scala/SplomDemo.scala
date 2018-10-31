@@ -31,24 +31,19 @@ object SplomDemo {
 
     val plotDiv = div.render
 
-    val dimension1: Dimension = Dimension.values(Utils.anArray).label("Dimension 1")
-    val dimension2: Dimension = Dimension.values(Utils.randomDoubles(100, 10)).label("dimension 2")
-    val dimension3: Dimension = Dimension.values(Utils.randomDoubles(100, 10)).label("dimension 3")
-    val dimension4: Dimension = Dimension.values(Utils.randomDoubles(100, 10)).label("dimension 4")
-    val dimension5: Dimension = Dimension.values(Utils.randomDoubles(100, 10)).label("dimension 5")
+    val dimensions = (1 to 5).foldLeft(js.Array[Dimension]()) { (acc, i) =>
+      acc :+ Dimension.values(Utils.randomInts(50, 100)).label(s"Dimension $i")._result
+    }
 
     val colorDim = (0 to 100).toJSArray
 
     val data = PlotData
       .set(plotlytype.splom)
-      .set(Seq(
-        dimension1,
-        dimension2,
-        dimension3,
-        dimension4,
-        dimension5
-      ).toJSArray).set(plotlymarker.set(plotlycolor.array(colorDim)).set(ColorScale.hot))
-
+      .set(dimensions)
+      .set(plotlymarker
+        .set(plotlycolor.array(colorDim))
+        .set(ColorScale.hot)
+      )
 
     val config = Config.displayModeBar(false)
 

@@ -3,10 +3,8 @@ package plotlyjs.demo
 import com.definitelyscala.plotlyjs._
 import com.definitelyscala.plotlyjs.all._
 import com.definitelyscala.plotlyjs.PlotlyImplicits._
-import com.definitelyscala.plotlyjs.plotlyConts._
 import org.scalajs.dom.raw.Element
 import scala.scalajs.js.JSConverters._
-import scala.util._
 import scala.scalajs.js
 import scalatags.JsDom.all._
 
@@ -31,7 +29,7 @@ object SplomDemo {
 
   val sc = sourcecode.Text {
 
-    val plotDiv = div(id := "toto").render
+    val plotDiv = div.render
 
     val dimension1: Dimension = Dimension.values(Utils.anArray).label("Dimension 1")
     val dimension2: Dimension = Dimension.values(Utils.randomDoubles(100, 10)).label("dimension 2")

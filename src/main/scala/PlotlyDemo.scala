@@ -50,7 +50,8 @@ object PlotlyDemo {
       HistogramDemo.elementDemo,
       ScatterDemo.elementDemo,
       BoxDemo.elementDemo,
-      SplomDemo.elementDemo
+      SplomDemo.elementDemo,
+      HeatMapDemo.elementDemo
     )
 
     val tabs = demos.foldLeft(Tabs.tabs()) { (acc, demo) =>

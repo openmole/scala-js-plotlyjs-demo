@@ -2,15 +2,14 @@ package plotlyjs.demo
 
 package demo
 
-import scaladget.api.{JSDependency, BootstrapTags => bs}
-import scaladget.stylesheet.{all => sheet}
+import scaladget.bootstrapnative.bsn._
+import scaladget.bootstrapnative.bsnsheet
+import scaladget.tools._
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
-import sheet._
-import bs._
 
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
@@ -50,28 +49,28 @@ object PlotlyDemo {
       LineChartDemo.elementDemo,
       HistogramDemo.elementDemo,
       ScatterDemo.elementDemo,
-      BoxDemo.elementDemo
+      BoxDemo.elementDemo,
+      SplomDemo.elementDemo
     )
 
-    JSDependency.withJS(JSDependency.BOOTSTRAP_NATIVE) {
-
-      val tabs = demos.foldLeft(bs.tabs) { (acc, demo) =>
-        acc.add(demo.title,
-          div(marginLeft := 15, marginTop := 25)(
-            h3(demo.title),
-            div(row)(
-              div(colMD(demo.codeWidth))(pre(code(toClass("scala"))(demo.cleanCode))),
-              div(colMD(12 - demo.codeWidth))(demo.element)
-//              div(colMD(8))(pre(code(toClass("scala"))(s"/*${imports}\n\n*/${demo.cleanCode}")), width := "75%"),
-//              div(colMD(4))(demo.element)
-            )
+    val tabs = demos.foldLeft(Tabs.tabs()) { (acc, demo) =>
+      acc.add(demo.title,
+        div(marginLeft := 15, marginTop := 25)(
+          h3(demo.title),
+          div(row)(
+            div(colMD(demo.codeWidth))(pre(code(toClass("scala"))(demo.cleanCode))),
+            div(colMD(12 - demo.codeWidth))(demo.element)
           )
         )
-      }
-      div(padding := 20)(
-        tabs.render(sheet.pills)
-      ).render
+      )
     }
+
+    dom.document.body.appendChild(
+      div(padding := 20)(
+        tabs.build.render(bsnsheet.pills)
+      ).render
+    )
+
     dom.document.body.appendChild(tags.script("hljs.initHighlighting();"))
   }
 }

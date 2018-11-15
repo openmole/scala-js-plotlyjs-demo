@@ -29,20 +29,23 @@ object SplomDemo {
 
   val sc = sourcecode.Text {
 
+    val sup = 100
+    val size = 50
+
     val plotDiv = div.render
 
     val dimensions = (1 to 5).foldLeft(js.Array[Dimension]()) { (acc, i) =>
-      acc :+ Dimension.values(Utils.randomInts(50, 100)).label(s"Dimension $i")._result
+      acc :+ Dimension.values(Utils.randomInts(size, sup)).label(s"Dimension $i")._result
     }
 
-    val colorDim = (0 to 100).toJSArray
+    val colors = (0 to size).toJSArray map{ x => x.toDouble / size }
 
     val data = PlotData
       .set(plotlytype.splom)
       .set(dimensions)
       .set(plotlymarker
-        .set(plotlycolor.array(colorDim))
-        .set(ColorScale.hot)
+        .set(Color.array(colors))
+        .set(ColorScale.reds)
       )
 
     val config = Config.displayModeBar(false)

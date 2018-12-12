@@ -45,7 +45,7 @@ object SplomDemo {
       .set(dimensions)
       .set(plotlymarker
         .set(Color.array(colors))
-        .set(ColorScale.reds)
+        .set(ColorScale.viridis)
       )
 
     val config = Config.displayModeBar(false)

@@ -3,8 +3,7 @@ package plotlyjs.demo
 import com.definitelyscala.plotlyjs._
 import com.definitelyscala.plotlyjs.all._
 import com.definitelyscala.plotlyjs.PlotlyImplicits._
-import com.definitelyscala.plotlyjs.plotlyConts._
-import org.querki.jsext.JSOptionBuilder
+import scala.scalajs.js.JSConverters._
 import org.scalajs.dom.raw.Element
 
 import scalatags.JsDom.all._
@@ -43,14 +42,14 @@ object LineChartDemo {
         .set(plotlymarker.set(plotlysymbol.square))
 
       val data1 = data
-        .x(Utils.randomInts(15, 10).sorted)
+        .x((0 to 14).toJSArray)
         .y(Utils.randomDoubles(15, 10))
         .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180,0,0)))
         .name("Reds")
 
       val data2 = data
-        .x(Utils.randomInts(10, 10).sorted)
-        .y(Utils.randomInts(10, 10).sorted)
+        .x((0 to 14).toJSArray)
+        .y(Utils.randomInts(15, 10).sorted)
         .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.cross))
         .name("Blues")
 

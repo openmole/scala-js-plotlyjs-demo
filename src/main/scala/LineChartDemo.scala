@@ -27,41 +27,47 @@ import scala.scalajs._
 
 object LineChartDemo {
 
-    val sc = sourcecode.Text {
+  val sc = sourcecode.Text {
 
-      val plotDiv = div.render
+    val plotDiv = div.render
 
-      val layout = Layout
-        .title("My line plot")
-        .showlegend(true)
-        .xaxis(plotlyaxis.title("Time"))
-        .yaxis(plotlyaxis.title("Production"))
+    val layout = Layout
+      .title("My line plot")
+      .showlegend(true)
+      .xaxis(plotlyaxis.title("Time"))
+      .yaxis(plotlyaxis.title("Production"))
 
-      val data = PlotData
-        .set(plotlymode.markers.lines)
-        .set(plotlymarker.set(plotlysymbol.square))
+    val data = PlotData
+      .set(plotlymode.markers.lines)
+      .set(plotlymarker.set(plotlysymbol.square))
 
-      val data1 = data
-        .x((0 to 14).toJSArray)
-        .y(Utils.randomDoubles(15, 10))
-        .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180,0,0)))
-        .name("Reds")
+    val ref = Utils.randomDoubles(15, 10)
 
-      val data2 = data
-        .x((0 to 14).toJSArray)
-        .y(Utils.randomInts(15, 10).sorted)
-        .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.cross))
-        .name("Blues")
+    val dataRef = data
+      .x((0 to 14).asInstanceOf[Plotly.DatumArray])
+      .y(ref)
+      .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180, 0, 0)))
+      .name("Reds")
 
-      val config = Config.displayModeBar(false)
 
-      Plotly.newPlot(plotDiv,
-        js.Array(data1, data2),
-        layout,
-        config)
+    val dataN = (for (i <- 1 to 6) yield {
+      data
+        .x((0 to 14).asInstanceOf[Plotly.DatumArray])
+        .y(ref.map{x=> x + Utils.rng.nextDouble * 2 - 1}.asInstanceOf[Plotly.DatumArray])
+        .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.circle))
+        ._result
+    }).toJSArray
 
-      div(plotDiv.render).render
-    }
+
+    val config = Config.displayModeBar(false)
+
+    Plotly.newPlot(plotDiv,
+      dataN :+ dataRef._result,
+      layout,
+      config)
+
+    div(plotDiv.render).render
+  }
 
 
   val elementDemo = new ElementDemo {

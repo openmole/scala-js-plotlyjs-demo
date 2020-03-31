@@ -14,4 +14,4 @@ sbt> runDemo
 
 Then open the scala-js-plotlyjs-demo/src/target/plotly-demo.html file. Here you are !
 
-If you cannot wait, visit the [online demo](http://zebulon.iscpif.fr/~leclaire/plots/plotly-demo.html) 
+If you cannot wait, visit the [online demo](https://plotly-demo.openmole.org/plotly-demo.html) 

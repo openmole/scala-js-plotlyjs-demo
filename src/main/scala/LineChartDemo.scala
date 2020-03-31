@@ -1,12 +1,14 @@
 package plotlyjs.demo
 
+import com.definitelyscala.plotlyjs
 import com.definitelyscala.plotlyjs._
 import com.definitelyscala.plotlyjs.all._
 import com.definitelyscala.plotlyjs.PlotlyImplicits._
+
 import scala.scalajs.js.JSConverters._
 import org.scalajs.dom.raw.Element
-
 import scalatags.JsDom.all._
+
 import scala.scalajs._
 
 /*
@@ -29,6 +31,8 @@ object LineChartDemo {
 
   val sc = sourcecode.Text {
 
+    import plotlyjs.PlotlyStatic
+
     val plotDiv = div.render
 
     val layout = Layout
@@ -43,8 +47,9 @@ object LineChartDemo {
 
     val ref = Utils.randomDoubles(15, 10)
 
+
     val dataRef = data
-      .x((0 to 14).asInstanceOf[Plotly.DatumArray])
+      .x((0 to 14).asInstanceOf[PlotlyStatic.DatumArray])
       .y(ref)
       .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180, 0, 0)))
       .name("Reds")
@@ -52,8 +57,8 @@ object LineChartDemo {
 
     val dataN = (for (i <- 1 to 6) yield {
       data
-        .x((0 to 14).asInstanceOf[Plotly.DatumArray])
-        .y(ref.map{x=> x + Utils.rng.nextDouble * 2 - 1}.asInstanceOf[Plotly.DatumArray])
+        .x((0 to 14).asInstanceOf[PlotlyStatic.DatumArray])
+        .y(ref.map{x=> x + Utils.rng.nextDouble * 2 - 1}.asInstanceOf[PlotlyStatic.DatumArray])
         .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.circle))
         ._result
     }).toJSArray

@@ -9,8 +9,6 @@ name := "scala-js-plotlyjs-demo"
 
 scalaVersion := "2.13.1"
 
-crossScalaVersions := Seq("2.12.8","2.13.1")
-
 resolvers += Resolver.bintrayRepo("definitelyscala", "maven")
 resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += Resolver.jcenterRepo

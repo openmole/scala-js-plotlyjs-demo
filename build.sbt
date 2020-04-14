@@ -3,10 +3,13 @@ import java.io.PrintWriter
 import sbt.IO
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import execnpm.NpmDeps.Dep
 
 name := "scala-js-plotlyjs-demo"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.13.1"
+
+crossScalaVersions := Seq("2.12.8","2.13.1")
 
 resolvers += Resolver.bintrayRepo("definitelyscala", "maven")
 resolvers += Resolver.sonatypeRepo("snapshots")
@@ -15,11 +18,11 @@ resolvers += Resolver.jcenterRepo
 lazy val runDemo = taskKey[Unit]("runDemo")
 
 lazy val demo = project.in(file(".")) enablePlugins (ExecNpmPlugin) settings(
-  libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.2",
-  libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.6.4",
-  libraryDependencies += "fr.iscpif.scaladget" %%% "bootstrapnative" % "1.2.3",
-  libraryDependencies += "com.definitelyscala" %%% "scala-js-plotlyjs" % "1.1.10",
-  libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.2",
+  libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
+  libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.8.7",
+  libraryDependencies += "fr.iscpif.scaladget" %%% "bootstrapnative" % "1.3.0",
+  libraryDependencies += "org.openmole" %%% "scala-js-plotlyjs" % "1.3.0",
+  libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
 
   runDemo := {
     val demoTarget = target.value

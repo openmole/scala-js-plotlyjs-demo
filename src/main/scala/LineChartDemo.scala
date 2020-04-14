@@ -3,10 +3,12 @@ package plotlyjs.demo
 import com.definitelyscala.plotlyjs._
 import com.definitelyscala.plotlyjs.all._
 import com.definitelyscala.plotlyjs.PlotlyImplicits._
+import com.definitelyscala.plotlyjs.PlotlyStatic.DatumArray
+
 import scala.scalajs.js.JSConverters._
 import org.scalajs.dom.raw.Element
-
 import scalatags.JsDom.all._
+
 import scala.scalajs._
 
 /*
@@ -44,7 +46,7 @@ object LineChartDemo {
     val ref = Utils.randomDoubles(15, 10)
 
     val dataRef = data
-      .x((0 to 14).asInstanceOf[Plotly.DatumArray])
+      .x((0 to 14).asInstanceOf[DatumArray])
       .y(ref)
       .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180, 0, 0)))
       .name("Reds")
@@ -52,8 +54,8 @@ object LineChartDemo {
 
     val dataN = (for (i <- 1 to 6) yield {
       data
-        .x((0 to 14).asInstanceOf[Plotly.DatumArray])
-        .y(ref.map{x=> x + Utils.rng.nextDouble * 2 - 1}.asInstanceOf[Plotly.DatumArray])
+        .x((0 to 14).asInstanceOf[DatumArray])
+        .y(ref.map{x=> x + Utils.rng.nextDouble * 2 - 1}.asInstanceOf[DatumArray])
         .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.circle))
         ._result
     }).toJSArray

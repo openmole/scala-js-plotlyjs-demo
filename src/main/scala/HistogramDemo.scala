@@ -2,8 +2,10 @@ package plotlyjs.demo
 
 import com.definitelyscala.plotlyjs._
 import com.definitelyscala.plotlyjs.all._
-
+import scala.scalajs.js.JSConverters._
+import com.definitelyscala.plotlyjs.PlotlyImplicits._
 import scalatags.JsDom.all._
+
 import scala.scalajs._
 import org.scalajs.dom._
 /*
@@ -28,6 +30,13 @@ object HistogramDemo {
   val sc = sourcecode.Text {
     val plotDiv = div.render
 
+    val layout = Layout
+      .title("My line plot")
+      .showlegend(true)
+      .xaxis(plotlyaxis.domain(Seq(0,0.4).toJSArray))
+      .yaxis(plotlyaxis.anchor("x2"))
+      .xaxis2(plotlyaxis.domain(Seq(0.6,1).toJSArray))
+
     val histogramData = PlotData.set(plotlytype.histogram)
 
     val data1 = histogramData
@@ -35,10 +44,12 @@ object HistogramDemo {
       .name("First serie")
 
     val data2 = histogramData
-      .x(Utils.randomInts(500))
+      .x(Utils.anArray.toJSArray.toJSArray)
+      .xaxis("x2")
+      .yaxis("y2")
       .name("Second serie")
 
-    Plotly.newPlot(plotDiv, js.Array(data1, data2))
+    Plotly.newPlot(plotDiv, js.Array(data1, data2), layout = layout)
     div(plotDiv.render).render
   }
 

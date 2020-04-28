@@ -42,9 +42,9 @@ object SplomDemo {
 
     val data = splom
       .set(dimensions)
-      .set(plotlymarker
-        .set(Color.array(colors))
-        .set(ColorScale.viridis)
+      .marker(plotlymarker
+        .color(Color.array(colors))
+        .colorScale(ColorScale.viridis)
       )
 
     val config = Config.displayModeBar(false)

@@ -41,12 +41,12 @@ object ScatterDemo {
       .customdata(colorDim.map {
         _.toString
       })
-      .set(plotlymode.markers)
-      .set(plotlymarker
-        .set(plotlysizemode.area)
+      .marker(plotlymarker
+        .sizeMode(plotlysizemode.area)
         .size(colorDim)
-        .set(plotlycolor.array(colorDim))
-        .set(plotlycolorscale.jet)
+        .color(plotlycolor.array(colorDim))
+        .colorScale(plotlycolorscale.jet)
+        .symbol(circlecross)
       )
 
     val config = Config.displayModeBar(false)

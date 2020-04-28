@@ -42,25 +42,23 @@ object LineChartDemo {
       .xaxis(plotlyaxis.title("Time"))
       .yaxis(plotlyaxis.title("Production"))
 
-    val data = linechart
-      .set(plotlymode.markers.lines)
-      .set(plotlymarker.set(plotlysymbol.square))
+    val data = linechart.lines
 
     val ref = Utils.randomDoubles(15, 10)
 
 
     val dataRef = data
-      .x((0 to 14).asInstanceOf[PlotlyStatic.DatumArray])
+      .x((0 to 14).toJSArray)
       .y(ref)
-      .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180, 0, 0)))
+      .marker(plotlymarker.symbol(square).color(plotlycolor.rgb(180, 0, 0)).size(12.0))
       .name("Reds")
 
 
     val dataN = (for (i <- 1 to 6) yield {
       data
-        .x((0 to 14).asInstanceOf[PlotlyStatic.DatumArray])
-        .y(ref.map{x=> x + Utils.rng.nextDouble * 2 - 1}.asInstanceOf[PlotlyStatic.DatumArray])
-        .set(plotlymarker.size(10.0).set(plotlycolor.rgb(0, 136, 170)).set(plotlysymbol.circle))
+        .x((0 to 14).toJSArray)
+        .y(ref.map { x => x + Utils.rng.nextDouble * 2 - 1 }.toJSArray)
+        .marker(plotlymarker.size(10.0).color(plotlycolor.rgb(200, 136, 170)))
         ._result
     }).toJSArray
 

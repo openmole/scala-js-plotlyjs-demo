@@ -42,14 +42,17 @@ object BoxDemo {
 
     val data1 = box
       .y(Utils.randomInts(50, 50))
-      .set(plotlymarker.set(plotlycolor.rgba(180,180,0,0.5))
-        .set(plotlysizemode.area))
+      .marker(plotlymarker
+        .color(plotlycolor.rgba(180,180,0,0.5))
+        .sizeMode(plotlysizemode.area)
+      )
       .name("First set")
 
     val data2 = box
       .y(Utils.randomInts(50, 40))
-      .set(plotlymarker.set(plotlycolor.rgba(180,0,180,1))
-        .set(plotlysizemode.area))
+      .marker(plotlymarker
+        .color(plotlycolor.rgba(180,0,180,1))
+        .sizeMode(plotlysizemode.area))
       .name("Second set")
 
     val config = Config.displayModeBar(false)

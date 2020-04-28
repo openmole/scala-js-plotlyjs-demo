@@ -37,15 +37,13 @@ object ErrorBarDemo {
       .xaxis(plotlyaxis.title("Time"))
       .yaxis(plotlyaxis.title("Production"))
 
-    val data = PlotData
-      .set(plotlymode.markers.lines)
-      .set(plotlymarker.set(plotlysymbol.square))
+    val data = linechart.lines
 
     val data1 = data
       .x((0 to 14).toJSArray)
       .y(Utils.randomDoubles(15, 10))
       .errorY(ErrorY.array(Utils.randomDoubles(15,5)))
-      .set(plotlymarker.size(12.0).set(plotlycolor.rgb(180,0,0)))
+      .marker(plotlymarker.size(12.0).color(plotlycolor.rgb(180,0,0)).symbol(square))
       .name("Reds")
 
 

@@ -42,7 +42,7 @@ object LineChartDemo {
       .xaxis(plotlyaxis.title("Time"))
       .yaxis(plotlyaxis.title("Production"))
 
-    val data = PlotData
+    val data = linechart
       .set(plotlymode.markers.lines)
       .set(plotlymarker.set(plotlysymbol.square))
 

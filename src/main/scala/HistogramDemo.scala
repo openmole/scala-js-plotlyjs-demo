@@ -27,6 +27,7 @@ import org.scalajs.dom._
 
 object HistogramDemo {
 
+  import com.definitelyscala.plotlyjs.HistogramDataBuilder._
   val sc = sourcecode.Text {
     val plotDiv = div.render
 
@@ -37,13 +38,12 @@ object HistogramDemo {
       .yaxis(plotlyaxis.anchor("x2"))
       .xaxis2(plotlyaxis.domain(Seq(0.6,1).toJSArray))
 
-    val histogramData = PlotData.set(plotlytype.histogram)
-
-    val data1 = histogramData
+    val data1 = histogram
       .x(Utils.randomInts(500))
       .name("First serie")
+      .xbins(Bin.start(0.0).end(1000.0).size(25))
 
-    val data2 = histogramData
+    val data2 = histogram
       .x(Utils.anArray.toJSArray.toJSArray)
       .xaxis("x2")
       .yaxis("y2")

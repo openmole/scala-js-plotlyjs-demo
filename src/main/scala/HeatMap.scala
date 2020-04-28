@@ -30,9 +30,8 @@ object HeatMapDemo {
 
     val plotDiv = div.render
 
-    val data1 = PlotData
+    val data1 = heatmap
       .z((1 to 100).foldLeft(js.Array[js.Array[Int]]())((acc, i)=> acc :+ Utils.randomInts(50,100*i) ))
-      .set(plotlytype.heatmap)
 
 
     val layout = Layout

@@ -40,8 +40,7 @@ object SplomDemo {
 
     val colors = (0 to size).toJSArray map{ x => x.toDouble / size }
 
-    val data = PlotData
-      .set(plotlytype.splom)
+    val data = splom
       .set(dimensions)
       .set(plotlymarker
         .set(Color.array(colors))

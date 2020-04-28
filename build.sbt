@@ -19,14 +19,14 @@ lazy val demo = project.in(file(".")) enablePlugins (ExecNpmPlugin) settings(
   libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
   libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.8.7",
   libraryDependencies += "fr.iscpif.scaladget" %%% "bootstrapnative" % "1.3.0",
-  libraryDependencies += "org.openmole" %%% "scala-js-plotlyjs" % "1.4.1",
+  libraryDependencies += "org.openmole" %%% "scala-js-plotlyjs" % "1.4.2",
   libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
 
   runDemo := {
     val demoTarget = target.value
     val demoResource = (resourceDirectory in Compile).value
 
-    val demoJS = (fullOptJS in Compile).value
+    val demoJS = (fastOptJS in Compile).value
 
     IO.copyFile(demoJS.data, demoTarget / "js/demo.js")
     IO.copyFile(dependencyFile.value, demoTarget / "js/deps.js")

@@ -40,15 +40,13 @@ object BoxDemo {
       .title("My box plot")
       .showlegend(true)
 
-    val boxData = PlotData.set(plotlytype.box)
-
-    val data1 = boxData
+    val data1 = box
       .y(Utils.randomInts(50, 50))
       .set(plotlymarker.set(plotlycolor.rgba(180,180,0,0.5))
         .set(plotlysizemode.area))
       .name("First set")
 
-    val data2 = boxData
+    val data2 = box
       .y(Utils.randomInts(50, 40))
       .set(plotlymarker.set(plotlycolor.rgba(180,0,180,1))
         .set(plotlysizemode.area))

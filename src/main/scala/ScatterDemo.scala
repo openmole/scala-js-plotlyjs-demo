@@ -35,14 +35,13 @@ object ScatterDemo {
 
     val colorDim = Utils.randomDoubles()
 
-    val data = PlotData
+    val data = scatter
       .x(Utils.randomDoubles())
       .y(Utils.randomDoubles())
       .customdata(colorDim.map {
         _.toString
       })
       .set(plotlymode.markers)
-      .set(plotlytype.scatter)
       .set(plotlymarker
         .set(plotlysizemode.area)
         .size(colorDim)

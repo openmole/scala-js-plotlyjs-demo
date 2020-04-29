@@ -33,10 +33,8 @@ object HistogramDemo {
 
     val layout = Layout
       .title("My line plot")
+      .grid(plotlygrid.columns(3).rows(1).pattern(Pattern.coupled))
       .showlegend(true)
-      .xaxis(plotlyaxis.domain(Seq(0,0.4).toJSArray))
-      .yaxis(plotlyaxis.anchor("x2"))
-      .xaxis2(plotlyaxis.domain(Seq(0.6,1).toJSArray))
 
     val data1 = histogram
       .x(Utils.randomInts(500))
@@ -46,10 +44,14 @@ object HistogramDemo {
     val data2 = histogram
       .x(Utils.anArray.toJSArray.toJSArray)
       .xaxis("x2")
-      .yaxis("y2")
       .name("Second serie")
 
-    Plotly.newPlot(plotDiv, js.Array(data1, data2), layout = layout)
+    val data3 = histogram
+      .x(Utils.anArray.toJSArray.toJSArray)
+      .xaxis("x3")
+      .name("Second serie")
+
+    Plotly.newPlot(plotDiv, js.Array(data1, data2, data3), layout = layout)
     div(plotDiv.render).render
   }
 

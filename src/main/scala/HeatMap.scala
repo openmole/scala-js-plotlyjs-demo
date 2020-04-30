@@ -1,8 +1,8 @@
 package plotlyjs.demo
 
-import com.definitelyscala.plotlyjs._
-import com.definitelyscala.plotlyjs.all._
-import com.definitelyscala.plotlyjs.PlotlyImplicits._
+import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
+import org.openmole.plotlyjs.PlotlyImplicits._
 import org.scalajs.dom.raw.Element
 import scala.scalajs.js
 import scalatags.JsDom.all._

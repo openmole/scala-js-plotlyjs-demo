@@ -1,8 +1,8 @@
 package plotlyjs.demo
 
-import com.definitelyscala.plotlyjs._
-import com.definitelyscala.plotlyjs.all._
-import com.definitelyscala.plotlyjs.PlotlyImplicits._
+import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
+import org.openmole.plotlyjs.PlotlyImplicits._
 import org.scalajs.dom.raw.Element
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
@@ -42,8 +42,8 @@ object SplomDemo {
 
     val data = splom
       .set(dimensions)
-      .marker(plotlymarker
-        .color(Color.array(colors))
+      .marker(marker
+        .color(all.color.array(colors))
         .colorScale(ColorScale.viridis)
       )
 

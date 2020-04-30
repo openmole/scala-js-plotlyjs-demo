@@ -1,9 +1,9 @@
 package plotlyjs.demo
 
-import com.definitelyscala.plotlyjs._
-import com.definitelyscala.plotlyjs.all._
-import com.definitelyscala.plotlyjs.PlotlyImplicits._
-import com.definitelyscala.plotlyjs.plotlyConts._
+import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
+import org.openmole.plotlyjs.PlotlyImplicits._
+import org.openmole.plotlyjs.plotlyConts._
 import org.scalajs.dom.raw.Element
 
 import scala.scalajs.js
@@ -41,11 +41,11 @@ object ScatterDemo {
       .customdata(colorDim.map {
         _.toString
       })
-      .marker(plotlymarker
-        .sizeMode(plotlysizemode.area)
+      .marker(marker
+        .sizeMode(sizemode.area)
         .size(colorDim)
-        .color(plotlycolor.array(colorDim))
-        .colorScale(plotlycolorscale.jet)
+        .color(all.color.array(colorDim))
+        .colorScale(colorscale.jet)
         .symbol(circlecross)
       )
 

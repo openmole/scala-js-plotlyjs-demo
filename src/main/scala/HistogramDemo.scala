@@ -1,9 +1,9 @@
 package plotlyjs.demo
 
-import com.definitelyscala.plotlyjs._
-import com.definitelyscala.plotlyjs.all._
+import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
 import scala.scalajs.js.JSConverters._
-import com.definitelyscala.plotlyjs.PlotlyImplicits._
+import org.openmole.plotlyjs.PlotlyImplicits._
 import scalatags.JsDom.all._
 
 import scala.scalajs._
@@ -27,13 +27,13 @@ import org.scalajs.dom._
 
 object HistogramDemo {
 
-  import com.definitelyscala.plotlyjs.HistogramDataBuilder._
+  import org.openmole.plotlyjs.HistogramDataBuilder._
   val sc = sourcecode.Text {
     val plotDiv = div.render
 
     val layout = Layout
       .title("My line plot")
-      .grid(plotlygrid.columns(3).rows(1).pattern(Pattern.coupled))
+      .grid(grid.columns(3).rows(1).pattern(Pattern.coupled))
       .showlegend(true)
 
     val data1 = histogram
@@ -42,12 +42,12 @@ object HistogramDemo {
       .xbins(Bin.start(0.0).end(1000.0).size(25))
 
     val data2 = histogram
-      .x(Utils.anArray.toJSArray.toJSArray)
+      .x(Utils.anArray.toJSArray)
       .xaxis("x2")
       .name("Second serie")
 
     val data3 = histogram
-      .x(Utils.anArray.toJSArray.toJSArray)
+      .x(Utils.anArray.toJSArray)
       .xaxis("x3")
       .name("Second serie")
 

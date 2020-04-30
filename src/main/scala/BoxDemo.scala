@@ -1,9 +1,9 @@
 package plotlyjs.demo
 
-import com.definitelyscala.plotlyjs._
-import com.definitelyscala.plotlyjs.all._
-import com.definitelyscala.plotlyjs.PlotlyImplicits._
-import com.definitelyscala.plotlyjs.plotlyConts._
+import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
+import org.openmole.plotlyjs.PlotlyImplicits._
+import org.openmole.plotlyjs.plotlyConts._
 import org.querki.jsext.JSOptionBuilder
 import org.scalajs.dom.raw.Element
 
@@ -42,17 +42,17 @@ object BoxDemo {
 
     val data1 = box
       .y(Utils.randomInts(50, 50))
-      .marker(plotlymarker
-        .color(plotlycolor.rgba(180,180,0,0.5))
-        .sizeMode(plotlysizemode.area)
+      .marker(marker
+        .color(all.color.rgba(180,180,0,0.5))
+        .sizeMode(sizemode.area)
       )
       .name("First set")
 
     val data2 = box
       .y(Utils.randomInts(50, 40))
-      .marker(plotlymarker
-        .color(plotlycolor.rgba(180,0,180,1))
-        .sizeMode(plotlysizemode.area))
+      .marker(marker
+        .color(all.color.rgba(180,0,180,1))
+        .sizeMode(sizemode.area))
       .name("Second set")
 
     val config = Config.displayModeBar(false)

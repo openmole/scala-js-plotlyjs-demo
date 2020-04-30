@@ -1,8 +1,8 @@
 package plotlyjs.demo
 
-import com.definitelyscala.plotlyjs._
-import com.definitelyscala.plotlyjs.all._
-import com.definitelyscala.plotlyjs.PlotlyImplicits._
+import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
+import org.openmole.plotlyjs.PlotlyImplicits._
 import scala.scalajs.js.JSConverters._
 import org.scalajs.dom.raw.Element
 
@@ -34,8 +34,8 @@ object ErrorBarDemo {
     val layout = Layout
       .title("My line plot")
       .showlegend(true)
-      .xaxis(plotlyaxis.title("Time"))
-      .yaxis(plotlyaxis.title("Production"))
+      .xaxis(axis.title("Time"))
+      .yaxis(axis.title("Production"))
 
     val data = linechart.lines
 
@@ -43,7 +43,7 @@ object ErrorBarDemo {
       .x((0 to 14).toJSArray)
       .y(Utils.randomDoubles(15, 10))
       .errorY(ErrorY.array(Utils.randomDoubles(15,5)))
-      .marker(plotlymarker.size(12.0).color(plotlycolor.rgb(180,0,0)).symbol(square))
+      .marker(marker.size(12.0).color(all.color.rgb(180,0,0)).symbol(square))
       .name("Reds")
 
 

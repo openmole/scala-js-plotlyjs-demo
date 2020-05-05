@@ -17,7 +17,7 @@ lazy val runDemo = taskKey[Unit]("runDemo")
 
 lazy val demo = project.in(file(".")) enablePlugins (ExecNpmPlugin) settings(
   libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
-  libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.8.7",
+  libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.9.1",
   libraryDependencies += "org.openmole.scaladget" %%% "bootstrapnative" % "1.3.0",
   libraryDependencies += "org.openmole" %%% "scala-js-plotlyjs" % "1.5.0",
   libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",

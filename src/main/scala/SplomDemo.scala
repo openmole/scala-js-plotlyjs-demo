@@ -29,6 +29,9 @@ object SplomDemo {
 
   val sc = sourcecode.Text {
 
+    import org.openmole.plotlyjs.SplomDataBuilder._
+    import org.openmole.plotlyjs.Layout._
+
     val sup = 100
     val size = 50
 
@@ -38,12 +41,14 @@ object SplomDemo {
       acc :+ Dimension.values(Utils.randomInts(size, sup)).label(s"Dimension $i")._result
     }
 
-    val colors = (0 to size).toJSArray map{ x => x.toDouble / size }
+    val colors = (0 to size).toJSArray map { x => x.toDouble / size }
 
     val data = splom
       .set(dimensions)
+      .showupperhalf(false)
+      .diagonalOff
       .marker(marker
-        .color(all.color.array(colors))
+        .color(Color.array(colors))
         .colorScale(ColorScale.viridis)
       )
 
@@ -51,6 +56,8 @@ object SplomDemo {
 
     val layout = Layout
       .title("My line plot")
+      .dragmode(DragMode.select)
+      .hovermode(HoverMode.yUnified)
       .height(700)
       .width(700)
 

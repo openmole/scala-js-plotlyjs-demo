@@ -49,7 +49,7 @@ object SplomDemo {
       .diagonalOff
       .marker(marker
         .color(Color.array(colors))
-        .colorScale(ColorScale.viridis)
+        .showscale(true)
       )
 
     val config = Config.displayModeBar(false)

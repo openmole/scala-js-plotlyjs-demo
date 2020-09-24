@@ -46,6 +46,7 @@ object PlotlyDemo {
       """.stripMargin
 
     val demos = Seq(
+      ScatterPolarDemo.elementDemo,
       LineChartDemo.elementDemo,
       HistogramDemo.elementDemo,
       ScatterDemo.elementDemo,

@@ -10,7 +10,12 @@ import org.scalajs.dom.raw.Element
 
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
+import org.scalajs.dom.raw.Element
 import scalatags.JsDom.all._
+import scalatags.JsDom.svgTags
+import scaladget.svg.path.Path
+
+import scala.util.Random
 
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
@@ -29,7 +34,7 @@ import scalatags.JsDom.all._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object ScatterPolarDemo {
+object ParetoDemo {
 
   import org.openmole.plotlyjs.ScatterPolarDataBuilder._
 
@@ -37,29 +42,36 @@ object ScatterPolarDemo {
 
     val plotDiv = div.render
 
-    val results = Seq(
-      Seq(15.0, 3.0, 7.0),
-      Seq(4.0, 9.0, 5.0),
-      Seq(8.0, 12.0, 11.0),
-      Seq(6.0, 8.0, 10.0),
-      Seq(8.0, 2.0, 6.0),
-      Seq(11.0,9.0, 2.0)
-    )
+    //    val results = Seq(
+    //      Seq(15.0, 3.0, 7.0),
+    //      Seq(4.0, 9.0, 5.0),
+    //      Seq(8.0, 12.0, 11.0),
+    //      Seq(6.0, 8.0, 10.0),
+    //      Seq(8.0, 2.0, 6.0),
+    //      Seq(11.0, 9.0, 2.0)
+    //    )
 
-    val repetitions = Seq(100.0, 20.0, 10.0, 1.0, 25.0, 10.0, 2.0, 5.0, 5.0, 45.0).toJSArray
+    val results = Data.dim8Sample100
 
-//        val results = Seq(
-//          Seq(1 / 34.080, 0.666),
-//          Seq(1 / 34.708, 0.669),
-//          Seq(1 / 38.329, 0.680),
-//          Seq(1 / 40.587, 0.702),
-//          Seq(1 / 37.012, 0.678),
-//          Seq(1 / 39.921, 0.699),
-//          Seq(1 / 39.682, 0.687),
-//          Seq(1 / 41.428, 0.705),
-//          Seq(1 / 41.596, 0.720),
-//          Seq(1 / 41.439, 0.717)
-//        )
+    val cpaVariability = Seq(0.0686544468026073, 0.08720490767943528, 0.1004942957820982, 0.11953341441462292, 0.1340278943366293, 0.14455564337712556, 0.15612690327097392, 0.18940249433650735)
+    val maxCPAVariability = cpaVariability.max
+
+    val rng = new Random(7)
+
+    val repetitions = (0 to 100).toJSArray.map { _ => rng.between(1, 100) }
+
+    //        val results = Seq(
+    //          Seq(1 / 34.080, 0.666),
+    //          Seq(1 / 34.708, 0.669),
+    //          Seq(1 / 38.329, 0.680),
+    //          Seq(1 / 40.587, 0.702),
+    //          Seq(1 / 37.012, 0.678),
+    //          Seq(1 / 39.921, 0.699),
+    //          Seq(1 / 39.682, 0.687),
+    //          Seq(1 / 41.428, 0.705),
+    //          Seq(1 / 41.596, 0.720),
+    //          Seq(1 / 41.439, 0.717)
+    //        )
 
     //        val results = Seq(
     //          Seq(1.0, 8.0),
@@ -70,14 +82,14 @@ object ScatterPolarDemo {
     //          Seq(8.0, 0.0)
     //        )
 
-//        val results = Seq(
-//          Seq(1.0, 8.0,4.0,1.0),
-//          Seq(2.0, 6.0,2.0,5.0),
-//          Seq(3.0, 4.0,7.0,4.0),
-//          Seq(5.0, 2.0,3.0,5.0),
-//          Seq(7.0, 1.0,2.0,10.0),
-//          Seq(8.0, 0.0,4.0,8.0)
-//        )
+    //        val results = Seq(
+    //          Seq(1.0, 8.0,4.0,1.0),
+    //          Seq(2.0, 6.0,2.0,5.0),
+    //          Seq(3.0, 4.0,7.0,4.0),
+    //          Seq(5.0, 2.0,3.0,5.0),
+    //          Seq(7.0, 1.0,2.0,10.0),
+    //          Seq(8.0, 0.0,4.0,8.0)
+    //        )
 
 
     val colors = Seq(
@@ -88,7 +100,7 @@ object ScatterPolarDemo {
       Color.rgb(204, 102, 119),
       Color.rgb(68, 170, 153),
       Color.rgb(170, 68, 153),
-      Color.rgb(51, 34, 136)
+      Color.rgb(0, 114, 178)
     )
 
     val nbObjectives = results.headOption.headOption.map(_.length).getOrElse(2)
@@ -96,7 +108,7 @@ object ScatterPolarDemo {
     val TWO_PI = 2 * Math.PI
     val TO_DEGREES = 180 / Math.PI
 
-    val objectiveNames = Seq("Goal 1", "Goal 2", "Goal 3", "Goal 4")
+    val objectiveNames = cpaVariability.zipWithIndex map { case (c, ind) => s"Goal $ind [${(c * 100).toInt}%]" }
 
     //DISPLAY OBJECTIVES
     val objectiveThetas = (0 to nbObjectives - 1).toArray.map {
@@ -111,7 +123,7 @@ object ScatterPolarDemo {
 
     val dataObjectives = objectiveThetas.zip(objectiveNames).zipWithIndex.map { case ((t, name), ind) => //case(t,name)=>
       scatterpolar.
-        r(js.Array(1.1)).
+        r(js.Array(0.4)).
         theta(js.Array(t * TO_DEGREES)).
         text(js.Array(name)).
         fillPolar(ScatterPolar.toself).
@@ -167,18 +179,18 @@ object ScatterPolarDemo {
       (r, theta)
     }
 
-    println("PoLar BAry " + polarBarycenters)
+    //println("PoLar BAry " + polarBarycenters)
 
-    case class Barycenter(r: Double, theta: Double, sector: Int)
+    case class Barycenter(r: Double, theta: Double, sector: Int, cpaVariability: Double, nbRepetitions: Int, label: String)
 
     // Sort points by angular sections
     val thetaSectors = {
-//      val first = -TWO_PI / (2 * nbObjectives)
-//      val last = TWO_PI / nbObjectives
-//      (BigDecimal(first) to BigDecimal(TWO_PI * (nbObjectives - 1) / nbObjectives) by BigDecimal(last)).map {
-//        _.toDouble
-//      }
-        val first = -TWO_PI / (2 * nbObjectives)
+      //      val first = -TWO_PI / (2 * nbObjectives)
+      //      val last = TWO_PI / nbObjectives
+      //      (BigDecimal(first) to BigDecimal(TWO_PI * (nbObjectives - 1) / nbObjectives) by BigDecimal(last)).map {
+      //        _.toDouble
+      //      }
+      val first = -TWO_PI / (2 * nbObjectives)
       val step = TWO_PI / nbObjectives
       (BigDecimal(first) to BigDecimal(TWO_PI) by BigDecimal(step)).map {
         _.toDouble
@@ -188,55 +200,65 @@ object ScatterPolarDemo {
 
     println("Theta sectors " + thetaSectors)
 
-    val barycenters = polarBarycenters.map { case (r, theta) =>
-      Barycenter(r, theta, (thetaSectors.search(theta).insertionPoint % nbObjectives))
+
+    val barycenters = (polarBarycenters zip (repetitions zip (results.map { g => s"(${g.mkString(",")})" }))).map { case (((r, theta), (repetition, label))) =>
+      val index = (thetaSectors.search(theta).insertionPoint % nbObjectives)
+
+      Barycenter(r, theta, index, cpaVariability(index), repetition, label)
     }
 
-println("baricenters " + barycenters)
-    val barycenterDataSeq = barycenters.groupBy{_.sector}.map { case (sector, b) =>
-      println("SECTOR " + sector  + "BAR " + b)
+   // println("baricenters " + barycenters)
+   // println("Labels " + results.map { g => s"(${g.mkString(",")})" }.toJSArray)
+    val barycenterDataSeq = barycenters.groupBy {
+      _.sector
+    }.map { case (sector, b) =>
+      val op = b.map {
+        _.cpaVariability / maxCPAVariability
+      }.toJSArray
+
       scatterpolar.
-        r(b.map{_.r}.toJSArray).
-        theta(b.map{_.theta}.toJSArray.map {
+        r(b.map {
+          _.r
+        }.toJSArray).
+        theta(b.map {
+          _.theta
+        }.toJSArray.map {
           _ * TO_DEGREES
         }).
-        text(results.map { g => s"(${g.mkString(",")})" }.toJSArray).
+        text(b.map {
+          _.label
+        }.toJSArray).
         hovertemplate("<b>%{text}</b>").
         fillPolar(ScatterPolar.none).
-        set(markers).set(marker.size(repetitions.map { r => r / 4 + 10 }).set(colors(sector)).set(line.width(2).set(Color.rgb(242, 242, 242))))._result
+        set(markers).set(
+        marker
+          .opacity(op)
+          .size(b.map {
+            _.nbRepetitions.toDouble / 4 + 10
+          }.toJSArray).set(colors(sector)).set(line.width(2).set(Color.rgb(65, 65, 65))))._result
     }
 
-//    val dataParetoPoints = scatterpolar.
-//      r(polarBarycenters.map {
-//        _._1
-//      }.toJSArray).
-//      theta(polarBarycenters.map {
-//        _._2
-//      }.toJSArray.map {
-//        _ * TO_DEGREES
-//      }).
-//      text(results.map { g => s"(${g.mkString(",")})" }.toJSArray).
-//      hovertemplate("<b>%{text}</b>").
-//      fillPolar(ScatterPolar.none).
-//      set(markers).set(marker.size(repetitions.map { r => r / 4 + 10 }).set(Color.rgb(30, 136, 229)).set(line.width(2).set(Color.rgb(242, 242, 242))))
-//
+
+    val graphWidth = 800
+    val graphHeight = 800
 
     val layout = Layout
       .title("Pareto overview")
-      .height(800)
-      .width(800)
+      .height(graphHeight)
+      .width(graphWidth)
       .showlegend(false)
       .polar(polar
-        .set(angularaxis
-          .showticklabels(true)
-          .linewidth(3)
+        .bgcolor(Color.rgb(245, 245, 245))
+        .angularAxis(axis
+          .showticklabels(false)
+          .linewidth(2)
+          .gridcolor(Color.rgba(12, 12, 12, 0.2))
           .ticks(TickType.outside)
         )
-        .set(
-          radialaxis
-            .showticklabels(false)
-            .linewidth(0)
-            .ticks(TickType.none)
+        .radialAxis(axis
+          .showticklabels(false)
+          .linewidth(0)
+          .ticks(TickType.none)
         )
       )
 
@@ -247,7 +269,7 @@ println("baricenters " + barycenters)
   }
 
   val elementDemo = new ElementDemo {
-    def title: String = "Scatter polar"
+    def title: String = "Pareto"
 
     def code: String = sc.source
 

@@ -20,6 +20,7 @@ lazy val demo = project.in(file(".")) enablePlugins (ExecNpmPlugin) settings(
   libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
   libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.9.1",
   libraryDependencies += "org.openmole.scaladget" %%% "bootstrapnative" % "1.3.4",
+  libraryDependencies += "org.openmole.scaladget" %%% "svg" % "1.3.4",
   libraryDependencies += "org.openmole" %%% "scala-js-plotlyjs" % "1.5.4",
   libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
 

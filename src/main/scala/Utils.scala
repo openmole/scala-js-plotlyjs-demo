@@ -20,6 +20,29 @@ object Utils {
 
   lazy val rng = scala.util.Random
 
+  val viridis = Seq(
+    "440154",
+    "481567",
+    "482677",
+    "453781",
+    "404788",
+    "39568C",
+    "33638D",
+    "2D708E",
+    "287D8E",
+    "238A8D",
+    "1F968B",
+    "20A387",
+    "29AF7F",
+    "3CBB75",
+    "55C667",
+    "73D055",
+    "95D840",
+    "B8DE29",
+    "DCE319",
+    "FDE725"
+  )
+
   def randomDoubles(nb: Int = 100, ratio: Int = 1000) = Seq.fill(nb)(rng.nextDouble * ratio).toJSArray
 
   def randomDoublesAsStrings(nb: Int = 100, ratio: Int = 1000) = Seq.fill(nb)((rng.nextDouble * ratio).toString).toJSArray

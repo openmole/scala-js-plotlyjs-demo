@@ -4,12 +4,9 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.plotlyConts._
-import org.scalajs.dom.raw.Element
 
 import scala.scalajs.js
-import scalatags.JsDom.all._
-import scaladget.tools.JsRxTags._
-import rx._
+import com.raquo.laminar.api.L._
 
 /*
  * Copyright (C) 24/03/16 // mathieu.leclaire@openmole.org
@@ -31,7 +28,7 @@ object ScatterDemo {
   val sc = sourcecode.Text {
     val hoverText = Var("")
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val colorDim = Utils.randomDoubles()
 
@@ -50,19 +47,17 @@ object ScatterDemo {
       )
 
     val config = Config.displayModeBar(false)
-    Plotly.plot(plotDiv, js.Array(data), config = config)
+    Plotly.plot(plotDiv.ref, js.Array(data), config = config)
 
 
-    plotDiv.on(PlotEvent.HOVER, (d: PointsData) => {
-      hoverText() = d.points.map { p => s"${p.x} ${p.y} ${p.customdata}" }.mkString(" and ")
+    plotDiv.ref.on(PlotEvent.HOVER, (d: PointsData) => {
+      hoverText.set(d.points.map { p => s"${p.x} ${p.y} ${p.customdata}" }.mkString(" and "))
     })
 
     div(
       plotDiv,
-      div(Rx {
-        hoverText()
-      })
-    ).render
+      child.text <-- hoverText.signal
+    )
   }
 
 
@@ -71,7 +66,7 @@ object ScatterDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 
 }

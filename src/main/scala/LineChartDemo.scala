@@ -1,16 +1,11 @@
 package plotlyjs.demo
 
-import org.openmole.plotlyjs
-import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
-import org.openmole.plotlyjs.PlotlyStatic.DatumArray
+import org.openmole.plotlyjs._
+import com.raquo.laminar.api.L._
 
 import scala.scalajs.js.JSConverters._
-import org.scalajs.dom.raw.Element
-import scalatags.JsDom.all._
-
-import scala.scalajs._
 
 /*
  * Copyright (C) 24/03/16 // mathieu.leclaire@openmole.org
@@ -32,9 +27,7 @@ object LineChartDemo {
 
   val sc = sourcecode.Text {
 
-    import plotlyjs.PlotlyStatic
-
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val layout = Layout
       .title("My line plot")
@@ -44,8 +37,12 @@ object LineChartDemo {
 
     val data = linechart.lines
 
+    println("DATA " + data)
     val ref = Utils.randomDoubles(15, 10)
 
+
+    val oo = marker.symbol(square).color(all.color.rgb(180, 0, 0)).size(12.0)
+    println("OO " + oo)
 
     val dataRef = data
       .x((0 to 14).toJSArray)
@@ -65,12 +62,12 @@ object LineChartDemo {
 
     val config = Config.displayModeBar(false)
 
-    Plotly.newPlot(plotDiv,
+    Plotly.newPlot(plotDiv.ref,
       dataN :+ dataRef._result,
       layout,
       config)
 
-    div(plotDiv.render).render
+    plotDiv
   }
 
 
@@ -79,6 +76,6 @@ object LineChartDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 }

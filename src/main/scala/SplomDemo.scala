@@ -6,7 +6,7 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.scalajs.dom.raw.Element
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
-import scalatags.JsDom.all._
+import com.raquo.laminar.api.L._
 
 /*
  * Copyright (C) 17/10/18 // mathieu.leclaire@openmole.org
@@ -35,7 +35,7 @@ object SplomDemo {
     val sup = 100
     val size = 50
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val dimensions = (1 to 5).foldLeft(js.Array[Dimension]()) { (acc, i) =>
       acc :+ Dimension.values(Utils.randomInts(size, sup)).label(s"Dimension $i")._result
@@ -62,12 +62,10 @@ object SplomDemo {
       .width(700)
 
 
-    Plotly.newPlot(plotDiv,
+    Plotly.newPlot(plotDiv.ref,
       js.Array(data), layout, config)
 
-    div(
-      plotDiv,
-    ).render
+    plotDiv
   }
 
 
@@ -76,6 +74,6 @@ object SplomDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 }

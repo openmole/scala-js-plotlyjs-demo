@@ -2,19 +2,14 @@
 package plotlyjs.demo
 
 
-import org.openmole.plotlyjs.PlotMode.{markers, markersAndText}
+import org.openmole.plotlyjs.PlotMode.markers
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
-import org.openmole.plotlyjs.plotlyConts._
-import org.scalajs.dom.raw.Element
 
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
-import org.scalajs.dom.raw.Element
-import scalatags.JsDom.all._
-import scalatags.JsDom.svgTags
-import scaladget.svg.path.Path
+import com.raquo.laminar.api.L._
 
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
@@ -39,7 +34,7 @@ object PSEDemo {
 
   val sc = sourcecode.Text {
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val data = scatterternary.
       a(Data.idealPSE("area").map{_._1}.toJSArray).
@@ -84,9 +79,9 @@ object PSEDemo {
         .caxis(axis.dtick(0.1).title("Convexity"))
     ).width(800).height(800)
 
-    Plotly.newPlot(plotDiv, Array(data, data2).toJSArray, layout)
+    Plotly.newPlot(plotDiv.ref, Array(data, data2).toJSArray, layout)
 
-    plotDiv.render
+    plotDiv
 
   }
 
@@ -95,7 +90,7 @@ object PSEDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 
 }

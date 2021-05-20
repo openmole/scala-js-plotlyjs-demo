@@ -3,9 +3,8 @@ package plotlyjs.demo
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
-import org.scalajs.dom.raw.Element
 import scala.scalajs.js
-import scalatags.JsDom.all._
+import com.raquo.laminar.api.L._
 
 /*
  * Copyright (C) 31/10/18 // mathieu.leclaire@openmole.org
@@ -28,10 +27,10 @@ object HeatMapDemo {
 
   val sc = sourcecode.Text {
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val data1 = heatmap
-      .z((1 to 100).foldLeft(js.Array[js.Array[Int]]())((acc, i)=> acc :+ Utils.randomInts(50,100*i) ))
+      .z((1 to 100).foldLeft(js.Array[js.Array[Int]]())((acc, i) => acc :+ Utils.randomInts(50, 100 * i)))
 
 
     val layout = Layout
@@ -40,12 +39,10 @@ object HeatMapDemo {
       .width(700)
 
 
-    Plotly.newPlot(plotDiv,
+    Plotly.newPlot(plotDiv.ref,
       js.Array(data1))
 
-    div(
-      plotDiv,
-    ).render
+    plotDiv
   }
 
 
@@ -54,6 +51,6 @@ object HeatMapDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 }

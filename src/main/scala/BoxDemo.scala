@@ -4,14 +4,10 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.plotlyConts._
-import org.querki.jsext.JSOptionBuilder
 import org.scalajs.dom.raw.Element
+import com.raquo.laminar.api.L._
 
-import scalatags.JsDom.all._
 import scala.scalajs._
-import org.scalajs.dom._
-import scaladget.tools.JsRxTags._
-import rx._
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
  *
@@ -34,7 +30,7 @@ object BoxDemo {
   val sc = sourcecode.Text {
     val clickText = Var("")
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val layout = Layout
       .title("My box plot")
@@ -56,19 +52,16 @@ object BoxDemo {
       .name("Second set")
 
     val config = Config.displayModeBar(false)
-    Plotly.newPlot(plotDiv, js.Array(data1, data2), layout, config)
+    Plotly.newPlot(plotDiv.ref, js.Array(data1, data2), layout, config)
 
-    plotDiv.on(PlotEvent.CLICK, (d: PointsData) => {
-      clickText() = d.points.map { p => s"${p.y}" }.mkString(" , ")
+    plotDiv.ref.on(PlotEvent.CLICK, (d: PointsData) => {
+      clickText.set(d.points.map { p => s"${p.y}" }.mkString(" , "))
     })
 
     div(
       plotDiv,
-      div(Rx {
-        clickText()
-      })
-    ).render
-    //div(plotDiv.render).render
+      child.text <-- clickText.signal
+    )
   }
 
 
@@ -77,6 +70,6 @@ object BoxDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 }

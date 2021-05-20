@@ -3,7 +3,7 @@ package plotlyjs.demo
 import org.scalajs.dom.raw.{Element, MouseEvent}
 import plotlyjs.demo.Data.{DimensionName, PSEData, pse}
 import org.openmole.plotlyjs.PlotlyImplicits._
-import scalatags.JsDom.all._
+import com.raquo.laminar.api.L._
 import scala.annotation.tailrec
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
@@ -12,7 +12,7 @@ import scala.scalajs.js.JSConverters._
 object PSESubPlots {
   val sc = sourcecode.Text {
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
 
     case class Dimensions(x: DimensionName, y: DimensionName, z: DimensionName)
@@ -94,8 +94,8 @@ object PSESubPlots {
         .y(points(z).map{_.y}.toJSArray).xaxis(s"x${ind + 1 }").yaxis(s"y${ind + 1 }")._result
     })
 
-    Plotly.newPlot(plotDiv, dataSeq.toJSArray, layout = layout)
-    div(plotDiv.render).render
+    Plotly.newPlot(plotDiv.ref, dataSeq.toJSArray, layout = layout)
+    plotDiv
 
   }
 
@@ -104,7 +104,7 @@ object PSESubPlots {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 
 }

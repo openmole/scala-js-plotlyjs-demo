@@ -4,9 +4,8 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import scala.scalajs.js.JSConverters._
-import org.scalajs.dom.raw.Element
 
-import scalatags.JsDom.all._
+import com.raquo.laminar.api.L._
 import scala.scalajs._
 
 /*
@@ -29,7 +28,7 @@ object ErrorBarDemo {
 
   val sc = sourcecode.Text {
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val layout = Layout
       .title("My line plot")
@@ -49,12 +48,12 @@ object ErrorBarDemo {
 
     val config = Config.displayModeBar(false)
 
-    Plotly.newPlot(plotDiv,
+    Plotly.newPlot(plotDiv.ref,
       js.Array(data1),
       layout,
       config)
 
-    div(plotDiv.render).render
+    plotDiv
   }
 
 
@@ -63,6 +62,6 @@ object ErrorBarDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 }

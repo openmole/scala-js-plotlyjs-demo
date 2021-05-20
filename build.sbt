@@ -1,14 +1,14 @@
-import java.io.PrintWriter
 
 import sbt.IO
-import org.scalajs.sbtplugin.ScalaJSPlugin
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import execnpm.NpmDeps.Dep
 
 name := "scala-js-plotlyjs-demo"
 
-scalaVersion := "2.13.2"
-crossScalaVersions := Seq("2.12.11", "2.13.2")
+scalaVersion := "2.13.5"
+crossScalaVersions := Seq("2.12.13", "2.13.5")
+
+val poltlyjsVersion = "1.5.6"
+val scaladgetVersion = "1.9.0"
+val laminarVersion = "0.12.2"
 
 resolvers += Resolver.bintrayRepo("definitelyscala", "maven")
 resolvers += Resolver.sonatypeRepo("snapshots")
@@ -16,27 +16,22 @@ resolvers += Resolver.jcenterRepo
 
 lazy val runDemo = taskKey[Unit]("runDemo")
 
-lazy val demo = project.in(file(".")) enablePlugins (ExecNpmPlugin) settings(
-  libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
-  libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.9.1",
-  libraryDependencies += "org.openmole.scaladget" %%% "bootstrapnative" % "1.3.4",
-  libraryDependencies += "org.openmole.scaladget" %%% "svg" % "1.3.4",
-  libraryDependencies += "org.openmole" %%% "scala-js-plotlyjs" % "1.5.4",
-  libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
-
+lazy val demo = project.in(file(".")) enablePlugins (ScalaJSBundlerPlugin, JSDependenciesPlugin) settings(
+  libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+  libraryDependencies += "com.raquo" %%% "laminar" % laminarVersion,
+  libraryDependencies += "org.openmole.scaladget" %%% "bootstrapnative" % scaladgetVersion,
+  libraryDependencies += "org.openmole.scaladget" %%% "highlightjs" % scaladgetVersion,
+  libraryDependencies += "org.openmole.scaladget" %%% "svg" % scaladgetVersion,
+  libraryDependencies += "org.openmole" %%% "scala-js-plotlyjs" % poltlyjsVersion ,
+  libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.6",
+  scalaJSUseMainModuleInitializer := true,
   runDemo := {
-    val demoTarget = target.value
-    val demoResource = (resourceDirectory in Compile).value
+    val demoResource = (Compile / resourceDirectory).value
+    val jsBuild = (Compile / fastOptJS / webpack ).value.head.data
 
-    val demoJS = (fastOptJS in Compile).value
-
-    IO.copyFile(demoJS.data, demoTarget / "js/demo.js")
-    IO.copyFile(dependencyFile.value, demoTarget / "js/deps.js")
-
-    IO.copyFile(demoResource / "plotly-demo.html", demoTarget / "plotly-demo.html")
-    IO.copyDirectory(demoResource / "js", demoTarget / "js")
-    IO.copyDirectory(demoResource / "css", demoTarget / "css")
-    IO.copyDirectory(demoResource / "data", demoTarget / "data")
+    IO.copyFile(jsBuild, target.value / "js/demoplotly.js")
+    IO.copyFile(crossTarget.value / s"${name.value}-jsdeps.js", target.value / "js/deps.js")
+    IO.copyDirectory(demoResource, target.value)
   }
 
 )

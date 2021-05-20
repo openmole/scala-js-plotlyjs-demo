@@ -10,9 +10,7 @@ import org.scalajs.dom.raw.Element
 
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
-import org.scalajs.dom.raw.Element
-import scalatags.JsDom.all._
-import scalatags.JsDom.svgTags
+import com.raquo.laminar.api.L._
 import scaladget.svg.path.Path
 
 import scala.util.Random
@@ -40,7 +38,7 @@ object ParetoDemo {
 
   val sc = sourcecode.Text {
 
-    val plotDiv = div.render
+    val plotDiv = div()
 
     //    val results = Seq(
     //      Seq(15.0, 3.0, 7.0),
@@ -128,8 +126,8 @@ object ParetoDemo {
         text(js.Array(name)).
         fillPolar(ScatterPolar.toself).
         textPosition(TextPosition.topCenter).
-        set(markersAndText).set(
-        marker.size(30).color(colors(ind)).symbol(square)
+        set(markersAndText).
+        set(marker.size(30).color(colors(ind)).symbol(square)
       )._result
     }.toSeq
 
@@ -262,9 +260,9 @@ object ParetoDemo {
         )
       )
 
-    Plotly.newPlot(plotDiv, (dataObjectives ++ barycenterDataSeq).toJSArray, layout)
+    Plotly.newPlot(plotDiv.ref, (dataObjectives ++ barycenterDataSeq).toJSArray, layout)
 
-    plotDiv.render
+    plotDiv
 
   }
 
@@ -273,6 +271,6 @@ object ParetoDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 }

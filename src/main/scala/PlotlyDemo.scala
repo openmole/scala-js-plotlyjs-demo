@@ -1,15 +1,9 @@
 package plotlyjs.demo
 
-package demo
-
+import scaladget.highlightjs.HighlightJS
 import scaladget.bootstrapnative.bsn._
-import scaladget.bootstrapnative.bsnsheet
-import scaladget.tools._
-import scala.scalajs.js.annotation.JSExportTopLevel
-import org.scalajs.dom
-
-import scalatags.JsDom.tags
-import scalatags.JsDom.all._
+import com.raquo.laminar.api.L._
+import org.scalajs
 
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
@@ -29,8 +23,10 @@ import scalatags.JsDom.all._
  */
 object PlotlyDemo {
 
-  @JSExportTopLevel("plotlyDemo")
-  def plotlyDemo(): Unit = {
+  def main(argv: Array[String]): Unit = {
+
+    scaladget.highlightjs.scalamode
+    HighlightJS.initHighlightingOnLoad()
 
     def imports =
       """
@@ -40,43 +36,54 @@ object PlotlyDemo {
     import com.definitelyscala.plotlyjs.plotlyConts._
     import scala.scalajs.js.JSConverters._
 
-    import scalatags.JsDom.all._
+    import com.raquo.laminar.api.L._
     import scala.scalajs._
-    import org.scalajs.dom._
       """.stripMargin
 
-    val demos = Seq(
-      PSESubPlots.elementDemo,
-      PSESVGDemo.elementDemo,
-      PSEDemo.elementDemo,
-      ParetoDemo.elementDemo,
-      LineChartDemo.elementDemo,
-      HistogramDemo.elementDemo,
-      ScatterDemo.elementDemo,
-      BoxDemo.elementDemo,
-      SplomDemo.elementDemo,
-      HeatMapDemo.elementDemo,
-      ErrorBarDemo.elementDemo
-    )
 
-    val tabs = demos.foldLeft(Tabs.tabs()) { (acc, demo) =>
-      acc.add(demo.title,
-        div(marginLeft := 15, marginTop := 25)(
-          h3(demo.title),
-          div(row)(
-            div(colMD(demo.codeWidth))(pre(code(toClass("scala"))(demo.cleanCode))),
-            div(colMD(12 - demo.codeWidth))(demo.element)
-          )
-        )
+    lazy val content =
+      div(containerFluid, marginLeft := "15", marginTop := "25",
+        h3("Build"),
+        div(row,
+          div(colSM, "Details on construction on ", a(href := "https://github.com/openmole/scala-js-plotlyjs", target := "_blank", "the scala-js-plotlyjs facade Github page"))
+        ),
+        h3("Imports"),
+        div(colSM, pre(code(cls("scala"), imports))),
+        Tabs.tabs(
+          for {
+            demo <- Seq(
+              LineChartDemo.elementDemo,
+              HistogramDemo.elementDemo,
+              ScatterDemo.elementDemo,
+              BoxDemo.elementDemo,
+              SplomDemo.elementDemo,
+              HeatMapDemo.elementDemo,
+              ErrorBarDemo.elementDemo,
+              PSESubPlots.elementDemo,
+              PSESVGDemo.elementDemo,
+              PSEDemo.elementDemo,
+              ParetoDemo.elementDemo,
+            )
+          } yield {
+            Tab(demo.title,
+              div(
+                h3(demo.title),
+                div(containerFluid,
+                  div(row, marginLeft := "15", marginTop := "25",
+                    div(colBS(demo.codeWidth), pre(code(cls := "scala", demo.cleanCode))),
+                    div(colBS(12 - demo.codeWidth), demo.element)
+                  )
+                )
+              )
+            )
+          },
+          tabStyle = navbar_pills
+        ).build.render
       )
-    }
 
-    dom.document.body.appendChild(
-      div(padding := 20)(
-        tabs.build.render(bsnsheet.pills)
-      ).render
-    )
-
-    dom.document.body.appendChild(tags.script("hljs.initHighlighting();"))
+    documentEvents.onDomContentLoaded.foreach { _ =>
+      render(scalajs.dom.document.body, content)
+    }(unsafeWindowOwner)
+    // dom.document.body.appendChild(tags.script("hljs.initHighlighting();"))
   }
 }

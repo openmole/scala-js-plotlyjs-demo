@@ -4,10 +4,8 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import scala.scalajs.js.JSConverters._
 import org.openmole.plotlyjs.PlotlyImplicits._
-import scalatags.JsDom.all._
-
+import com.raquo.laminar.api.L._
 import scala.scalajs._
-import org.scalajs.dom._
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
  *
@@ -29,7 +27,7 @@ object HistogramDemo {
 
   import org.openmole.plotlyjs.HistogramDataBuilder._
   val sc = sourcecode.Text {
-    val plotDiv = div.render
+    val plotDiv = div()
 
     val layout = Layout
       .title("My line plot")
@@ -51,8 +49,9 @@ object HistogramDemo {
       .xaxis("x3")
       .name("Second serie")
 
-    Plotly.newPlot(plotDiv, js.Array(data1, data2, data3), layout = layout)
-    div(plotDiv.render).render
+    Plotly.newPlot(plotDiv.ref, js.Array(data1, data2, data3), layout = layout)
+
+    plotDiv
   }
 
 
@@ -61,6 +60,6 @@ object HistogramDemo {
 
     def code: String = sc.source
 
-    def element: Element = sc.value
+    def element: HtmlElement = sc.value
   }
 }

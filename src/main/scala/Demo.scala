@@ -1,6 +1,6 @@
 package plotlyjs.demo
 
-import org.scalajs.dom._
+import com.raquo.laminar.api.L._
 
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
@@ -34,7 +34,7 @@ trait ElementDemo {
     else code
   }
 
-  def element: Element
+  def element: HtmlElement
 
   def codeWidth: Int = 6
 }

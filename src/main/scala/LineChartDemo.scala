@@ -37,12 +37,7 @@ object LineChartDemo {
 
     val data = linechart.lines
 
-    println("DATA " + data)
     val ref = Utils.randomDoubles(15, 10)
-
-
-    val oo = marker.symbol(square).color(all.color.rgb(180, 0, 0)).size(12.0)
-    println("OO " + oo)
 
     val dataRef = data
       .x((0 to 14).toJSArray)

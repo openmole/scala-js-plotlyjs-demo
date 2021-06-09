@@ -63,6 +63,7 @@ object PlotlyDemo {
               PSESVGDemo.elementDemo,
               PSEDemo.elementDemo,
               ParetoDemo.elementDemo,
+              Pareto3dDemo.elementDemo,
             )
           } yield {
             Tab(demo.title,

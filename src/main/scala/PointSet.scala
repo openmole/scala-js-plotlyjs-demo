@@ -4,18 +4,15 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
 
   //val inputDimension: Int
   val outputDimension: Int = rawOutputs.head.length
-  //val size = rawOutputs.size
+  val size: Int = rawOutputs.size
 
   //var rawInputs: Array[Array[Double]]
   //var plotInputs: Array[Array[Double]]
-  private var plotOutputs: Seq[Seq[Double]] = Seq[Seq[Double]]()
+  private var plotOutputs: Seq[Seq[Double]] = rawOutputs
 
   private var optimizationProblems: Seq[Double] = Array.fill[Double](outputDimension)(0)
 
-  def getPlotOutputs: Seq[Seq[Double]] = {
-    //println(s"plotOutputs = ${plotOutputs}")
-    plotOutputs
-  }
+  def getPlotOutputs: Seq[Seq[Double]] = plotOutputs
 
   def setOptimizationProblems(optimizationProblems: Seq[Double]): PointSet = {
     this.optimizationProblems = optimizationProblems
@@ -47,25 +44,6 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
     this
   }
 
-  /*
-  object OptimizationProblem extends Enumeration {
-    type OptimizationProblem = Value
-    val max, min = Value
-  }
-  */
-
-  /*
-  def set(index: Int, dimension: Int, value: Double) = points(index)(dimension) = value
-
-  def optimizationProblems(ops: Seq[OptimizationProblem.OptimizationProblem]) = {
-    this.ops = ops
-    this
-  }
-
-  def plotTo(op: OptimizationProblem.OptimizationProblem) = {
-
-  }
-  */
 }
 
 object PointSet {

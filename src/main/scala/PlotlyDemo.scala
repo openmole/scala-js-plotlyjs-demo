@@ -59,6 +59,7 @@ object PlotlyDemo {
               SplomDemo.elementDemo,
               HeatMapDemo.elementDemo,
               ErrorBarDemo.elementDemo,
+              ParallelCoordinatesDemo.elementDemo,
               PSESubPlots.elementDemo,
               PSESVGDemo.elementDemo,
               PSEDemo.elementDemo,

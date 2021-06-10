@@ -8,39 +8,35 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
 
   //var rawInputs: Array[Array[Double]]
   //var plotInputs: Array[Array[Double]]
-  private var plotOutputs: Seq[Seq[Double]] = rawOutputs
+  private var _plotOutputs: Seq[Seq[Double]] = rawOutputs
 
-  private var optimizationProblems: Seq[Double] = Array.fill[Double](outputDimension)(0)
+  private var _optimizationProblems: Seq[Double] = Array.fill[Double](outputDimension)(0)
 
-  def getPlotOutputs: Seq[Seq[Double]] = plotOutputs
+  def plotOutputs: Seq[Seq[Double]] = _plotOutputs
 
-  def setOptimizationProblems(optimizationProblems: Seq[Double]): PointSet = {
-    this.optimizationProblems = optimizationProblems
+  def optimizationProblems(optimizationProblems: Seq[Double]): PointSet = {
+    _optimizationProblems = optimizationProblems
     this
   }
 
   private def multiply(vector: Seq[Double], scalar: Double): Seq[Double] = vector.map(_ * scalar)
-  private def multiply(vector1: Seq[Double], vector2: Seq[Double]): Seq[Double] = for((c, i) <- vector1.zipWithIndex) yield c * vector2(i)
+  private def multiply(vector1: Seq[Double], vector2: Seq[Double]): Seq[Double] = vector1.zip(vector2) map {case (c1, c2) => c1 * c2}
   private def multiplyAll(vectors: Seq[Seq[Double]], vector: Seq[Double]): Seq[Seq[Double]] = vectors.map(multiply(_, vector))
 
   def higherPlotIsBetter: PointSet = {
-    plotOutputs = multiplyAll(rawOutputs, optimizationProblems)
+    _plotOutputs = multiplyAll(rawOutputs, _optimizationProblems)
     this
   }
 
   def lowerPlotIsBetter: PointSet = {
-    plotOutputs = multiplyAll(rawOutputs, multiply(optimizationProblems, -1))
+    _plotOutputs = multiplyAll(rawOutputs, multiply(_optimizationProblems, -1))
     this
   }
 
   def normalizePlotOutputSpace: PointSet = {
-    val min = Array.ofDim[Double](outputDimension)
-    val max = Array.ofDim[Double](outputDimension)
-    for(p <- plotOutputs) for((c, i) <- p.zipWithIndex) {
-      min(i) = Math.min(min(i), c)
-      max(i) = Math.max(max(i), c)
-    }
-    plotOutputs = plotOutputs.map(p => for((c, i) <- p.zipWithIndex) yield (c - min(i))/(max(i) - min(i)))
+    val min = _plotOutputs.transpose.map(_.min)
+    val max = _plotOutputs.transpose.map(_.max)
+    _plotOutputs = _plotOutputs.map(p => for((c, i) <- p.zipWithIndex) yield (c - min(i))/(max(i) - min(i)))
     this
   }
 

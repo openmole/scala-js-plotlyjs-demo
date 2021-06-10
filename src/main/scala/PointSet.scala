@@ -40,6 +40,14 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
     this
   }
 
+  def normalizePlotOutputPointsNorm1: PointSet = {
+    _plotOutputs = _plotOutputs.map(p => {
+      val norm1 = p.map(math.abs).sum
+      if(norm1 == 0) p else multiply(p, 1/norm1)
+    })
+    this
+  }
+
 }
 
 object PointSet {

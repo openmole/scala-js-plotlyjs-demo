@@ -1,5 +1,7 @@
 package plotlyjs.demo
 
+import scala.::
+
 object Data {
 
   val dim8Sample100 = List(
@@ -253,4 +255,17 @@ object Data {
     "compacity" -> ff,
     "convexity" -> ff
   )
+
+  def nCube(n: Int, p: Int): Seq[Seq[Double]] = {
+    val point = Array.fill[Double](n)(p-1)
+    for(_ <- 1 to math.pow(p, n).toInt) yield {
+      point(0) += 1
+      for(i <- 0 until n if point(i) == p) {
+        point(i) = 0
+        if(i + 1 < n) point(i + 1) += 1
+      }
+      point.map(_ / p).toSeq
+    }
+  }
+
 }

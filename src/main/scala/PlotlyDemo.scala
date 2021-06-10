@@ -64,6 +64,7 @@ object PlotlyDemo {
               PSESVGDemo.elementDemo,
               PSEDemo.elementDemo,
               ParetoDemo.elementDemo,
+              ParetoBisDemo.elementDemo,
               Pareto3dDemo.elementDemo,
             )
           } yield {

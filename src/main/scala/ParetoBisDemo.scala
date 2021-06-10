@@ -1,17 +1,17 @@
 package plotlyjs.demo
 
+import com.raquo.laminar.api.L._
+import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.PlotMode.{markers, markersAndText}
+import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import org.openmole.plotlyjs.PlotlyImplicits._
-import org.openmole.plotlyjs.plotlyConts._
-import org.scalajs.dom.raw.Element
+import org.scalajs.dom.html
+import plotlyjs.demo.PointSet._
+import sourcecode.Text
 
-import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
-import com.raquo.laminar.api.L._
-import scaladget.svg.path.Path
-
+import scala.scalajs.js.JSConverters._
 import scala.util.Random
 
 /*
@@ -31,63 +31,15 @@ import scala.util.Random
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object ParetoDemo {
+object ParetoBisDemo {
 
   import org.openmole.plotlyjs.ScatterPolarDataBuilder._
 
-  val sc = sourcecode.Text {
+  private val sc = sourcecode.Text {
 
     val plotDiv = div()
 
-    //    val results = Seq(
-    //      Seq(15.0, 3.0, 7.0),
-    //      Seq(4.0, 9.0, 5.0),
-    //      Seq(8.0, 12.0, 11.0),
-    //      Seq(6.0, 8.0, 10.0),
-    //      Seq(8.0, 2.0, 6.0),
-    //      Seq(11.0, 9.0, 2.0)
-    //    )
-
-    val results = Data.dim8Sample100
-
-    val cpaVariability = Seq(0.0686544468026073, 0.08720490767943528, 0.1004942957820982, 0.11953341441462292, 0.1340278943366293, 0.14455564337712556, 0.15612690327097392, 0.18940249433650735)
-    val maxCPAVariability = cpaVariability.max
-
-    val rng = new Random(7)
-
-    val repetitions = (0 to 100).toJSArray.map { _ => rng.between(1, 100) }
-
-    //        val results = Seq(
-    //          Seq(1 / 34.080, 0.666),
-    //          Seq(1 / 34.708, 0.669),
-    //          Seq(1 / 38.329, 0.680),
-    //          Seq(1 / 40.587, 0.702),
-    //          Seq(1 / 37.012, 0.678),
-    //          Seq(1 / 39.921, 0.699),
-    //          Seq(1 / 39.682, 0.687),
-    //          Seq(1 / 41.428, 0.705),
-    //          Seq(1 / 41.596, 0.720),
-    //          Seq(1 / 41.439, 0.717)
-    //        )
-
-    //        val results = Seq(
-    //          Seq(1.0, 8.0),
-    //          Seq(2.0, 6.0),
-    //          Seq(3.0, 4.0),
-    //          Seq(5.0, 2.0),
-    //          Seq(7.0, 1.0),
-    //          Seq(8.0, 0.0)
-    //        )
-
-    //        val results = Seq(
-    //          Seq(1.0, 8.0,4.0,1.0),
-    //          Seq(2.0, 6.0,2.0,5.0),
-    //          Seq(3.0, 4.0,7.0,4.0),
-    //          Seq(5.0, 2.0,3.0,5.0),
-    //          Seq(7.0, 1.0,2.0,10.0),
-    //          Seq(8.0, 0.0,4.0,8.0)
-    //        )
-
+    val results = Data.nCube(8, 3).filter(_.contains(0))
 
     val colors = Seq(
       Color.rgb(136, 34, 85),
@@ -105,10 +57,8 @@ object ParetoDemo {
     val TWO_PI = 2 * Math.PI
     val TO_DEGREES = 180 / Math.PI
 
-    val objectiveNames = cpaVariability.zipWithIndex map { case (c, ind) => s"Goal $ind [${(c * 100).toInt}%]" }
-
     //DISPLAY OBJECTIVES
-    val objectiveThetas = (0 to nbObjectives - 1).toArray.map {
+    val objectiveThetas = (0 until nbObjectives).toArray.map {
       _ * TWO_PI / nbObjectives
     }
 
@@ -118,11 +68,11 @@ object ParetoDemo {
 
     //val objectiveRs = (0 to nbObjectives - 1).toArray.map { _ => 1.2 }
 
-    val dataObjectives = objectiveThetas.zip(objectiveNames).zipWithIndex.map { case ((t, name), ind) => //case(t,name)=>
+    val dataObjectives = objectiveThetas.zipWithIndex.map { case (t, ind) => //case(t,name)=>
       scatterpolar.
         r(js.Array(0.4)).
         theta(js.Array(t * TO_DEGREES)).
-        text(js.Array(name)).
+        //text(js.Array(name)).
         fillPolar(ScatterPolar.toself).
         textPosition(TextPosition.topCenter).
         set(markersAndText).
@@ -130,37 +80,18 @@ object ParetoDemo {
       )._result
     }.toSeq
 
-    //GET ALL MAX / OBJECTIVE
-    val maxs = results.transpose.map {
-      _.max
-    }
-
-    //DISPLAY PARETO POINTS
-    lazy val normalizedObjectiveResults = results.map { r =>
-      normalization(r)
-    }
-
-    //PARETO NORMALIZATION (values from 0 to 1) AND ORDER INVERSION (minimization to maximization)
-    def normalization(sequence: Seq[Double]) = {
-      sequence.zipWithIndex.map { case (el, ind) => 1 - el / maxs(ind) }
-    }
-
-    println("RESULTS " + results)
-    println("NORMALIZED " + normalizedObjectiveResults)
-
+    val pointSet = new PointSet(results)
+      .optimizationProblems(Seq.fill(8)(MIN))
+      .higherPlotIsBetter
+      .normalizePlotOutputSpace
+      .normalizePlotOutputPointsNorm1
 
     // BARYCENTER COMPUTATION
-    val cartesianBarycenters = (normalizedObjectiveResults).map { weights =>
-
-      val objSum = weights.sum
-      val weightedCoord = (weights zip cartesianObjectives) map { case (w, (x, y)) =>
+    val cartesianBarycenters = (pointSet.plotOutputs).map { normalizedWeights =>
+      val weightedCoord = (normalizedWeights zip cartesianObjectives) map { case (w, (x, y)) =>
         (w * x, w * y)
       }
-
-      val weightedCoordSum = weightedCoord.reduceLeft[(Double, Double)] { case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2) }
-
-      (weightedCoordSum._1 / objSum, weightedCoordSum._2 / objSum)
-
+      weightedCoord.reduce[(Double, Double)] { case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2) }
     }
     println("BARYCENTERS " + cartesianBarycenters)
 
@@ -198,42 +129,29 @@ object ParetoDemo {
     println("Theta sectors " + thetaSectors)
 
 
-    val barycenters = (polarBarycenters zip (repetitions zip (results.map { g => s"(${g.mkString(",")})" }))).map { case (((r, theta), (repetition, label))) =>
+    val barycenters = (polarBarycenters zip ((results.map { g => s"(${g.mkString(",")})" }))).map { case ((r, theta), label) =>
       val index = (thetaSectors.search(theta).insertionPoint % nbObjectives)
 
-      Barycenter(r, theta, index, cpaVariability(index), repetition, label)
+      Barycenter(r, theta, index, 1, 1, label)
     }
 
    // println("baricenters " + barycenters)
    // println("Labels " + results.map { g => s"(${g.mkString(",")})" }.toJSArray)
-    val barycenterDataSeq = barycenters.groupBy {
-      _.sector
-    }.map { case (sector, b) =>
-      val op = b.map {
-        _.cpaVariability / maxCPAVariability
-      }.toJSArray
-
-      scatterpolar.
-        r(b.map {
-          _.r
-        }.toJSArray).
-        theta(b.map {
-          _.theta
-        }.toJSArray.map {
+    val barycenterDataSeq = Seq(scatterpolar.
+        r(barycenters.map(_.r).toJSArray).
+        theta(barycenters.map(_.theta).toJSArray.map {
           _ * TO_DEGREES
         }).
-        text(b.map {
-          _.label
-        }.toJSArray).
+        text(barycenters.map(_.label).toJSArray).
         hovertemplate("<b>%{text}</b>").
         fillPolar(ScatterPolar.none).
         set(markers).set(
         marker
-          .opacity(op)
-          .size(b.map {
+          .opacity(0.5)
+          .size(barycenters.map {
             _.nbRepetitions.toDouble / 4 + 10
-          }.toJSArray).set(colors(sector)).set(line.width(2).set(Color.rgb(65, 65, 65))))._result
-    }
+          }.toJSArray)/*.set(colors(sector))*/.set(line.width(2).set(Color.rgb(65, 65, 65))))._result
+    )
 
 
     val graphWidth = 800
@@ -265,8 +183,8 @@ object ParetoDemo {
 
   }
 
-  val elementDemo = new ElementDemo {
-    def title: String = "Pareto"
+  val elementDemo: ElementDemo = new ElementDemo {
+    def title: String = "Pareto bis"
 
     def code: String = sc.source
 

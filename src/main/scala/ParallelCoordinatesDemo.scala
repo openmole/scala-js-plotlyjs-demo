@@ -1,6 +1,7 @@
 package plotlyjs.demo
 
 import com.raquo.laminar.api.L._
+import plotlyjs.demo.PointSet._
 
 object ParallelCoordinatesDemo {
 
@@ -8,6 +9,13 @@ object ParallelCoordinatesDemo {
 
     val plotDiv = div()
 
+    val results = Data.dim8Sample100
+
+    val pointSet = new PointSet(results)
+      .optimizationProblems(Seq.fill(8)(MIN))
+      .higherPlotIsBetter
+
+    //val data = parallelcoordinates //TODO add to plotlyjs
     plotDiv
   }
 

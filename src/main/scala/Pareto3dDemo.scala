@@ -18,7 +18,7 @@ object Pareto3dDemo {
     val plotDiv = div()
 
     val shift = 0.1
-    val lowCubeCorner = Data.nCube(3, 12).filter(_.contains(0)).map(_.map(_ * 3 + shift))
+    val lowCubeCorner = Data.lowCorner(3, 12).map(_.map(_ * 3 + shift))
 
     val dim = Seq(1, 2, 3)
     val results = Data.dim8Sample100.map(p => Seq(p(dim(0)), p(dim(1)), p(dim(2))))

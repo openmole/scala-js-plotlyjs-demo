@@ -39,7 +39,7 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val results = Data.nCube(8, 3).filter(_.contains(0))
+    val results = Data.lowCorner(5, 3)
 
     val colors = Seq(
       Color.rgb(136, 34, 85),
@@ -52,7 +52,7 @@ object ParetoBisDemo {
       Color.rgb(0, 114, 178)
     )
 
-    val nbObjectives = results.headOption.headOption.map(_.length).getOrElse(2)
+    val nbObjectives = results.headOption.map(_.length).getOrElse(2)
 
     val TWO_PI = 2 * Math.PI
     val TO_DEGREES = 180 / Math.PI
@@ -70,7 +70,7 @@ object ParetoBisDemo {
 
     val dataObjectives = objectiveThetas.zipWithIndex.map { case (t, ind) => //case(t,name)=>
       scatterpolar.
-        r(js.Array(0.4)).
+        r(js.Array(1)).
         theta(js.Array(t * TO_DEGREES)).
         //text(js.Array(name)).
         fillPolar(ScatterPolar.toself).
@@ -80,18 +80,24 @@ object ParetoBisDemo {
       )._result
     }.toSeq
 
-    val pointSet = new PointSet(results)
-      .optimizationProblems(Seq.fill(8)(MIN))
-      .higherPlotIsBetter
-      .normalizePlotOutputSpace
-      .normalizePlotOutputPointsNorm1
+    val pointSet = {
+      val pointSet = new PointSet(results)
+      pointSet
+        .optimizationProblems(Seq.fill(pointSet.outputDimension)(MIN))
+        .higherPlotIsBetter
+        .normalizePlotOutputSpace
+        .normalizePlotOutputPointsNorm1
+    }
 
     // BARYCENTER COMPUTATION
-    val cartesianBarycenters = (pointSet.plotOutputs).map { normalizedWeights =>
-      val weightedCoord = (normalizedWeights zip cartesianObjectives) map { case (w, (x, y)) =>
-        (w * x, w * y)
+    val cartesianBarycenters = pointSet.plotOutputs.map {
+      normalizedWeights => {
+        //println(normalizedWeights.map(scala.math.abs).sum)
+        val weightedCoord = (normalizedWeights zip cartesianObjectives) map { case (w, (x, y)) =>
+          (w * x, w * y)
+        }
+        weightedCoord.reduce[(Double, Double)] { case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2) }
       }
-      weightedCoord.reduce[(Double, Double)] { case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2) }
     }
     println("BARYCENTERS " + cartesianBarycenters)
 

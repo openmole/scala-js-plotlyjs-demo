@@ -39,7 +39,7 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val results = Data.lowCorner(5, 3)
+    val results = Data.dim8Sample100//Data.lowCorner(3, 8)
 
     val colors = Seq(
       Color.rgb(136, 34, 85),
@@ -90,15 +90,12 @@ object ParetoBisDemo {
     }
 
     // BARYCENTER COMPUTATION
-    val cartesianBarycenters = pointSet.plotOutputs.map {
-      normalizedWeights => {
-        //println(normalizedWeights.map(scala.math.abs).sum)
-        val weightedCoord = (normalizedWeights zip cartesianObjectives) map { case (w, (x, y)) =>
-          (w * x, w * y)
-        }
-        weightedCoord.reduce[(Double, Double)] { case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2) }
-      }
-    }
+    val cartesianBarycenters = pointSet.plotOutputs.map(
+      _.zip(cartesianObjectives) map {
+        case (w, (x, y)) => (w * x, w * y)
+      } reduce[(Double, Double)] {
+        case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2)
+      })
     println("BARYCENTERS " + cartesianBarycenters)
 
     // POLAR COORDINATES COMPUTATION

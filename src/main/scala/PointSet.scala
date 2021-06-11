@@ -48,6 +48,13 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
     this
   }
 
+  def slice(from: Int, until: Int): PointSet = {
+    val pointSet = new PointSet(rawOutputs.slice(from, until))
+      .optimizationProblems(_optimizationProblems.slice(from, until))
+    pointSet._plotOutputs = _plotOutputs.slice(from, until)
+    pointSet
+  }
+
 }
 
 object PointSet {

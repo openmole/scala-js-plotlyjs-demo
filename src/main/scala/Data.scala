@@ -268,8 +268,6 @@ object Data {
     }
   }
 
-  def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = {
-    nCube(n, p).filter(_.contains(0))
-  }
+  def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = nCube(n, p).filter(_.contains(0))
 
 }

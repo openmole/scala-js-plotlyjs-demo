@@ -17,34 +17,36 @@ object Pareto3dDemo {
 
     val plotDiv = div()
 
-    val shift = 0.1
-    val lowCubeCorner = Data.lowCorner(3, 12).map(_.map(_ * 3 + shift))
+    val lowCorner = Data.lowCorner(3, 8).map(_.map(_ * 3))
 
     val dim = Seq(1, 2, 3)
     val results = Data.dim8Sample100.map(p => Seq(p(dim(0)), p(dim(1)), p(dim(2))))
 
-    val pointSet = new PointSet(lowCubeCorner ++ results)
+    val pointSet = new PointSet(lowCorner ++ results)
       .optimizationProblems(Seq(MIN, MIN, MIN))
       .higherPlotIsBetter
       .normalizePlotOutputSpace
 
-    val allData = for(i <- 0 until pointSet.size) yield {
-      val rawPoint = pointSet.rawOutputs(i)
-      val rawText = rawPoint.indices.map(j => s"o${j+1} : ${rawPoint(j)}").mkString("<br>")
-      val plotPoint = pointSet.plotOutputs(i)
+    def scatterTernaryData(name: String, pointSet: PointSet, color: Color): PlotData = {
       scatterternary
-        .a(Seq(plotPoint(0)).toJSArray)
-        .b(Seq(plotPoint(1)).toJSArray)
-        .c(Seq(plotPoint(2)).toJSArray)
+        .name(name)
+        .a(pointSet.plotOutputs.map(_(0)).toJSArray)
+        .b(pointSet.plotOutputs.map(_(1)).toJSArray)
+        .c(pointSet.plotOutputs.map(_(2)).toJSArray)
         .set(markers)
         .set(marker
-          .color(if(i < lowCubeCorner.size) Color.rgb(0, 0, 0) else Color.rgb(255, 0, 0))
+          .color(color)
           .symbol(circle)
           .opacity(0.5))
         .hoverinfo("text")
-        .text(s"Model output :<br>${rawText}")
+        .text(pointSet.rawOutputs.map(p => s"Model output :<br>${
+          (p.zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
+        }").toJSArray)
         ._result
     }
+
+    val lowCornerData = scatterTernaryData("Low corner", pointSet.slice(0, lowCorner.size), Color.rgb(0, 0, 0))
+    val resultsData = scatterTernaryData("Results", pointSet.slice(lowCorner.size, pointSet.size), Color.rgb(255, 0, 0))
 
     val layout = Layout.ternary(
       ternary
@@ -54,7 +56,7 @@ object Pareto3dDemo {
     ).width(800).height(800)
       ._result
 
-    Plotly.newPlot(plotDiv.ref, allData.toJSArray, layout)
+    Plotly.newPlot(plotDiv.ref, Seq(lowCornerData, resultsData).toJSArray, layout)
 
     plotDiv
   }

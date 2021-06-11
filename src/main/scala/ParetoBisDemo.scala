@@ -12,6 +12,7 @@ import sourcecode.Text
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.Object.entries
 import scala.util.Random
 
 /*
@@ -39,20 +40,11 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val results = Data.dim8Sample100//Data.lowCorner(3, 8)
+    val lowCorner = Data.lowCorner(8, 2).map(_.map(_ * 1))
 
-    val colors = Seq(
-      Color.rgb(136, 34, 85),
-      Color.rgb(136, 204, 238),
-      Color.rgb(17, 119, 51),
-      Color.rgb(221, 204, 119),
-      Color.rgb(204, 102, 119),
-      Color.rgb(68, 170, 153),
-      Color.rgb(170, 68, 153),
-      Color.rgb(0, 114, 178)
-    )
+    val results = Data.dim8Sample100
 
-    val nbObjectives = results.headOption.map(_.length).getOrElse(2)
+    val nbObjectives = lowCorner.head.size
 
     val TWO_PI = 2 * Math.PI
     val TO_DEGREES = 180 / Math.PI
@@ -68,7 +60,7 @@ object ParetoBisDemo {
 
     //val objectiveRs = (0 to nbObjectives - 1).toArray.map { _ => 1.2 }
 
-    val dataObjectives = objectiveThetas.zipWithIndex.map { case (t, ind) => //case(t,name)=>
+    val dataObjectiveSeq = objectiveThetas.map { t =>
       scatterpolar.
         r(js.Array(1)).
         theta(js.Array(t * TO_DEGREES)).
@@ -76,29 +68,26 @@ object ParetoBisDemo {
         fillPolar(ScatterPolar.toself).
         textPosition(TextPosition.topCenter).
         set(markersAndText).
-        set(marker.size(30).color(colors(ind)).symbol(square)
+        set(marker
+          .size(30)
+          .color(Color.hsl((t * TO_DEGREES).toInt, 100, 50))
+          .symbol(circle)
       )._result
     }.toSeq
 
-    val pointSet = {
-      val pointSet = new PointSet(results)
-      pointSet
-        .optimizationProblems(Seq.fill(pointSet.outputDimension)(MIN))
-        .higherPlotIsBetter
-        .normalizePlotOutputSpace
-        .normalizePlotOutputPointsNorm1
-    }
+    val pointSet = new PointSet(lowCorner ++ results)
+      .optimizationProblems(Seq.fill(lowCorner.head.size)(MIN))
+      .higherPlotIsBetter
+      .normalizePlotOutputSpace
+      .normalizePlotOutputPointsNorm1
 
-    // BARYCENTER COMPUTATION
     val cartesianBarycenters = pointSet.plotOutputs.map(
       _.zip(cartesianObjectives) map {
         case (w, (x, y)) => (w * x, w * y)
       } reduce[(Double, Double)] {
         case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2)
       })
-    println("BARYCENTERS " + cartesianBarycenters)
 
-    // POLAR COORDINATES COMPUTATION
     val polarBarycenters = cartesianBarycenters.map { case (x, y) =>
       val squaredSum = Math.sqrt(x * x + y * y)
       val r = squaredSum
@@ -110,36 +99,41 @@ object ParetoBisDemo {
       (r, theta)
     }
 
-    //println("PoLar BAry " + polarBarycenters)
+    case class Barycenter(r: Double, theta: Double, pointSetIndex: Int)
 
-    case class Barycenter(r: Double, theta: Double, sector: Int, cpaVariability: Double, nbRepetitions: Int, label: String)
+    val barycenters = polarBarycenters.zipWithIndex.map { case ((r, theta), pointSetIndex) => Barycenter(r, theta, pointSetIndex) }
 
-    // Sort points by angular sections
-    val thetaSectors = {
-      //      val first = -TWO_PI / (2 * nbObjectives)
-      //      val last = TWO_PI / nbObjectives
-      //      (BigDecimal(first) to BigDecimal(TWO_PI * (nbObjectives - 1) / nbObjectives) by BigDecimal(last)).map {
-      //        _.toDouble
-      //      }
-      val first = -TWO_PI / (2 * nbObjectives)
-      val step = TWO_PI / nbObjectives
-      (BigDecimal(first) to BigDecimal(TWO_PI) by BigDecimal(step)).map {
-        _.toDouble
-      }.tail
-
+    def scatterPolarData(name: String, pointSet: PointSet, barycenters: Seq[Barycenter], color: Color): PlotData = {
+      scatterpolar
+        .name(name)
+        .r(barycenters.map(_.r).toJSArray)
+        .theta(barycenters.map(_.theta * TO_DEGREES).toJSArray)
+        .set(markers)
+        .set(marker
+          .symbol(circle)
+          .color(color)
+          .opacity(0.5))
+        .fillPolar(ScatterPolar.none)
+        .hoverinfo("none")//.hoverinfo("text") TODO temporaly disabled
+        .text(pointSet.rawOutputs.map(p => s"Model output :<br>${
+          (p.zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
+        }").toJSArray)
+        .customdata(barycenters.map(_.pointSetIndex.toString).toJSArray)
+        ._result
     }
 
-    println("Theta sectors " + thetaSectors)
+    val lowCornerData = scatterPolarData(
+      "Low corner",
+      pointSet.slice(0, lowCorner.size), //TODO safe to slice a PointSet ? Consider create a PointSetSlice type
+      barycenters.slice(0, lowCorner.size),
+      Color.rgb(0, 0, 0))
+    val resultsData = scatterPolarData(
+      "Results",
+      pointSet.slice(lowCorner.size, pointSet.size),
+      barycenters.slice(lowCorner.size, pointSet.size),
+      Color.rgb(255, 0, 0))
 
-
-    val barycenters = (polarBarycenters zip ((results.map { g => s"(${g.mkString(",")})" }))).map { case ((r, theta), label) =>
-      val index = (thetaSectors.search(theta).insertionPoint % nbObjectives)
-
-      Barycenter(r, theta, index, 1, 1, label)
-    }
-
-   // println("baricenters " + barycenters)
-   // println("Labels " + results.map { g => s"(${g.mkString(",")})" }.toJSArray)
+    /*
     val barycenterDataSeq = Seq(scatterpolar.
         r(barycenters.map(_.r).toJSArray).
         theta(barycenters.map(_.theta).toJSArray.map {
@@ -155,7 +149,7 @@ object ParetoBisDemo {
             _.nbRepetitions.toDouble / 4 + 10
           }.toJSArray)/*.set(colors(sector))*/.set(line.width(2).set(Color.rgb(65, 65, 65))))._result
     )
-
+    */
 
     val graphWidth = 800
     val graphHeight = 800
@@ -164,7 +158,7 @@ object ParetoBisDemo {
       .title("Pareto overview")
       .height(graphHeight)
       .width(graphWidth)
-      .showlegend(false)
+      //.showlegend(false)
       .polar(polar
         .bgcolor(Color.rgb(245, 245, 245))
         .angularAxis(axis
@@ -180,17 +174,61 @@ object ParetoBisDemo {
         )
       )
 
-    Plotly.newPlot(plotDiv.ref, (dataObjectives ++ barycenterDataSeq).toJSArray, layout)
+    val allData = dataObjectiveSeq ++ Seq(lowCornerData, resultsData);
+    Plotly.newPlot(plotDiv.ref, allData.toJSArray, layout)
+
+    def get[A](plotData: PlotData, key: String, index: Int): A = entries(plotData).filter(_._1 == key).head._2.asInstanceOf[scala.scalajs.js.Array[A]](index)
+    val hoverTraceIndex = allData.size
+    plotDiv.ref.on("plotly_hover", pointsData => {
+      println("hover")
+
+      val pointData = pointsData.points.head
+      val data = pointData.data
+      val index = pointData.pointNumber
+
+      val r = get[Double](data, "r", index)
+      val t = get[Double](data, "theta", index)
+      val pointSetIndex = get[String](data, "customdata", index).toInt
+      val plotOutput = pointSet.plotOutputs(pointSetIndex) // create non point-normalize plot points
+
+      val plotDataSeq = dataObjectiveSeq.zipWithIndex map { case (dataObjective, index) =>
+        scatterpolar
+          .r(Seq(r, get[Double](dataObjective, "r", 0)).toJSArray)
+          .theta(Seq(t, get[Double](dataObjective, "theta", 0)).toJSArray)
+          .line(line.width(scala.math.abs(plotOutput(index)) * 16))
+          .fillPolar(ScatterPolar.none)
+          .hoverinfo("none")
+          ._result
+      }
+      Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray, (hoverTraceIndex until hoverTraceIndex + plotDataSeq.size).map(_.toDouble).toJSArray)
+/*
+      plotDataSeq.zipWithIndex foreach { case (plotData, index) =>
+        Plotly.addTraces(plotDiv.ref, plotData, hoverTraceIndex + index)
+      }
+*/
+/*
+      val plotData = scatterpolar
+        .r(dataObjectiveSeq.map(get[Double](_, "r", 0)).flatMap(Seq(r, _)).toJSArray)
+        .theta(dataObjectiveSeq.map(get[Double](_, "theta", 0)).flatMap(Seq(t, _)).toJSArray.toJSArray)
+        .line(line.width(1))
+        .fillPolar(ScatterPolar.none)
+        .hoverinfo("none")
+        ._result
+*/
+      //Plotly.addTraces(plotDiv.ref, plotData, hoverTraceIndex)
+    })
+    plotDiv.ref.on("plotly_unhover", _ => {
+      println("unhover")
+      Plotly.deleteTraces(plotDiv.ref, (hoverTraceIndex until hoverTraceIndex + dataObjectiveSeq.size).map(_.toDouble).toJSArray)
+    })
 
     plotDiv
-
   }
 
   val elementDemo: ElementDemo = new ElementDemo {
     def title: String = "Pareto bis"
-
     def code: String = sc.source
-
     def element: HtmlElement = sc.value
   }
+
 }

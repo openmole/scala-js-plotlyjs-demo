@@ -45,8 +45,14 @@ object Pareto3dDemo {
         ._result
     }
 
-    val lowCornerData = scatterTernaryData("Low corner", pointSet.slice(0, lowCorner.size), Color.rgb(0, 0, 0))
-    val resultsData = scatterTernaryData("Results", pointSet.slice(lowCorner.size, pointSet.size), Color.rgb(255, 0, 0))
+    val lowCornerData = scatterTernaryData(
+      "Low corner",
+      pointSet.slice(0, lowCorner.size),
+      Color.rgb(0, 0, 0))
+    val resultsData = scatterTernaryData(
+      "Results",
+      pointSet.slice(lowCorner.size, pointSet.size),
+      Color.rgb(255, 0, 0))
 
     val layout = Layout.ternary(
       ternary

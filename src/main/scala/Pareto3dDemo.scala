@@ -25,21 +25,22 @@ object Pareto3dDemo {
     val pointSet = new PointSet(lowCorner ++ results)
       .optimizationProblems(Seq(MIN, MIN, MIN))
       .higherPlotIsBetter
-      .normalizePlotOutputSpace
 
-    def scatterTernaryData(name: String, pointSet: PointSet, color: Color): PlotData = {
+    def scatterTernaryData(name: String, from: Int, until: Int, color: Color): PlotData = {
+      val rawOutputs = pointSet.rawOutputs.slice(from, until)
+      val spaceNormalizedOutputs = pointSet.spaceNormalizedOutputs.slice(from, until);
       scatterternary
         .name(name)
-        .a(pointSet.plotOutputs.map(_(0)).toJSArray)
-        .b(pointSet.plotOutputs.map(_(1)).toJSArray)
-        .c(pointSet.plotOutputs.map(_(2)).toJSArray)
+        .a(spaceNormalizedOutputs.map(_(0)).toJSArray)
+        .b(spaceNormalizedOutputs.map(_(1)).toJSArray)
+        .c(spaceNormalizedOutputs.map(_(2)).toJSArray)
         .set(markers)
         .set(marker
           .color(color)
           .symbol(circle)
           .opacity(0.5))
         .hoverinfo("text")
-        .text(pointSet.rawOutputs.map(p => s"Model output :<br>${
+        .text(rawOutputs.map(p => s"Model output :<br>${
           (p.zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
         }").toJSArray)
         ._result
@@ -47,11 +48,11 @@ object Pareto3dDemo {
 
     val lowCornerData = scatterTernaryData(
       "Low corner",
-      pointSet.slice(0, lowCorner.size),
+      0, lowCorner.size,
       Color.rgb(0, 0, 0))
     val resultsData = scatterTernaryData(
       "Results",
-      pointSet.slice(lowCorner.size, pointSet.size),
+      lowCorner.size, pointSet.size,
       Color.rgb(255, 0, 0))
 
     val layout = Layout.ternary(

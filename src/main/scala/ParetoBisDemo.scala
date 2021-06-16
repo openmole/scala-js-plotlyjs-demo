@@ -7,8 +7,9 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.scalajs.dom.html
-import plotlyjs.demo.PointSet._
 import sourcecode.Text
+import tools.PointSet
+import tools.PointSet.MIN
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._

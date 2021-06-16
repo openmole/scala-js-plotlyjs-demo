@@ -3,7 +3,6 @@ package plotlyjs.demo
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.Plotly
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.PointSet._
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 

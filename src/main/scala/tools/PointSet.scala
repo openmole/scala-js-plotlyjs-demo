@@ -1,4 +1,4 @@
-package plotlyjs.demo
+package tools
 
 class PointSet(val rawOutputs: Seq[Seq[Double]]) {
 

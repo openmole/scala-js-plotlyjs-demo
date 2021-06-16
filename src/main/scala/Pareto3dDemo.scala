@@ -8,8 +8,8 @@ import scala.scalajs.js.JSConverters._
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.PlotMode.markers
 import org.openmole.plotlyjs.ScatterTernaryDataBuilder.ScatterTernaryDataBuilder
-
-import PointSet._
+import tools.PointSet
+import tools.PointSet._
 
 object Pareto3dDemo {
 

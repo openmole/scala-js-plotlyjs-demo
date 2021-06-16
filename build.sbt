@@ -6,7 +6,7 @@ name := "scala-js-plotlyjs-demo"
 scalaVersion := "2.13.5"
 crossScalaVersions := Seq("2.12.13", "2.13.5")
 
-val poltlyjsVersion = "1.5.6"
+val poltlyjsVersion = "1.5.8-SNAPSHOT"
 val scaladgetVersion = "1.9.0"
 val laminarVersion = "0.12.2"
 

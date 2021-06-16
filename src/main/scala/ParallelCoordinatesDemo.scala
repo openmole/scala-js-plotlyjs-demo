@@ -1,7 +1,11 @@
 package plotlyjs.demo
 
 import com.raquo.laminar.api.L._
+import org.openmole.plotlyjs.Plotly
+import org.openmole.plotlyjs.all._
 import plotlyjs.demo.PointSet._
+
+import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 object ParallelCoordinatesDemo {
 
@@ -11,11 +15,12 @@ object ParallelCoordinatesDemo {
 
     val results = Data.dim8Sample100
 
-    val pointSet = new PointSet(results)
-      .optimizationProblems(Seq.fill(8)(MIN))
-      .higherPlotIsBetter
+    val data = parallelCoordinates
+      .dimensions(results.transpose.map(values => dimension.values(values.toJSArray)._result).toJSArray)
+      ._result
 
-    //val data = parallelcoordinates //TODO add to plotlyjs
+    Plotly.newPlot(plotDiv.ref, Seq(data).toJSArray)
+
     plotDiv
   }
 

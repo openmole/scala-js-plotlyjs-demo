@@ -63,8 +63,8 @@ object ParetoBisDemo {
         .set(marker
           .size(30)
           .color(colors(index))
-          .symbol(circle)
-      )._result
+          .symbol(circle))
+        ._result
     }
 
     val pointSet = new PointSet(lowCorner/* ++ results*/)
@@ -112,7 +112,7 @@ object ParetoBisDemo {
     val lowCornerDataSeq = (0 to nbObjectives).map(count => {
       val (countRawOutputs, countBarycenters) = pointSet.rawOutputs.zip(barycenters).filter { case (p, _) => p.count(c => c == 0) == count }.unzip
       scatterPolarData(
-        s"Low corner – $count",
+        s"Low corner – $count zeros",
         countRawOutputs,
         countBarycenters,
         Color.hsl((count.toDouble/nbObjectives * 360).toInt, 50, 50)

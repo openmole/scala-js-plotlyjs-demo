@@ -1,5 +1,8 @@
 package plotlyjs.demo
 
+import tools.AngularAdjustment.angularAdjustment
+import tools.Vectors
+
 import scala.::
 
 object Data {
@@ -268,6 +271,21 @@ object Data {
     }
   }
 
+  private def reverse(normalSpacePoints: Seq[Seq[Double]]) = {
+    val dimension = normalSpacePoints.head.length
+    normalSpacePoints.map(Vectors.negate).map(Vectors.add(_, Seq.fill(dimension)(1)))
+  }
   def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = nCube(n, p).filter(_.contains(0))
+  def highCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(lowCorner(n, p))
+  def highSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = Data.highCorner(n, p).map(angularAdjustment).map(Vectors.normalize)
+  def lowSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(highSphericalCorner(n, p))
+
+  def limitAngle(normalSpacePoints: Seq[Seq[Double]]): Seq[Seq[Double]] = {
+    val dimension = normalSpacePoints.head.length
+    val middleDirectionVector = Seq.fill(dimension)(1.0)
+    val maxAngle = Vectors.angle(middleDirectionVector, Seq(0.0) ++ Seq.fill(dimension - 1)(1)) // zero if dimension is infinite
+    normalSpacePoints.filter(Vectors.angle(_, middleDirectionVector) <= maxAngle)
+  }
+  def lowSphericalCornerLimitedAngle(n: Int, p: Int): Seq[Seq[Double]] = reverse(limitAngle(highSphericalCorner(n, p)))
 
 }

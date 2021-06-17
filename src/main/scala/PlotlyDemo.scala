@@ -66,6 +66,7 @@ object PlotlyDemo {
               ParetoDemo.elementDemo,
               ParetoBisDemo.elementDemo,
               Pareto3dDemo.elementDemo,
+              AngularAdjustmentTest.elementDemo,
             )
           } yield {
             Tab(demo.title,

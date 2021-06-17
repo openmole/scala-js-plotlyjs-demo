@@ -1,20 +1,17 @@
 package plotlyjs.demo
 
 import com.raquo.laminar.api.L._
-import com.raquo.laminar.nodes.ReactiveHtmlElement
-import org.openmole.plotlyjs.PlotMode.{lines, markers, markersAndText}
+import org.openmole.plotlyjs.PlotMode.{markers, markersAndText}
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import org.scalajs.dom.html
-import sourcecode.Text
-import tools.PointSet
+import tools.{PointSet, Vectors}
 import tools.PointSet.MIN
+import tools.AngularAdjustment.angularAdjustment
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
-import scala.util.Random
 
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
@@ -41,10 +38,10 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val lowCorner = Data.lowCorner(12, 2).map(_.map(_ * 1))
+    val corner = Data.lowSphericalCorner(8, 2)
     val results = Data.dim8Sample100
 
-    val nbObjectives = lowCorner.head.size
+    val nbObjectives = corner.head.size
 
     val TWO_PI = 2 * Math.PI
     val TO_DEGREES = 180 / Math.PI
@@ -55,12 +52,12 @@ object ParetoBisDemo {
     val colors = degreeObjectiveThetas.map(theta => Color.hsl(theta.toInt, 100, 50))
     val cartesianObjectives = radianObjectiveThetas.map(theta => (Math.cos(theta), Math.sin(theta)))
     val dataObjectiveSeq = degreeObjectiveThetas.zipWithIndex.map { case (theta, index) =>
-      scatterpolar
+      scatterPolar
         .r(js.Array(1))
         .theta(js.Array(theta))
         .fillPolar(ScatterPolar.toself)
         .textPosition(TextPosition.topCenter)
-        .set(markersAndText)
+        .setMode(markersAndText)
         .set(marker
           .size(30)
           .color(colors(index))
@@ -68,8 +65,8 @@ object ParetoBisDemo {
         ._result
     }
 
-    val pointSet = new PointSet(lowCorner/* ++ results*/)
-      .optimizationProblems(Seq.fill(lowCorner.head.size)(MIN))
+    val pointSet = new PointSet(corner/* ++ results*/)
+      .optimizationProblems(Seq.fill(corner.head.size)(MIN))
       .higherPlotIsBetter
 
     val cartesianBarycenters = pointSet.norm1VectorNormalizedOutputs.map(
@@ -93,11 +90,11 @@ object ParetoBisDemo {
     val barycenters = polarBarycenters.zipWithIndex.map { case ((r, theta), pointSetIndex) => Barycenter(r, theta, pointSetIndex) }
 
     def scatterPolarData(name: String, rawOutputs: Seq[Seq[Double]], barycenters: Seq[Barycenter], color: Color): PlotData = {
-      scatterpolar
+      scatterPolar
         .name(name)
         .r(barycenters.map(_.r).toJSArray)
         .theta(barycenters.map(_.theta * TO_DEGREES).toJSArray)
-        .set(markers)
+        .setMode(markers)
         .set(marker
           .symbol(circle)
           .color(color)
@@ -128,12 +125,12 @@ object ParetoBisDemo {
     */
     val resultsData = scatterPolarData(
       "Results",
-      pointSet.rawOutputs.slice(lowCorner.size, pointSet.size),
-      barycenters.slice(lowCorner.size, pointSet.size),
+      pointSet.rawOutputs.slice(corner.size, pointSet.size),
+      barycenters.slice(corner.size, pointSet.size),
       Color.rgb(255, 0, 0))
 
     /*
-    val barycenterDataSeq = Seq(scatterpolar.
+    val barycenterDataSeq = Seq(scatterPolar.
         r(barycenters.map(_.r).toJSArray).
         theta(barycenters.map(_.theta).toJSArray.map {
           _ * TO_DEGREES
@@ -205,7 +202,7 @@ object ParetoBisDemo {
               val objectiveR = objectiveROption.get
               val objectiveTheta = objectiveThetaOption.get
 
-              scatterpolar
+              scatterPolar
                 .r(js.Array(r, objectiveR))
                 .theta(js.Array(t, objectiveTheta))
                 .line(line.width(scala.math.abs(plotOutput(index)) * 4).set(colors(index)))
@@ -215,7 +212,7 @@ object ParetoBisDemo {
                 .hoverinfo("none")
                 ._result
             } else {
-              scatterpolar._result
+              scatterPolar._result
             }
           }
           Plotly.addTraces(plotDiv.ref, plotDataSeq.map[js.UndefOr[PlotData]](Option(_).orUndefined).toJSArray)
@@ -228,7 +225,7 @@ object ParetoBisDemo {
       }
 */
 /*
-      val plotData = scatterpolar
+      val plotData = scatterPolar
         .r(dataObjectiveSeq.map(get[Double](_, "r", 0)).flatMap(Seq(r, _)).toJSArray)
         .theta(dataObjectiveSeq.map(get[Double](_, "theta", 0)).flatMap(Seq(t, _)).toJSArray.toJSArray)
         .line(line.width(1))

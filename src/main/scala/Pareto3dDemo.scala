@@ -1,15 +1,15 @@
 package plotlyjs.demo
 
-import org.openmole.plotlyjs._
-import org.openmole.plotlyjs.all._
-import org.openmole.plotlyjs.PlotlyImplicits._
-
-import scala.scalajs.js.JSConverters._
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.PlotMode.markers
+import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ScatterTernaryDataBuilder.ScatterTernaryDataBuilder
+import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
 import tools.PointSet
 import tools.PointSet._
+
+import scala.scalajs.js.JSConverters._
 
 object Pareto3dDemo {
 
@@ -17,24 +17,24 @@ object Pareto3dDemo {
 
     val plotDiv = div()
 
-    val lowCorner = Data.lowCorner(3, 8).map(_.map(_ * 3))
+    val lowSphericalCorner = Data.lowSphericalCorner(3, 8).map(_.map(_ * 3))
 
     val dim = Seq(1, 2, 3)
     val results = Data.dim8Sample100.map(p => Seq(p(dim(0)), p(dim(1)), p(dim(2))))
 
-    val pointSet = new PointSet(lowCorner ++ results)
+    val pointSet = new PointSet(lowSphericalCorner ++ results)
       .optimizationProblems(Seq(MIN, MIN, MIN))
       .higherPlotIsBetter
 
     def scatterTernaryData(name: String, from: Int, until: Int, color: Color): PlotData = {
       val rawOutputs = pointSet.rawOutputs.slice(from, until)
       val spaceNormalizedOutputs = pointSet.spaceNormalizedOutputs.slice(from, until);
-      scatterternary
+      scatterTernary
         .name(name)
         .a(spaceNormalizedOutputs.map(_(0)).toJSArray)
         .b(spaceNormalizedOutputs.map(_(1)).toJSArray)
         .c(spaceNormalizedOutputs.map(_(2)).toJSArray)
-        .set(markers)
+        .setMode(markers)
         .set(marker
           .color(color)
           .symbol(circle)
@@ -47,12 +47,12 @@ object Pareto3dDemo {
     }
 
     val lowCornerData = scatterTernaryData(
-      "Low corner",
-      0, lowCorner.size,
+      "Low spherical corner",
+      0, lowSphericalCorner.size,
       Color.rgb(0, 0, 0))
     val resultsData = scatterTernaryData(
       "Results",
-      lowCorner.size, pointSet.size,
+      lowSphericalCorner.size, pointSet.size,
       Color.rgb(255, 0, 0))
 
     val layout = Layout.ternary(

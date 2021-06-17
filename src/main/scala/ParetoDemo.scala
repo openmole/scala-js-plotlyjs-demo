@@ -119,13 +119,13 @@ object ParetoDemo {
     //val objectiveRs = (0 to nbObjectives - 1).toArray.map { _ => 1.2 }
 
     val dataObjectives = objectiveThetas.zip(objectiveNames).zipWithIndex.map { case ((t, name), ind) => //case(t,name)=>
-      scatterpolar.
+      scatterPolar.
         r(js.Array(0.4)).
         theta(js.Array(t * TO_DEGREES)).
         text(js.Array(name)).
         fillPolar(ScatterPolar.toself).
         textPosition(TextPosition.topCenter).
-        set(markersAndText).
+        setMode(markersAndText).
         set(marker.size(30).color(colors(ind)).symbol(square)
       )._result
     }.toSeq
@@ -213,7 +213,7 @@ object ParetoDemo {
         _.cpaVariability / maxCPAVariability
       }.toJSArray
 
-      scatterpolar.
+      scatterPolar.
         r(b.map {
           _.r
         }.toJSArray).
@@ -227,7 +227,7 @@ object ParetoDemo {
         }.toJSArray).
         hovertemplate("<b>%{text}</b>").
         fillPolar(ScatterPolar.none).
-        set(markers).set(
+        setMode(markers).set(
         marker
           .opacity(op)
           .size(b.map {

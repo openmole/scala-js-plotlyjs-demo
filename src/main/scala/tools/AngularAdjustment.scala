@@ -1,40 +1,49 @@
 package tools
 
 import Vectors._
+import tools.AngularAdjustment.SpaceSegmentation.SpaceSegmentation
 
 object AngularAdjustment {
 
-  def maxMagnitudeDecomposition(v: Seq[Double]): (Seq[Double], Seq[Double]) = {
-    val maxMagnitudeIndex = v.map(math.abs).zipWithIndex.maxBy(_._1)._2
-    val component = v.zipWithIndex.map { case (c, i) => if(i == maxMagnitudeIndex) c else 0 }
-    val remainder = v.zipWithIndex.map { case (c, i) => if(i != maxMagnitudeIndex) c else 0 }
-    (component, remainder)
+  object SpaceSegmentation {
+
+    trait SpaceSegmentation {
+      def radialSplit(vector: Seq[Double]): (Seq[Double], Seq[Double])
+      def borderNormalSplit(vector: Seq[Double]): (Seq[Double], Seq[Double])
+    }
+
+    val cubic: SpaceSegmentation = new SpaceSegmentation {
+      def maxMagnitudeDecomposition(v: Seq[Double]): (Seq[Double], Seq[Double]) = {
+        val maxMagnitudeIndex = v.map(math.abs).zipWithIndex.maxBy(_._1)._2
+        val component = v.zipWithIndex.map { case (c, i) => if(i == maxMagnitudeIndex) c else 0 }
+        val remainder = v.zipWithIndex.map { case (c, i) => if(i != maxMagnitudeIndex) c else 0 }
+        (component, remainder)
+      }
+      override def radialSplit(vector: Seq[Double]): (Seq[Double], Seq[Double]) = maxMagnitudeDecomposition(vector)
+      override def borderNormalSplit(vector: Seq[Double]): (Seq[Double], Seq[Double]) = maxMagnitudeDecomposition(vector)
+    }
+
+    //TODO simplex ?
   }
 
-  def angularAdjustment(vector: Seq[Double]): Seq[Double] = {
-    val dimension = vector.length
-
-    val (componentToKeep, remainderToAdjust) = maxMagnitudeDecomposition(vector)
+  def angularAdjustment(spaceSegmentation: SpaceSegmentation, vector: Seq[Double]): Seq[Double] = {
+    val (componentToKeep, remainderToAdjust) = spaceSegmentation.radialSplit(vector)
     val orthogonalRadius = length(componentToKeep)
     val radialDirection = normalize(componentToKeep)
 
-    val (borderNormalComponent, _) = maxMagnitudeDecomposition(remainderToAdjust)
+    val (borderNormalComponent, _) = spaceSegmentation.borderNormalSplit(remainderToAdjust)
     val centerToBorderProportion = length(borderNormalComponent) / orthogonalRadius
-    //println(s"Is proportion ? ${0 <= centerToBorderProportion && centerToBorderProportion <= 1}")
 
     val touchingBorderRemainder = scale(remainderToAdjust, 1/centerToBorderProportion)
-    //println(s"Expected length : $orthogonalRadius, actual length : ${length(maxMagnitudeDecomposition(touchingBorderRemainder)._1)}")
-    val maxAngle = angle(add(componentToKeep, touchingBorderRemainder), radialDirection)
-    //println(s"Is maxAngle in range ? ${math.Pi/4 <= maxAngle && maxAngle <= math.atan(math.sqrt(dimension))}")
+    val touchingBorder = add(componentToKeep, touchingBorderRemainder)
+    val maxAngle = angle(touchingBorder, radialDirection)
 
     val newVectorAngle = centerToBorderProportion * maxAngle
-    //println(s"Is newVectorAngle in range ? ${0 <= newVectorAngle && newVectorAngle <= math.atan(math.sqrt(dimension))}")
 
     val newRemainderLength = orthogonalRadius * math.tan(newVectorAngle)
     val adjustedRemainder = toLength(remainderToAdjust, newRemainderLength)
     val adjustedVector = add(componentToKeep, adjustedRemainder)
 
-    //println(s"Expected angle : $newVectorAngle, actual angle : ${angle(adjustedVector, radialDirection)}")
     if(adjustedVector.count(_.isNaN) == 0) adjustedVector else vector
   }
 

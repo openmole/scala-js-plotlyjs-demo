@@ -5,7 +5,9 @@ import org.openmole.plotlyjs.PlotMode.markers
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.AngularAdjustment.{SpaceSegmentation, angularAdjustment}
+import plotlyjs.demo.directions.{AngularAdjustment, DiscAngularSpaceAdjustment}
+import plotlyjs.demo.directions.AngularAdjustment.Geometry
+import plotlyjs.demo.directions.DiscAngularSpaceAdjustment.angularAdjustment
 import plotlyjs.demo.utils.{Data, Vectors}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -29,12 +31,12 @@ object AngularAdjustmentTest {
         )._result
     }
 
-    def scatter3dDiv(cubicPoints: Seq[Seq[Double]], color: Color) = {
+    def scatter3dDiv(cubicPoints: Seq[Seq[Double]], sphericalPoints: Seq[Seq[Double]], color: Color) = {
       val plotDiv = div()
 
       val plotDataSeq = Seq(
         scatter3dData("cubic", cubicPoints, color),
-        scatter3dData("spherical", cubicPoints.map(Vectors.normalize), color),
+        scatter3dData("spherical", sphericalPoints, color),
       )
 
       Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray)
@@ -42,12 +44,21 @@ object AngularAdjustmentTest {
       plotDiv
     }
 
-    val highCorner = Data.highCorner(3, 16)
-    val adjustedHighCorner = highCorner.map(angularAdjustment(SpaceSegmentation.cubic, _))
+    val highCorner = Data.highCorner(3, 16).map(_.map(_ * 2))
 
     div(
-      scatter3dDiv(highCorner, Color.rgb(255, 0, 0)),
-      scatter3dDiv(adjustedHighCorner, Color.rgb(0, 0, 255)),
+      scatter3dDiv(
+        highCorner,
+        highCorner.map(AngularAdjustment.spaceAdjustedNormalization(Geometry.cubic, _)),
+        Color.rgb(255, 0, 0)),
+      scatter3dDiv(
+        highCorner.map(AngularAdjustment.angularAdjustment(Geometry.cubic, _)),
+        highCorner.map(AngularAdjustment.angularAdjustment(Geometry.cubic, _)).map(AngularAdjustment.spaceAdjustedNormalization(Geometry.cubic, _)),
+        Color.rgb(0, 0, 255)),
+      scatter3dDiv(
+        highCorner.map(DiscAngularSpaceAdjustment.angularAdjustment).filter(_ != null),
+        highCorner.map(DiscAngularSpaceAdjustment.angularAdjustment).filter(_ != null).map(AngularAdjustment.spaceAdjustedNormalization(Geometry.cubic, _)),
+        Color.rgb(0, 255, 0)),
     )
   }
 

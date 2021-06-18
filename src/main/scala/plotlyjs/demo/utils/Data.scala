@@ -1,6 +1,6 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.directions.AngularAdjustment.{SpaceSegmentation, angularAdjustment}
+import plotlyjs.demo.directions.AngularAdjustment.{Geometry, angularAdjustment}
 
 object Data {
 
@@ -274,7 +274,7 @@ object Data {
   }
   def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = nCube(n, p).filter(_.contains(0))
   def highCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(lowCorner(n, p))
-  def highSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = Data.highCorner(n, p).map(angularAdjustment(SpaceSegmentation.cubic, _)).map(Vectors.normalize)
+  def highSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = Data.highCorner(n, p).map(angularAdjustment(Geometry.cubic, _)).map(Vectors.normalize)
   def lowSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(highSphericalCorner(n, p))
 
   def limitAngle(normalSpacePoints: Seq[Seq[Double]]): Seq[Seq[Double]] = {

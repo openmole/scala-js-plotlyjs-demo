@@ -16,7 +16,7 @@ object AngularAdjustment {
       def maxMagnitudeDecomposition(v: Seq[Double]): (Seq[Double], Seq[Double]) = {
         val maxMagnitudeIndex = v.map(math.abs).zipWithIndex.maxBy(_._1)._2
         val component = v.zipWithIndex.map { case (c, i) => if(i == maxMagnitudeIndex) c else 0 }
-        val remainder = v.zipWithIndex.map { case (c, i) => if(i != maxMagnitudeIndex) c else 0 }
+        val remainder = v.zipWithIndex.map { case (c, i) => if(i != maxMagnitudeIndex) c else 0 } //TODO add the remainder computation in trait SpaceSegmentation : remainder = vector - component
         (component, remainder)
       }
       override def radialSplit(vector: Seq[Double]): (Seq[Double], Seq[Double]) = maxMagnitudeDecomposition(vector)

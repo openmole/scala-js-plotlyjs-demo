@@ -1,15 +1,15 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
-import scala.scalajs.js.JSConverters._
 
+import scala.scalajs.js
 import com.raquo.laminar.api.L._
-import scala.scalajs._
+import plotlyjs.demo.utils.Utils
 
 /*
- * Copyright (C) 24/03/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 31/10/18 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,41 +24,32 @@ import scala.scalajs._
  * You should have received a copy of the GNU General Public License
  */
 
-object ErrorBarDemo {
+
+object HeatMapDemo {
 
   val sc = sourcecode.Text {
 
     val plotDiv = div()
 
+    val data1 = heatmap
+      .z((1 to 100).foldLeft(js.Array[js.Array[Int]]())((acc, i) => acc :+ Utils.randomInts(50, 100 * i)))
+
+
     val layout = Layout
-      .title("My line plot")
-      .showlegend(true)
-      .xaxis(axis.title("Time"))
-      .yaxis(axis.title("Production"))
+      .title("My heat map")
+      .height(700)
+      .width(700)
 
-    val data = linechart.lines
-
-    val data1 = data
-      .x((0 to 14).toJSArray)
-      .y(Utils.randomDoubles(15, 10))
-      .errorY(ErrorY.array(Utils.randomDoubles(15,5)))
-      .marker(marker.size(12.0).color(all.color.rgb(180,0,0)).symbol(square))
-      .name("Reds")
-
-
-    val config = Config.displayModeBar(false)
 
     Plotly.newPlot(plotDiv.ref,
-      js.Array(data1),
-      layout,
-      config)
+      js.Array(data1))
 
     plotDiv
   }
 
 
   val elementDemo = new ElementDemo {
-    def title: String = "Error bar"
+    def title: String = "Heat map"
 
     def code: String = sc.source
 

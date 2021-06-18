@@ -1,4 +1,4 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.PlotMode.markers
@@ -6,8 +6,8 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ScatterTernaryDataBuilder.ScatterTernaryDataBuilder
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import tools.PointSet
-import tools.PointSet._
+import plotlyjs.demo.utils.PointSet._
+import plotlyjs.demo.utils.{Data, PointSet}
 
 import scala.scalajs.js.JSConverters._
 

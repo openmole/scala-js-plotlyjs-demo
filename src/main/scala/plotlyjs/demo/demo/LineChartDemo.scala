@@ -1,13 +1,15 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
-import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import scala.scalajs.js.JSConverters._
 import org.openmole.plotlyjs.PlotlyImplicits._
+import org.openmole.plotlyjs._
 import com.raquo.laminar.api.L._
-import scala.scalajs._
+import plotlyjs.demo.utils.Utils
+
+import scala.scalajs.js.JSConverters._
+
 /*
- * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
+ * Copyright (C) 24/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,43 +22,53 @@ import scala.scalajs._
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object HistogramDemo {
+object LineChartDemo {
 
-  import org.openmole.plotlyjs.HistogramDataBuilder._
   val sc = sourcecode.Text {
+
     val plotDiv = div()
 
     val layout = Layout
       .title("My line plot")
-      .grid(grid.columns(3).rows(1).pattern(Pattern.coupled))
       .showlegend(true)
+      .xaxis(axis.title("Time"))
+      .yaxis(axis.title("Production"))
 
-    val data1 = histogram
-      .x(Utils.randomInts(500))
-      .name("First serie")
-      .xbins(Bin.start(0.0).end(1000.0).size(25))
+    val data = linechart.lines
 
-    val data2 = histogram
-      .x(Utils.anArray.toJSArray)
-      .xaxis("x2")
-      .name("Second serie")
+    val ref = Utils.randomDoubles(15, 10)
 
-    val data3 = histogram
-      .x(Utils.anArray.toJSArray)
-      .xaxis("x3")
-      .name("Second serie")
+    val dataRef = data
+      .x((0 to 14).toJSArray)
+      .y(ref)
+      .marker(marker.symbol(square).color(all.color.rgb(180, 0, 0)).size(12.0))
+      .name("Reds")
 
-    Plotly.newPlot(plotDiv.ref, js.Array(data1, data2, data3), layout = layout)
+
+    val dataN = (for (i <- 1 to 6) yield {
+      data
+        .x((0 to 14).toJSArray)
+        .y(ref.map { x => x + Utils.rng.nextDouble * 2 - 1 }.toJSArray)
+        .marker(marker.size(10.0).color(all.color.rgb(200, 136, 170)))
+        ._result
+    }).toJSArray
+
+
+    val config = Config.displayModeBar(false)
+
+    Plotly.newPlot(plotDiv.ref,
+      dataN :+ dataRef._result,
+      layout,
+      config)
 
     plotDiv
   }
 
 
   val elementDemo = new ElementDemo {
-    def title: String = "Histogram"
+    def title: String = "Line chart"
 
     def code: String = sc.source
 

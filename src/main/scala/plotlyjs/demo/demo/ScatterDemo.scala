@@ -1,15 +1,16 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.plotlyConts._
-import org.scalajs.dom.raw.Element
-import com.raquo.laminar.api.L._
 
-import scala.scalajs._
+import scala.scalajs.js
+import com.raquo.laminar.api.L._
+import plotlyjs.demo.utils.Utils
+
 /*
- * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org
+ * Copyright (C) 24/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,54 +23,51 @@ import scala.scalajs._
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-object BoxDemo {
+object ScatterDemo {
 
   val sc = sourcecode.Text {
-    val clickText = Var("")
+    val hoverText = Var("")
 
     val plotDiv = div()
 
-    val layout = Layout
-      .title("My box plot")
-      .showlegend(true)
+    val colorDim = Utils.randomDoubles()
 
-    val data1 = box
-      .y(Utils.randomInts(50, 50))
+    val data = scatter
+      .x(Utils.randomDoubles())
+      .y(Utils.randomDoubles())
+      .customdata(colorDim.map {
+        _.toString
+      })
       .marker(marker
-        .color(all.color.rgba(180,180,0,0.5))
         .sizeMode(sizemode.area)
+        .size(colorDim)
+        .color(all.color.array(colorDim))
+        .colorScale(colorscale.jet)
+        .symbol(circlecross)
       )
-      .name("First set")
-
-    val data2 = box
-      .y(Utils.randomInts(50, 40))
-      .marker(marker
-        .color(all.color.rgba(180,0,180,1))
-        .sizeMode(sizemode.area))
-      .name("Second set")
 
     val config = Config.displayModeBar(false)
-    Plotly.newPlot(plotDiv.ref, js.Array(data1, data2), layout, config)
+    Plotly.plot(plotDiv.ref, js.Array(data), config = config)
 
-    plotDiv.ref.on(PlotEvent.CLICK, (d: PointsData) => {
-      clickText.set(d.points.map { p => s"${p.y}" }.mkString(" , "))
+
+    plotDiv.ref.on(PlotEvent.HOVER, (d: PointsData) => {
+      hoverText.set(d.points.map { p => s"${p.x} ${p.y} ${p.customdata}" }.mkString(" and "))
     })
 
     div(
       plotDiv,
-      child.text <-- clickText.signal
+      child.text <-- hoverText.signal
     )
   }
 
 
   val elementDemo = new ElementDemo {
-    def title: String = "Box"
+    def title: String = "Scatter"
 
     def code: String = sc.source
 
     def element: HtmlElement = sc.value
   }
+
 }

@@ -1,4 +1,4 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import org.openmole.plotlyjs.PlotMode.{markers, markersAndText}
 import org.openmole.plotlyjs._
@@ -10,6 +10,7 @@ import org.scalajs.dom.raw.Element
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
 import com.raquo.laminar.api.L._
+import plotlyjs.demo.utils.Data
 import scaladget.svg.path.Path
 
 import scala.util.Random

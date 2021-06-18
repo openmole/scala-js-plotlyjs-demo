@@ -1,4 +1,4 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
 

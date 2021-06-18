@@ -1,9 +1,6 @@
-package plotlyjs.demo
+package plotlyjs.demo.utils
 
-import tools.AngularAdjustment.{SpaceSegmentation, angularAdjustment}
-import tools.Vectors
-
-import scala.::
+import plotlyjs.demo.directions.AngularAdjustment.{SpaceSegmentation, angularAdjustment}
 
 object Data {
 

@@ -1,7 +1,7 @@
-package tools
+package plotlyjs.demo.directions
 
-import Vectors._
-import tools.AngularAdjustment.SpaceSegmentation.SpaceSegmentation
+import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.directions.AngularAdjustment.SpaceSegmentation.SpaceSegmentation
 
 object AngularAdjustment {
 

@@ -1,13 +1,12 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.PlotMode.{markers, markersAndText}
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import tools.{PointSet, Vectors}
-import tools.PointSet.MIN
-import tools.AngularAdjustment.angularAdjustment
+import plotlyjs.demo.utils.PointSet._
+import plotlyjs.demo.utils.{Data, PointSet}
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._

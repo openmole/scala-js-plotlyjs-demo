@@ -1,5 +1,5 @@
 
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 
 import org.openmole.plotlyjs.PlotMode.markers
@@ -10,6 +10,7 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js
 import com.raquo.laminar.api.L._
+import plotlyjs.demo.utils.Data
 
 /*
  * Copyright (C) 31/10/17 // mathieu.leclaire@openmole.org

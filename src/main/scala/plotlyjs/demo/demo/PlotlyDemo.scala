@@ -1,4 +1,4 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import scaladget.highlightjs.HighlightJS
 import scaladget.bootstrapnative.bsn._

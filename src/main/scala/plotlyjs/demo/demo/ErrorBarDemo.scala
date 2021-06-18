@@ -1,11 +1,14 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
+import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
-import org.openmole.plotlyjs._
-import com.raquo.laminar.api.L._
 
 import scala.scalajs.js.JSConverters._
+import com.raquo.laminar.api.L._
+import plotlyjs.demo.utils.Utils
+
+import scala.scalajs._
 
 /*
  * Copyright (C) 24/03/16 // mathieu.leclaire@openmole.org
@@ -23,7 +26,7 @@ import scala.scalajs.js.JSConverters._
  * You should have received a copy of the GNU General Public License
  */
 
-object LineChartDemo {
+object ErrorBarDemo {
 
   val sc = sourcecode.Text {
 
@@ -37,28 +40,18 @@ object LineChartDemo {
 
     val data = linechart.lines
 
-    val ref = Utils.randomDoubles(15, 10)
-
-    val dataRef = data
+    val data1 = data
       .x((0 to 14).toJSArray)
-      .y(ref)
-      .marker(marker.symbol(square).color(all.color.rgb(180, 0, 0)).size(12.0))
+      .y(Utils.randomDoubles(15, 10))
+      .errorY(ErrorY.array(Utils.randomDoubles(15,5)))
+      .marker(marker.size(12.0).color(all.color.rgb(180,0,0)).symbol(square))
       .name("Reds")
-
-
-    val dataN = (for (i <- 1 to 6) yield {
-      data
-        .x((0 to 14).toJSArray)
-        .y(ref.map { x => x + Utils.rng.nextDouble * 2 - 1 }.toJSArray)
-        .marker(marker.size(10.0).color(all.color.rgb(200, 136, 170)))
-        ._result
-    }).toJSArray
 
 
     val config = Config.displayModeBar(false)
 
     Plotly.newPlot(plotDiv.ref,
-      dataN :+ dataRef._result,
+      js.Array(data1),
       layout,
       config)
 
@@ -67,7 +60,7 @@ object LineChartDemo {
 
 
   val elementDemo = new ElementDemo {
-    def title: String = "Line chart"
+    def title: String = "Error bar"
 
     def code: String = sc.source
 

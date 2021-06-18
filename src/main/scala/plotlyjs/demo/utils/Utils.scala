@@ -1,4 +1,4 @@
-package plotlyjs.demo
+package plotlyjs.demo.utils
 /*
  * Copyright (C) 24/03/16 // mathieu.leclaire@openmole.org
  *

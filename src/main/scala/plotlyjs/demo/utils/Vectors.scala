@@ -1,4 +1,4 @@
-package tools
+package plotlyjs.demo.utils
 
 object Vectors {
 

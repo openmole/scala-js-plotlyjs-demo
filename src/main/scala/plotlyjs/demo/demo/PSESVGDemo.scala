@@ -1,12 +1,14 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import org.openmole.plotlyjs._
 import scaladget.bootstrapnative.bsn._
 import scaladget.tools._
 import org.scalajs.dom.raw.{Element, MouseEvent}
-import plotlyjs.demo.Data.{DimensionName, PSEData, pse}
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.L.svg
+import plotlyjs.demo.utils.Data
+import plotlyjs.demo.utils.Data._
+import plotlyjs.demo.utils.Utils
 
 import scala.annotation.tailrec
 
@@ -25,7 +27,7 @@ object PSESVGDemo {
 
     def findCordinate(coords: Seq[Coordinate], cx: Int, cy: Int) = coords.find(c => c.cx == cx && c.cy == cy)
 
-    def colorPaletteRatio(cz: Int, zSize: Int) = (cz * plotlyjs.demo.Utils.viridis.size.toDouble / zSize).toInt - 1
+    def colorPaletteRatio(cz: Int, zSize: Int) = (cz * Utils.viridis.size.toDouble / zSize).toInt - 1
 
 
     @tailrec
@@ -67,7 +69,7 @@ object PSESVGDemo {
               c <- dataCells
             } yield {
               svg.rect(svg.x := (c.cx * xCellSize).toString, svg.y := ((psey.dimension.size - c.cy) * yCellSize - 50).toString, svg.width := cellWidth.toString, svg.height := cellHeight.toString,
-                svg.style := s"fill:#${plotlyjs.demo.Utils.viridis(colorPaletteRatio(c.cz, psez.dimension.size))};",
+                svg.style := s"fill:#${Utils.viridis(colorPaletteRatio(c.cz, psez.dimension.size))};",
                 onMouseOver --> { _ =>
                   pseValues.set(s"X ${c.cx} Y ${c.cy} Z ${c.cz}")
                 }

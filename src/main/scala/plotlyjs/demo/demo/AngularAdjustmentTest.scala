@@ -1,12 +1,12 @@
-package plotlyjs.demo
+package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.PlotMode.markers
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import tools.AngularAdjustment.{SpaceSegmentation, angularAdjustment}
-import tools.Vectors
+import plotlyjs.demo.directions.AngularAdjustment.{SpaceSegmentation, angularAdjustment}
+import plotlyjs.demo.utils.{Data, Vectors}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 

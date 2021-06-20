@@ -53,7 +53,7 @@ object DiscAngularSpaceAdjustment /*extends App */{
       }
       val fillingAdjustedRemainder = scale(remainderToAdjust, 1/fillingLimit_CenterToBorderProportion)
 
-      AngularAdjustment.angularAdjustment(Geometry.cubic, add(componentToKeep, fillingAdjustedRemainder))
+      AngularAdjustment.cellRadialAdjustment(Geometry.cubic, add(componentToKeep, fillingAdjustedRemainder))
     } else {
       null
     }

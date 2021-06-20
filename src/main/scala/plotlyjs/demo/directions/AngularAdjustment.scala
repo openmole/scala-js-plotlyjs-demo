@@ -43,25 +43,37 @@ object AngularAdjustment {
     //TODO simplex ?
   }
 
-  def angularAdjustment(spaceSegmentation: Geometry, vector: Seq[Double]): Seq[Double] = {
-    val (componentToKeep, remainderToAdjust) = spaceSegmentation.radialSplit(vector)
-    val radius = length(componentToKeep)
-    val radialDirection = normalize(componentToKeep)
+  def cellRadialAdjustment(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
+    val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
+    val sphericalRadius = length(componentToKeep)
+    val sphericalRadialDirection = normalize(componentToKeep)
 
-    val (borderNormalComponent, _) = spaceSegmentation.borderNormalSplit(remainderToAdjust)
-    val centerToBorderProportion = length(borderNormalComponent) / radius
+    val (borderNormalComponent, _) = geometry.borderNormalSplit(remainderToAdjust)
+    val centerToBorderProportion = length(borderNormalComponent) / sphericalRadius
 
     val touchingBorderRemainder = scale(remainderToAdjust, 1/centerToBorderProportion)
     val touchingBorder = add(componentToKeep, touchingBorderRemainder)
-    val maxAngle = angle(touchingBorder, radialDirection)
+    val maxAngle = angle(touchingBorder, sphericalRadialDirection)
 
     val newVectorAngle = centerToBorderProportion * maxAngle
 
-    val newRemainderLength = radius * math.tan(newVectorAngle)
+    val newRemainderLength = sphericalRadius * math.tan(newVectorAngle)
     val adjustedRemainder = toLength(remainderToAdjust, newRemainderLength)
     val adjustedVector = add(componentToKeep, adjustedRemainder)
 
     if(adjustedVector.count(_.isNaN) == 0) adjustedVector else vector
+  }
+
+  def cellBorderParallelAdjustment(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
+    val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
+    val (borderNormalComponent, borderParallelComponent) = geometry.borderNormalSplit(remainderToAdjust)
+
+
+
+    val adjustedRemainder = ???
+    val adjustedVector = add(componentToKeep, adjustedRemainder)
+
+    adjustedVector
   }
 
   def nSphereSurface(n: Int, r: Double): Double = {
@@ -74,17 +86,17 @@ object AngularAdjustment {
     }
   }
 
-  def spaceAdjustment(geometry: Geometry, dimension: Int): Double = {
+  def spacialAdjustment(geometry: Geometry, dimension: Int): Double = {
     math.pow(geometry.space(dimension) / nSphereSurface(dimension - 1, 1), 1.0/dimension)
   }
 
-  def spaceAdjustedNormalization(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
+  def spacialAdjustedNormalization(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
     val dimension = vector.length
     val radius = {
       val (radialComponent, _) = geometry.radialSplit(vector)
       length(radialComponent)
     }
-    scale(normalize(vector), radius * spaceAdjustment(geometry, dimension))
+    toLength(vector, radius * spacialAdjustment(geometry, dimension))
   }
 
 }

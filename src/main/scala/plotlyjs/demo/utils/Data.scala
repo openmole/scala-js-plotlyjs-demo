@@ -1,6 +1,7 @@
 package plotlyjs.demo.utils
 
 import plotlyjs.demo.directions.AngularAdjustment.{Geometry, cellRadialAdjustment}
+import plotlyjs.demo.utils.Vectors._
 
 object Data {
 
@@ -270,7 +271,7 @@ object Data {
 
   private def reverse(normalSpacePoints: Seq[Seq[Double]]) = {
     val dimension = normalSpacePoints.head.length
-    normalSpacePoints.map(Vectors.negate).map(Vectors.add(_, Seq.fill(dimension)(1)))
+    normalSpacePoints.map(negate).map(_ + Seq.fill(dimension)(1))
   }
   def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = nCube(n, p).filter(_.contains(0))
   def highCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(lowCorner(n, p))
@@ -280,8 +281,8 @@ object Data {
   def limitAngle(normalSpacePoints: Seq[Seq[Double]]): Seq[Seq[Double]] = {
     val dimension = normalSpacePoints.head.length
     val middleDirectionVector = Seq.fill(dimension)(1.0)
-    val maxAngle = Vectors.angle(middleDirectionVector, Seq(0.0) ++ Seq.fill(dimension - 1)(1)) // zero if dimension is infinite
-    normalSpacePoints.filter(Vectors.angle(_, middleDirectionVector) <= maxAngle)
+    val maxAngle = middleDirectionVector angle (Seq(0.0) ++ Seq.fill(dimension - 1)(1)) // zero if dimension is infinite
+    normalSpacePoints.filter(v => (v angle middleDirectionVector) <= maxAngle)
   }
   def lowSphericalCornerLimitedAngle(n: Int, p: Int): Seq[Seq[Double]] = reverse(limitAngle(highSphericalCorner(n, p)))
 

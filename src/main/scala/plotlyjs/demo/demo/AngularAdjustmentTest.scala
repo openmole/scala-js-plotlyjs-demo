@@ -8,6 +8,7 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.{AngularAdjustment, CubicAngularAdjustment, DiscAngularSpaceAdjustment}
 import plotlyjs.demo.utils.Data
+import plotlyjs.demo.utils.Vectors.scale
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
@@ -43,7 +44,7 @@ object AngularAdjustmentTest {
       plotDiv
     }
 
-    val highCorner = Data.highCorner(3, 16)
+    val highCorner = Data.highCorner(3, 16).map(scale(2))
 
     div(
       scatter3dDiv(

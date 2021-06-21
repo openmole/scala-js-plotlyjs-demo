@@ -18,7 +18,7 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
     _optimizationProblems = optimizationProblems
     this
   }
-  private var _orientation = 0;
+  private var _orientation = 0
   def higherPlotIsBetter: PointSet = {
     _orientation = 1
     this

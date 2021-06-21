@@ -1,8 +1,9 @@
 package plotlyjs.demo.directions
 
-import scala.math._
-import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.Matrices._
+import plotlyjs.demo.utils.Vectors._
+
+import scala.math._
 
 object CubicAngularAdjustment {
 

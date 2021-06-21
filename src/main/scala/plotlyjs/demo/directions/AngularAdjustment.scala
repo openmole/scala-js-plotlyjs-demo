@@ -2,7 +2,6 @@ package plotlyjs.demo.directions
 
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry.Geometry
-import plotlyjs.demo.utils.Vectors
 
 object AngularAdjustment {
 
@@ -15,7 +14,7 @@ object AngularAdjustment {
                                                       // making the Splitter list of DirectionsSegmentation
       def split(vector: Seq[Double]): (Seq[Double], Seq[Double]) = {
         val componentOfVector = component(vector)
-        (componentOfVector, Vectors.sub(vector, componentOfVector))
+        (componentOfVector, vector - componentOfVector)
       }
     }
 
@@ -45,21 +44,21 @@ object AngularAdjustment {
 
   def cellRadialAdjustment(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
     val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
-    val sphericalRadius = length(componentToKeep)
+    val sphericalRadius = norm(componentToKeep)
     val sphericalRadialDirection = normalize(componentToKeep)
 
     val (borderNormalComponent, _) = geometry.borderNormalSplit(remainderToAdjust)
-    val centerToBorderProportion = length(borderNormalComponent) / sphericalRadius
+    val centerToBorderProportion = norm(borderNormalComponent) / sphericalRadius
 
-    val touchingBorderRemainder = scale(remainderToAdjust, 1/centerToBorderProportion)
-    val touchingBorder = add(componentToKeep, touchingBorderRemainder)
-    val maxAngle = angle(touchingBorder, sphericalRadialDirection)
+    val touchingBorderRemainder = remainderToAdjust * (1/centerToBorderProportion)
+    val touchingBorder = componentToKeep + touchingBorderRemainder
+    val maxAngle = touchingBorder angle sphericalRadialDirection
 
     val newVectorAngle = centerToBorderProportion * maxAngle
 
     val newRemainderLength = sphericalRadius * math.tan(newVectorAngle)
-    val adjustedRemainder = toLength(remainderToAdjust, newRemainderLength)
-    val adjustedVector = add(componentToKeep, adjustedRemainder)
+    val adjustedRemainder = remainderToAdjust toNorm newRemainderLength
+    val adjustedVector = componentToKeep + adjustedRemainder
 
     if(adjustedVector.count(_.isNaN) == 0) adjustedVector else vector
   }
@@ -71,7 +70,7 @@ object AngularAdjustment {
 
 
     val adjustedRemainder = ???
-    val adjustedVector = add(componentToKeep, adjustedRemainder)
+    val adjustedVector = componentToKeep + adjustedRemainder
 
     adjustedVector
   }
@@ -94,9 +93,9 @@ object AngularAdjustment {
     val dimension = vector.length
     val radius = {
       val (radialComponent, _) = geometry.radialSplit(vector)
-      length(radialComponent)
+      norm(radialComponent)
     }
-    toLength(vector, radius * spacialAdjustment(geometry, dimension))
+    vector toNorm radius * spacialAdjustment(geometry, dimension)
   }
 
 }

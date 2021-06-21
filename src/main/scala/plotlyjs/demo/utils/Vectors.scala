@@ -2,7 +2,6 @@ package plotlyjs.demo.utils
 
 import scala.math._
 import plotlyjs.demo.utils.Matrices._
-import plotlyjs.demo.utils.Vectors.{norm, normalize, replace, scale, toNorm}
 
 object Vectors {
 
@@ -34,11 +33,11 @@ object Vectors {
   def scale(s: Double): Vector => Vector = (v: Vector) => scale(v, s)
   def normalize(p: Int): Vector => Vector = (v: Vector) => normalize(v, p)
   def toNorm(p: Int, d: Double): Vector => Vector = (v: Vector) => toNorm(v, p, d)
-  def add(v1: Vector): Vector => Vector = (v2: Vector) => add(v1, v2)
-  def sub(v1: Vector): Vector => Vector = (v2: Vector) => sub(v1, v2)
-  def mul(v1: Vector): Vector => Vector = (v2: Vector) => mul(v1, v2)
-  def dot(v1: Vector): Vector => Double = (v2: Vector) => dot(v1, v2)
-  def angle(v1: Vector): Vector => Double = (v2: Vector) => angle(v1, v2)
+  def add(v2: Vector): Vector => Vector = (v1: Vector) => add(v1, v2)
+  def sub(v2: Vector): Vector => Vector = (v1: Vector) => sub(v1, v2)
+  def mul(v2: Vector): Vector => Vector = (v1: Vector) => mul(v1, v2)
+  def dot(v2: Vector): Vector => Double = (v1: Vector) => dot(v1, v2)
+  def angle(v2: Vector): Vector => Double = (v1: Vector) => angle(v1, v2)
   //
 
   //Parameter aliases

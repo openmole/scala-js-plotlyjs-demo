@@ -52,7 +52,7 @@ object AngularAdjustment {
 
     val touchingBorderRemainder = remainderToAdjust * (1/centerToBorderProportion)
     val touchingBorder = componentToKeep + touchingBorderRemainder
-    val maxAngle = touchingBorder angle sphericalRadialDirection
+    val maxAngle = touchingBorder ^ sphericalRadialDirection
 
     val newVectorAngle = centerToBorderProportion * maxAngle
 

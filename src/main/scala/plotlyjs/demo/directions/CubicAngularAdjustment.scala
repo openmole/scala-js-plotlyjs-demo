@@ -18,7 +18,7 @@ object CubicAngularAdjustment {
 
   def angularAdjustment(vector: Seq[Double]): Seq[Double] = {
 
-    val dimension = vector.length
+    val dimension = vector.dimension
 
     val maxMagnitudeIndex = vector.map(abs).zipWithIndex.maxBy(_._1)._2
     val radius = vector(maxMagnitudeIndex)
@@ -48,7 +48,7 @@ object CubicAngularAdjustment {
 
     val startVectors = cellIndices.map(spaceIndex).map(i => vector.replace(i, 0))
     val stopVectors = cellIndices.map(spaceIndex).map(i => vector.replace(i, signum(vector(i)) * radius))
-    val totalAngles = cellIndices.map(i => startVectors(i) angle stopVectors(i))
+    val totalAngles = cellIndices.map(i => startVectors(i) ^ stopVectors(i))
 
     val targetedAngles = proportions zip totalAngles map { case (p, tA) => p * tA }
 

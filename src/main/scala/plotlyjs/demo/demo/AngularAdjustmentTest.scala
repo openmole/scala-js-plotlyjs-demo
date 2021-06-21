@@ -44,7 +44,7 @@ object AngularAdjustmentTest {
       plotDiv
     }
 
-    val highCorner = Data.highCorner(3, 16).map(scale(2))
+    val highCorner = Data.highCorner(3, 16)//.map(scale(2))
 
     div(
       scatter3dDiv(

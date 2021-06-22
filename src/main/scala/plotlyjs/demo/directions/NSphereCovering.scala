@@ -1,5 +1,7 @@
 package plotlyjs.demo.directions
 
+import plotlyjs.demo.utils.Data
+
 import scala.math._
 import plotlyjs.demo.utils.Vectors._
 

@@ -7,7 +7,8 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.{AngularAdjustment, CubicAngularAdjustment, NSphereCovering}
-import plotlyjs.demo.utils.{Data, Vectors}
+import plotlyjs.demo.utils.Data
+import plotlyjs.demo.utils.Vectors._
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
@@ -30,7 +31,7 @@ object AngularAdjustmentTest {
         )._result
     }
 
-    def scatter3dDiv(cubicPoints: Seq[Seq[Double]], sphericalPoints: Seq[Seq[Double]], color: Color) = {
+    def scatter3dDiv(title: String, cubicPoints: Seq[Seq[Double]], sphericalPoints: Seq[Seq[Double]], color: Color) = {
       val plotDiv = div()
 
       val plotDataSeq = Seq(
@@ -38,25 +39,30 @@ object AngularAdjustmentTest {
         scatter3dData("spherical", sphericalPoints, color),
       )
 
-      Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray)
+      val layout = Layout
+        .title(title)
+
+      Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray, layout)
 
       plotDiv
     }
 
     val dimension = 3
     val step = 8
-    val points = Data.highCorner(dimension, 2 * step)//.map(Vectors.sub(Seq.fill(dimension)(0.5)))//.map(scale(2))
+    val points = Data.centeredNCube(dimension, 2 * step, hollow = true).filter(_.head >= 0)
 
     val alphaStep = Math.PI/4 / step
 
     div(
       scatter3dDiv(
+        "Cube – no adjustment",
         points,
-        points.map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
+        points.map(normalize),
         Color.rgb(255, 0, 0)),
       scatter3dDiv(
+        "Radial angular adjustment",
         points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)),
-        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
+        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(normalize),
         Color.rgb(0, 0, 255)),
       /*
       scatter3dDiv(
@@ -65,13 +71,21 @@ object AngularAdjustmentTest {
         Color.rgb(0, 255, 0)),
       */
       scatter3dDiv(
+        "Cartesian angular adjustment",
         points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null),
-        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
+        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(normalize),
         Color.rgb(0, 255, 0)),
       scatter3dDiv(
-        NSphereCovering.nSphereCovering(dimension - 1, alphaStep, true),
-        NSphereCovering.nSphereCovering(dimension - 1, alphaStep),
-        Color.rgb(0, 0, 255)),
+        "Building method – 2-sphere",
+        NSphereCovering.nSphereCovering(dimension - 1, alphaStep, keepCubicShape = true).filter(_.head >= 0),
+        NSphereCovering.nSphereCovering(dimension - 1, alphaStep).filter(_.head >= 0),
+        Color.rgb(0, 0, 0)),
+      scatter3dDiv(
+        "Building method – 3-sphere cell",
+        NSphereCovering.nSphereCovering(dimension, alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
+        NSphereCovering.nSphereCovering(dimension, alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail),
+        Color.rgb(0, 0, 0)),
+      //evalDiv,
     )
   }
 

@@ -257,23 +257,36 @@ object Data {
     "convexity" -> ff
   )
 
-  def nCube(n: Int, p: Int): Seq[Seq[Double]] = {
-    val point = Array.fill[Double](n)(p-1)
-    for(_ <- 1 to math.pow(p, n).toInt) yield {
-      point(0) += 1
-      for(i <- 0 until n if point(i) == p) {
-        point(i) = 0
-        if(i + 1 < n) point(i + 1) += 1
+  def integerNCube(n: Int, p: Int, hollow: Boolean = false): Seq[Seq[Int]] = {
+    val pointGenerator = Array.fill[Int](n)(p-1)
+    val points = for(_ <- 1 to math.pow(p, n).toInt) yield {
+      pointGenerator(0) += 1
+      for(i <- 0 until n if pointGenerator(i) == p) {
+        pointGenerator(i) = 0
+        if(i + 1 < n) pointGenerator(i + 1) += 1
       }
-      point.map(_ / p).toSeq
+      pointGenerator.toSeq
     }
+    if(hollow) {
+      points.filter(v => v.contains(0) || v.contains(p - 1))
+    } else {
+      points
+    }
+  }
+
+  def normalizedNCube(n: Int, p: Int, hollow: Boolean = false): Seq[Seq[Double]] = {
+    integerNCube(n, p, hollow).map(_.map(_.toDouble / (p - 1)))
+  }
+
+  def centeredNCube(n: Int, p: Int, hollow: Boolean = false): Seq[Seq[Double]] = {
+   normalizedNCube(n, p, hollow).map(sub(Seq.fill(n)(0.5))).map(scale(2))
   }
 
   private def reverse(normalSpacePoints: Seq[Seq[Double]]) = {
     val dimension = normalSpacePoints.head.length
     normalSpacePoints.map(negate).map(_ + Seq.fill(dimension)(1))
   }
-  def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = nCube(n, p).filter(_.contains(0))
+  def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = normalizedNCube(n, p).filter(_.contains(0))
   def highCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(lowCorner(n, p))
   def highSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = Data.highCorner(n, p).map(cellRadialAdjustment(Geometry.cubic, _)).map(Vectors.normalize)
   def lowSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(highSphericalCorner(n, p))

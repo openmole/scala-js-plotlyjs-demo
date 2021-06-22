@@ -6,7 +6,7 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
-import plotlyjs.demo.directions.{AngularAdjustment, CubicAngularAdjustment}
+import plotlyjs.demo.directions.{AngularAdjustment, CubicAngularAdjustment, NSphereCovering}
 import plotlyjs.demo.utils.{Data, Vectors}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -44,7 +44,10 @@ object AngularAdjustmentTest {
     }
 
     val dimension = 3
-    val points = Data.highCorner(dimension, 16).map(Vectors.sub(Seq.fill(dimension)(0.5)))//.map(scale(2))
+    val step = 8
+    val points = Data.highCorner(dimension, 2 * step)//.map(Vectors.sub(Seq.fill(dimension)(0.5)))//.map(scale(2))
+
+    val alphaStep = Math.PI/4 / step
 
     div(
       scatter3dDiv(
@@ -65,6 +68,10 @@ object AngularAdjustmentTest {
         points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null),
         points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
         Color.rgb(0, 255, 0)),
+      scatter3dDiv(
+        NSphereCovering.nSphereCovering(dimension - 1, alphaStep, true),
+        NSphereCovering.nSphereCovering(dimension - 1, alphaStep),
+        Color.rgb(0, 0, 255)),
     )
   }
 

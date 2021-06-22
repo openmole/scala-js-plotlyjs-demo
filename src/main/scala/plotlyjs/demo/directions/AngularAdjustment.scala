@@ -50,7 +50,7 @@ object AngularAdjustment {
     val (borderNormalComponent, _) = geometry.borderNormalSplit(remainderToAdjust)
     val centerToBorderProportion = norm(borderNormalComponent) / sphericalRadius
 
-    val touchingBorderRemainder = remainderToAdjust * (1/centerToBorderProportion)
+    val touchingBorderRemainder = (1/centerToBorderProportion) *: remainderToAdjust
     val touchingBorder = componentToKeep + touchingBorderRemainder
     val maxAngle = touchingBorder ^ sphericalRadialDirection
 

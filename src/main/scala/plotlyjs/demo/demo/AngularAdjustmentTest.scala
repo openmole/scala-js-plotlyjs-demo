@@ -6,9 +6,8 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
-import plotlyjs.demo.directions.{AngularAdjustment, CubicAngularAdjustment, DiscAngularSpaceAdjustment}
-import plotlyjs.demo.utils.Data
-import plotlyjs.demo.utils.Vectors.scale
+import plotlyjs.demo.directions.{AngularAdjustment, CubicAngularAdjustment}
+import plotlyjs.demo.utils.{Data, Vectors}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
@@ -44,26 +43,27 @@ object AngularAdjustmentTest {
       plotDiv
     }
 
-    val highCorner = Data.highCorner(3, 16)//.map(scale(2))
+    val dimension = 3
+    val points = Data.highCorner(dimension, 16).map(Vectors.sub(Seq.fill(dimension)(0.5)))//.map(scale(2))
 
     div(
       scatter3dDiv(
-        highCorner,
-        highCorner.map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
+        points,
+        points.map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
         Color.rgb(255, 0, 0)),
       scatter3dDiv(
-        highCorner.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)),
-        highCorner.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
+        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)),
+        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
         Color.rgb(0, 0, 255)),
       /*
       scatter3dDiv(
-        highCorner.map(DiscAngularSpaceAdjustment.angularAdjustment).filter(_ != null),
-        highCorner.map(DiscAngularSpaceAdjustment.angularAdjustment).filter(_ != null).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
+        points.map(DiscAngularSpaceAdjustment.angularAdjustment).filter(_ != null),
+        points.map(DiscAngularSpaceAdjustment.angularAdjustment).filter(_ != null).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
         Color.rgb(0, 255, 0)),
       */
       scatter3dDiv(
-        highCorner.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null),
-        highCorner.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
+        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null),
+        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(AngularAdjustment.spacialAdjustedNormalization(Geometry.cubic, _)),
         Color.rgb(0, 255, 0)),
     )
   }

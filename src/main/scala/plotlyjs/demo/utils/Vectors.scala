@@ -25,30 +25,37 @@ object Vectors {
   def mul(v1: Vector, v2: Vector): Vector = v1 zip v2 map { case (c1, c2) => c1 * c2 }
   def dot(v1: Vector, v2: Vector): Double = mul(v1, v2).sum
   def angle(v1: Vector, v2: Vector): Double = acos(dot(v1, v2) / (norm(v1) * norm(v2)))
+  def parallelComponent(v1: Vector, v2: Vector): Vector = {
+    val u = normalize(v2, 2)
+    scale(u, dot(v1, u))
+  }
+  def orthogonalComponent(v1: Vector, v2: Vector): Vector = sub(v1, parallelComponent(v1, v2))
   //
 
   //Currying
-  def replace(i: Int, c: Double): Vector => Vector = (v: Vector) => replace(v, i, c)
-  def norm(p: Int): Vector => Double = (v: Vector) => norm(v, p)
-  def scale(s: Double): Vector => Vector = (v: Vector) => scale(v, s)
-  def normalize(p: Int): Vector => Vector = (v: Vector) => normalize(v, p)
-  def toNorm(p: Int, d: Double): Vector => Vector = (v: Vector) => toNorm(v, p, d)
+  def replace(i: Int, c: Double)(v: Vector): Vector = replace(v, i, c)
+  def norm(p: Int)(v: Vector): Double = norm(v, p)
+  def scale(s: Double)(v: Vector): Vector = scale(v, s)
+  def normalize(p: Int)(v: Vector): Vector = normalize(v, p)
+  def toNorm(p: Int, d: Double)(v: Vector): Vector = toNorm(v, p, d)
   def add(v2: Vector): Vector => Vector = (v1: Vector) => add(v1, v2)
   def sub(v2: Vector): Vector => Vector = (v1: Vector) => sub(v1, v2)
   def mul(v2: Vector): Vector => Vector = (v1: Vector) => mul(v1, v2)
   def dot(v2: Vector): Vector => Double = (v1: Vector) => dot(v1, v2)
   def angle(v2: Vector): Vector => Double = (v1: Vector) => angle(v1, v2)
+  def parallelComponent(v2: Vector): Vector => Vector = (v1: Vector) => parallelComponent(v1, v2)
+  def orthogonalComponent(v2: Vector): Vector => Vector = (v1: Vector) => orthogonalComponent(v1, v2)
   //
 
   //Parameter aliases
-  def norm: Vector => Double = norm(2)
-  def normalize: Vector => Vector = normalize(2)
-  def toNorm(d: Double): Vector => Vector = toNorm(2, d)
-  def negate: Vector => Vector = scale(-1)
+  def norm(v: Vector): Double = norm(2)(v)
+  def normalize(v: Vector): Vector = normalize(2)(v)
+  def toNorm(d: Double)(v: Vector): Vector = toNorm(2, d)(v)
+  def negate(v: Vector): Vector = scale(-1)(v)
   //
 
   //Function aliases
-  def - : Vector => Vector = negate
+  def -(v: Vector): Vector = negate(v)
   //
 
   //Implicit class
@@ -69,6 +76,8 @@ object Vectors {
     def mul(ov: Vector): Vector = Vectors.mul(ov)(v)
     def dot(ov: Vector): Double = Vectors.dot(ov)(v)
     def angle(ov: Vector): Double = Vectors.angle(ov)(v)
+    def parallelComponent(ov: Vector): Vector = Vectors.parallelComponent(ov)(v)
+    def orthogonalComponent(ov: Vector): Vector = Vectors.orthogonalComponent(ov)(v)
     //
 
     //Parameter aliases copy
@@ -80,6 +89,7 @@ object Vectors {
 
     //Function aliases
     def *(s: Double): Vector = scale(s)
+    def *:(s: Double): Vector = scale(s)
     def +(ov: Vector): Vector = add(ov)
     def -(ov: Vector): Vector = sub(ov)
     def ^(ov: Vector): Double = angle(ov)
@@ -87,10 +97,5 @@ object Vectors {
 
   }
   //
-
-  /*
-  def projection(v1: Vector, v2: Vector): Vector = mul(v2, dotProduct(v1, v2))
-  def orthogonal(v1: Vector, v2: Vector): Vector = sub(v1, projection(v1, v2))
-  */
 
 }

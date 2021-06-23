@@ -6,7 +6,7 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
-import plotlyjs.demo.directions.RegularDirectionsWithLines.{RegularDirections, regularDirections}
+import plotlyjs.demo.directions.RegularDirectionsWithLines.{VectorsAndLines, regularDirections}
 import plotlyjs.demo.directions._
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Vectors._
@@ -83,17 +83,17 @@ object AngularAdjustmentTest {
 
     val alphaStep = Math.PI/4 / (p/2.0)
 
-    def cut(regularDirections: RegularDirections) = {
+    def cut(regularDirections: VectorsAndLines) = {
       regularDirections.vectors.filterNot(_.read.head >= 0).foreach(_.remove())
       regularDirections.clean
     }
-    def cell(regularDirections: RegularDirections, sphericalShape: Boolean = false) = {
+    def cell(regularDirections: VectorsAndLines, sphericalShape: Boolean = false) = {
       regularDirections.vectors.filterNot(_.read.head == +1.0).foreach(_.remove())
       val cleaned = regularDirections.clean
       if(sphericalShape) cleaned.vectors.foreach(_.apply(normalize))
       cleaned
     }
-    def toLines(regularDirections: RegularDirections) = {
+    def toLines(regularDirections: VectorsAndLines) = {
       regularDirections.lineSegments.map { case (v1Ref, v2Ref) => (v1Ref.read, v2Ref.read) }
     }
     lazy val line3dCubicRegularDirections = toLines(cut(regularDirections(dimension, 2 * alphaStep)))
@@ -125,13 +125,13 @@ object AngularAdjustmentTest {
         Color.rgb(0, 255, 0)),
       scatter3dDiv(
         "Building method – 2-sphere",
-        NSphereCovering.nSphereCovering(dimension - 1, alphaStep, keepCubicShape = true).filter(_.head >= 0),
-        NSphereCovering.nSphereCovering(dimension - 1, alphaStep).filter(_.head >= 0),
+        RegularDirections.nSphereCovering(dimension, alphaStep, keepCubicShape = true).filter(_.head >= 0),
+        RegularDirections.nSphereCovering(dimension, alphaStep).filter(_.head >= 0),
         Color.rgb(0, 0, 0)),
       scatter3dDiv(
         "Building method – 3-sphere cell",
-        NSphereCovering.nSphereCovering(dimension, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
-        NSphereCovering.nSphereCovering(dimension, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail),
+        RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
+        RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail),
         Color.rgb(0, 0, 0)),
       scatter3dLinesDiv(
         "Building method – 2-sphere",

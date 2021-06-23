@@ -23,24 +23,24 @@ object RegularDirectionsWithLines {
   }
 
   type LineSegment = (VectorRef, VectorRef)
-  class RegularDirections(_vectors: Seq[VectorRef], _lineSegments: Seq[LineSegment] = Seq()) {
+  class VectorsAndLines(_vectors: Seq[VectorRef], _lineSegments: Seq[LineSegment] = Seq()) {
     def vectors: Seq[VectorRef] = _vectors
     def lineSegments: Seq[(VectorRef, VectorRef)] = _lineSegments
-    def copy: RegularDirections = {
+    def copy: VectorsAndLines = {
       val cleaned = clean
       val hashMap: mutable.HashMap[VectorRef, VectorRef] = mutable.HashMap()
       cleaned.vectors.foreach(v => hashMap += (v -> v.copy))
       val lineSegmentsCopy = cleaned.lineSegments.map(line => (hashMap(line._1), hashMap(line._2)))
-      new RegularDirections(hashMap.values.toSeq, lineSegmentsCopy)
+      new VectorsAndLines(hashMap.values.toSeq, lineSegmentsCopy)
     }
-    def ++(other: RegularDirections): RegularDirections = new RegularDirections(vectors ++ other.vectors, lineSegments ++ other.lineSegments)
-    def clean = new RegularDirections(vectors.filter(!_.isRemoved), lineSegments.filter { case (v1Ref, v2Ref) => !v1Ref.isRemoved && !v2Ref.isRemoved })
+    def ++(other: VectorsAndLines): VectorsAndLines = new VectorsAndLines(vectors ++ other.vectors, lineSegments ++ other.lineSegments)
+    def clean = new VectorsAndLines(vectors.filter(!_.isRemoved), lineSegments.filter { case (v1Ref, v2Ref) => !v1Ref.isRemoved && !v2Ref.isRemoved })
   }
 
-  def regularDirections(dim: Int, alphaStep: Double, sphericalShape: Boolean = false): RegularDirections = {
+  def regularDirections(dim: Int, alphaStep: Double, sphericalShape: Boolean = false): VectorsAndLines = {
     val nSphereDim = dim - 1
     if(nSphereDim == 0) {
-      new RegularDirections(Seq(Seq(-1.0), Seq(+1.0)), Seq())
+      new VectorsAndLines(Seq(Seq(-1.0), Seq(+1.0)), Seq())
     } else {
       val alphaMax = acos(1/sqrt(dim))
 
@@ -65,7 +65,7 @@ object RegularDirectionsWithLines {
           cellSphere.clean
         }).reduceLeft(_ ++ _)
       } else {
-        new RegularDirections(Seq(), Seq())
+        new VectorsAndLines(Seq(), Seq())
       }
 
       val zeros: VectorRef = Seq.fill(nSphereDim)(0.0)
@@ -83,12 +83,12 @@ object RegularDirectionsWithLines {
           }
         }).flatten
         if(vectorPairs.nonEmpty) lineSegments = lineSegments ++ Seq((zeros, vectorPairs(0)(0)), (zeros, vectorPairs(0)(1)))
-        cell = new RegularDirections(cell.vectors, lineSegments)
+        cell = new VectorsAndLines(cell.vectors, lineSegments)
       }
       println(cell.lineSegments)
       //
 
-      cell = cell ++ new RegularDirections(Seq(zeros))
+      cell = cell ++ new VectorsAndLines(Seq(zeros))
 
       val cubicNSphere = (0 to nSphereDim).map(insert => {
         Seq(Seq(-1.0), Seq(+1.0)).map(u => {
@@ -99,7 +99,7 @@ object RegularDirectionsWithLines {
           }))
           regularDirections
         }).reduce(_ ++ _)
-      }).reduce(_ ++ _) ++ new RegularDirections((0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if(c == '0') -1.0 else +1.0)))
+      }).reduce(_ ++ _) ++ new VectorsAndLines((0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if(c == '0') -1.0 else +1.0)))
 
       if(sphericalShape) cubicNSphere.vectors.foreach(_.apply(normalize))
 

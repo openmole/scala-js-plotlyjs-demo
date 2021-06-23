@@ -93,7 +93,6 @@ object AngularAdjustment {
   def nSphereSurface(n: Int, r: Double): Double = {
     import scala.math.{pow, Pi}
     if(n % 2 == 0) {
-      //noinspection ReplaceToWithUntil
       pow(2, n/2 + 1) * pow(Pi, n/2) * pow(r, n) / (1 to n-1 by 2).map(_.toDouble).product
     } else {
       pow(Pi, (n+1)/2) * pow(r, n) / (1.0/2.0 * (1 to (n-1)/2).map(_.toDouble).product)

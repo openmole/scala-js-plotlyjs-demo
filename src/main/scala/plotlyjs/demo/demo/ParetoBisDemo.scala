@@ -5,6 +5,7 @@ import org.openmole.plotlyjs.PlotMode.{markers, markersAndText}
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
+import plotlyjs.demo.directions.NSphereCovering
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.{Data, PointSet}
 
@@ -37,10 +38,10 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val corner = Data.lowSphericalCorner(8, 2)
+    val geometry = NSphereCovering.nSphereCovering(5, 23.toRadians).filter(_.max <= 0) //Data.lowSphericalCorner(8, 2)
     val results = Data.dim8Sample100
 
-    val nbObjectives = corner.head.size
+    val nbObjectives = geometry.head.size
 
     val TWO_PI = 2 * Math.PI
     val TO_DEGREES = 180 / Math.PI
@@ -64,8 +65,8 @@ object ParetoBisDemo {
         ._result
     }
 
-    val pointSet = new PointSet(corner/* ++ results*/)
-      .optimizationProblems(Seq.fill(corner.head.size)(MIN))
+    val pointSet = new PointSet(geometry/* ++ results*/)
+      .optimizationProblems(Seq.fill(geometry.head.size)(MIN))
       .higherPlotIsBetter
 
     val cartesianBarycenters = pointSet.norm1VectorNormalizedOutputs.map(
@@ -106,26 +107,26 @@ object ParetoBisDemo {
         .customdata(barycenters.map(_.pointSetIndex.toString).toJSArray)
         ._result
     }
+    /*
     val lowCornerDataSeq = (0 to nbObjectives).map(count => {
       val (countRawOutputs, countBarycenters) = pointSet.rawOutputs.zip(barycenters).filter { case (p, _) => p.count(c => c == 0) == count }.unzip
       scatterPolarData(
-        s"Low corner – $count zeros",
+        s"Geometry – $count zeros",
         countRawOutputs,
         countBarycenters,
         Color.hsl((count.toDouble/nbObjectives * 360).toInt, 50, 50)
       )
     })
-    /*
-    val lowCornerData = scatterPolarData(
-      "Low corner",
-      pointSet.rawOutputs.slice(0, lowCorner.size),
-      barycenters.slice(0, lowCorner.size),
-      Color.rgb(0, 0, 0))
     */
+    val geometryData = scatterPolarData(
+      "Geometry",
+      pointSet.rawOutputs.slice(0, geometry.size),
+      barycenters.slice(0, geometry.size),
+      Color.rgb(0, 0, 0))
     val resultsData = scatterPolarData(
       "Results",
-      pointSet.rawOutputs.slice(corner.size, pointSet.size),
-      barycenters.slice(corner.size, pointSet.size),
+      pointSet.rawOutputs.slice(geometry.size, pointSet.size),
+      barycenters.slice(geometry.size, pointSet.size),
       Color.rgb(255, 0, 0))
 
     /*
@@ -169,7 +170,7 @@ object ParetoBisDemo {
         )
       )
 
-    val allData = dataObjectiveSeq ++ lowCornerDataSeq ++ Seq(resultsData)
+    val allData = dataObjectiveSeq ++ Seq(geometryData) ++ Seq(resultsData)
     Plotly.newPlot(plotDiv.ref, allData.toJSArray, layout)
 
     def get[A](plotData: PlotData, key: String, index: Int): Option[A] = entries(plotData).filter(_._1 == key).headOption.map(_._2.asInstanceOf[scala.scalajs.js.Array[A]](index))

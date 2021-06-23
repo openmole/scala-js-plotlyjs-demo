@@ -48,10 +48,10 @@ object AngularAdjustmentTest {
     }
 
     val dimension = 3
-    val step = 8
-    val points = Data.centeredNCube(dimension, 2 * step, hollow = true).filter(_.head >= 0)
+    val p = 32
+    val points = Data.centeredNCube(dimension, p, hollow = true).filter(_.head >= 0)
 
-    val alphaStep = Math.PI/4 / step
+    val alphaStep = Math.PI/4 / (p/2.0)
 
     div(
       scatter3dDiv(

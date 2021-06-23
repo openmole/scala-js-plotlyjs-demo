@@ -1,5 +1,6 @@
 package plotlyjs.demo.directions
 
+import plotlyjs.demo.directions.AngularAdjustment.Splitter._
 import plotlyjs.demo.utils.Data
 
 import scala.math._
@@ -14,11 +15,20 @@ object NSphereCovering {
     } else {
       val alphaMax = acos(1/sqrt(dim))
 
-      val cellVectors = (1 to (alphaMax / alphaStep).toInt).flatMap(i => {
-          val rOnCell = tan(i * alphaStep)
-          val rOnSphere = Seq(rOnCell, 1).normalize.head
-          nSphereCovering(n - 1, alphaStep / rOnSphere).map(scale(rOnCell))
-      }).filter(_.map(abs).max <= 1) ++ Seq(Seq.fill(dim - 1)(0.0))
+      val cellVectors: Seq[Seq[Double]] = (1 to (alphaMax / alphaStep).toInt).flatMap(i => {
+        val rOnCell = tan(i * alphaStep)
+        val rOnSphere = Seq(rOnCell, 1).normalize.head
+        val sphere = nSphereCovering(n - 1, alphaStep / rOnSphere).map(scale(rOnCell))
+        val inside = sphere
+          .filter(_.map(abs).max <= 1)
+        val border = sphere
+          .map(maxMagnitudeComponent.split)
+          .filter(splitting => splitting.component.norm > 1)
+          .map(splitting => (normalize(splitting.component), splitting.remainder)) //rather radial projection ?
+          .map(splitting => splitting.fusion)
+          .filter(fusion => fusion.norm > tan((i - 1) * alphaStep))
+        /*inside ++ */border // ça dépasse !!!
+      }) ++ Seq(Seq.fill(dim - 1)(0.0))
 
       val cubicNSphere = cellVectors.flatMap(v => {
         (0 to dimension(v)).flatMap(number => {

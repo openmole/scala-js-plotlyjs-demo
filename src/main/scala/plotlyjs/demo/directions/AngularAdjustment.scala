@@ -2,47 +2,62 @@ package plotlyjs.demo.directions
 
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry.Geometry
+import plotlyjs.demo.directions.AngularAdjustment.Splitter._
 
 object AngularAdjustment {
 
-  object Geometry {
+  object Splitter {
 
-    trait Splitter {
-      def component(vector: Seq[Double]): Seq[Double] //TODO : component corresponds to the higher scalar product on "simple" reference directions
-                                                      // reference directions are the dual of the n-dimensional regular polyhedron
-                                                      // with the corresponding Splitters for its cells and recursively
-                                                      // making the Splitter list of DirectionsSegmentation
-      def split(vector: Seq[Double]): (Seq[Double], Seq[Double]) = {
+    type Splitter = Vector => Vector
+    implicit class ImplicitSplitter(splitter: Splitter) {
+      def component: Splitter = splitter
+      def remainder(vector: Vector): Vector = vector - component(vector)
+      def split(vector: Vector): Splitting = {
         val componentOfVector = component(vector)
         (componentOfVector, vector - componentOfVector)
       }
     }
 
+    type Splitting = (Vector, Vector)
+    implicit class ImplicitSplitting(splitting: Splitting) {
+      val component: Vector = splitting._1
+      val remainder: Vector = splitting._2
+      lazy val fusion: Vector = component + remainder
+    }
+
+    val maxMagnitudeComponent: Splitter = (v: Vector) => { //Max dot product on basis vectors and their negatives versions.
+      val maxMagnitudeIndex = v.map(math.abs).zipWithIndex.maxBy(_._1)._2
+      v.zipWithIndex.map { case (c, i) => if (i == maxMagnitudeIndex) c else 0 }
+    }
+
+  }
+
+  //TODO : component corresponds to the higher scalar product on "simple" reference directions
+  // reference directions are the dual of the n-dimensional regular polyhedron
+  // with the corresponding Splitters for its cells and recursively
+  // making the Splitter list of DirectionsSegmentation
+
+  object Geometry {
+
     trait Geometry { //TODO a splitter list, one for each space (n, n-1, n-2, ..., 2, 1 ?) – for the future point generation algorithm ?
-      val radialSplitter: Splitter //future n to (n-1)-cell projector
-      val borderNormalSplitter: Splitter //future n-1 to (n-2)-cell projector
-      def radialSplit(vector: Seq[Double]): (Seq[Double], Seq[Double]) = radialSplitter.split(vector)
-      def borderNormalSplit(vector: Seq[Double]): (Seq[Double], Seq[Double]) = borderNormalSplitter.split(vector)
+      def radialSplitter: Splitter //future n to (n-1)-cell projector
+      def borderNormalSplitter: Splitter //future n-1 to (n-2)-cell projector
+      def radialSplit(vector: Vector): Splitting = radialSplitter.split(vector)
+      def borderNormalSplit(vector: Vector): Splitting = borderNormalSplitter.split(vector)
 
       def space(dimension: Int): Double
     }
 
     val cubic: Geometry = new Geometry {
-
-      val maxMagnitudeDecomposition: Splitter = (v: Seq[Double]) => { //Max dot product on basis vectors and their negatives versions.
-        val maxMagnitudeIndex = v.map(math.abs).zipWithIndex.maxBy(_._1)._2
-        v.zipWithIndex.map { case (c, i) => if (i == maxMagnitudeIndex) c else 0 }
-      }
-      override val radialSplitter: Splitter = maxMagnitudeDecomposition
-      override val borderNormalSplitter: Splitter = maxMagnitudeDecomposition
-
+      override def radialSplitter: Splitter = Splitter.maxMagnitudeComponent
+      override def borderNormalSplitter: Splitter = Splitter.maxMagnitudeComponent
       override def space(dimension: Int): Double = 4 * 2*dimension //TODO Geometry as a GeometryFactory to set dimension at the beginning ?
     }
 
     //TODO simplex ?
   }
 
-  def cellRadialAdjustment(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
+  def cellRadialAdjustment(geometry: Geometry, vector: Vector): Vector = {
     val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
     val sphericalRadius = norm(componentToKeep)
     val sphericalRadialDirection = normalize(componentToKeep)
@@ -63,7 +78,7 @@ object AngularAdjustment {
     if(adjustedVector.count(_.isNaN) == 0) adjustedVector else vector
   }
 
-  def cellBorderParallelAdjustment(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
+  def cellBorderParallelAdjustment(geometry: Geometry, vector: Vector): Vector = {
     val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
     val (borderNormalComponent, borderParallelComponent) = geometry.borderNormalSplit(remainderToAdjust)
 
@@ -89,7 +104,7 @@ object AngularAdjustment {
     math.pow(geometry.space(dimension) / nSphereSurface(dimension - 1, 1), 1.0/dimension)
   }
 
-  def spacialAdjustedNormalization(geometry: Geometry, vector: Seq[Double]): Seq[Double] = {
+  def spacialAdjustedNormalization(geometry: Geometry, vector: Vector): Vector = {
     val dimension = vector.length
     val radius = {
       val (radialComponent, _) = geometry.radialSplit(vector)

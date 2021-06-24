@@ -11,11 +11,9 @@ class Graph[A](_hashMap: HashMap[A, Set[A]]) {
   def vertices: Set[A] = _hashMap.keySet
   def arrows: Seq[(A, A)] = _hashMap.flatMap[(A, A)] { case (vertex, heads) => heads.map((vertex, _)) }.toSeq
 
-  def arrow(v1: A, v2: A) = new Graph[A](_hashMap.map { case (vertex, heads) =>
+  def arrow(tail: A, head: A) = new Graph[A](_hashMap.map { case (vertex, heads) =>
     var newHeads = heads
-    Seq((v1, v2), (v2, v1)).foreach { case (tail, head) =>
-      if(tail == vertex) newHeads = heads + head
-    }
+    if(vertex == tail) newHeads = heads + head
     (vertex, newHeads)
   })
 

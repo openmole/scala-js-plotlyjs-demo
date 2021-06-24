@@ -14,7 +14,7 @@ object RegularDirections {
     } else {
       val alphaMax = acos(1/sqrt(dim))
 
-      val cellVectors = (1 to (alphaMax / alphaStep).toInt).flatMap(i => {
+      val cell = (1 to (alphaMax / alphaStep).toInt).flatMap(i => {
         val rOnCell = tan(i * alphaStep)
         val rOnSphere = Seq(rOnCell, 1).normalize.head
         val sphere = nSphereCovering(nSphereDim, alphaStep / rOnSphere).map(scale(rOnCell))
@@ -28,7 +28,7 @@ object RegularDirections {
         inside ++ border
       }) ++ Seq(Seq.fill(dim - 1)(0.0))
 
-      val cubicNSphere = cellVectors.flatMap(v => {
+      val cubicNSphere = cell.flatMap(v => {
         (0 to dim).flatMap(insert => {
           val (vLeft, vRight) = v.splitAt(insert)
           Seq(Seq(-1.0), Seq(+1.0)).map(u => {

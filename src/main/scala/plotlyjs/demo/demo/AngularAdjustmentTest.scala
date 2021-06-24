@@ -6,7 +6,7 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
-import plotlyjs.demo.directions.RegularDirectionsWithLines.{VectorsAndLines, regularDirections}
+import plotlyjs.demo.directions.RegularDirectionsWithLines
 import plotlyjs.demo.directions._
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Vectors._
@@ -83,23 +83,12 @@ object AngularAdjustmentTest {
 
     val alphaStep = Math.PI/4 / (p/2.0)
 
-    def cut(regularDirections: VectorsAndLines) = {
-      regularDirections.vectors.filterNot(_.read.head >= 0).foreach(_.remove())
-      regularDirections.clean
-    }
-    def cell(regularDirections: VectorsAndLines, sphericalShape: Boolean = false) = {
-      regularDirections.vectors.filterNot(_.read.head == +1.0).foreach(_.remove())
-      val cleaned = regularDirections.clean
-      if(sphericalShape) cleaned.vectors.foreach(_.apply(normalize))
-      cleaned
-    }
-    def toLines(regularDirections: VectorsAndLines) = {
-      regularDirections.lineSegments.map { case (v1Ref, v2Ref) => (v1Ref.read, v2Ref.read) }
-    }
-    lazy val line3dCubicRegularDirections = toLines(cut(regularDirections(dimension, 2 * alphaStep)))
-    lazy val line3dSphericalRegularDirections = toLines(cut(regularDirections(dimension, 2 * alphaStep, sphericalShape = true)))
-    lazy val line4dCubicRegularDirections = toLines(cell(cut(regularDirections(dimension + 1, 4 * alphaStep))))
-    lazy val line4dSphericalRegularDirections = toLines(cell(cut(regularDirections(dimension + 1, 4 * alphaStep)), sphericalShape = true))
+    val linesAlphaStep = 2 * alphaStep
+    //lazy val line3dCubicRegularDirections = RegularDirectionsWithLines2.nSphereCovering(dimension, linesAlphaStep, keepCubicShape = true).arrows//toLines(cut(regularDirections(dimension, 2 * alphaStep)))
+    lazy val line3dSphericalRegularDirections = RegularDirectionsWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 }
+    //println(line3dSphericalRegularDirections)
+    //lazy val line4dCubicRegularDirections = toLines(cell(cut(regularDirections(dimension + 1, 4 * alphaStep))))
+    //lazy val line4dSphericalRegularDirections = toLines(cell(cut(regularDirections(dimension + 1, 4 * alphaStep)), sphericalShape = true))
 
     div(
       scatter3dDiv(
@@ -133,11 +122,13 @@ object AngularAdjustmentTest {
         RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
         RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail),
         Color.rgb(0, 0, 0)),
+
       scatter3dLinesDiv(
         "Building method – 2-sphere",
-        line3dCubicRegularDirections,
+        null,//line3dCubicRegularDirections,
         line3dSphericalRegularDirections,
         Color.rgb(0, 0, 0)),
+
       /*
       scatter3dLinesDiv(
         "Building method – 3-sphere cell",
@@ -153,6 +144,10 @@ object AngularAdjustmentTest {
     def title: String = "AngularAdjustment"
     def code: String = sc.source
     def element: HtmlElement = sc.value
+  }
+
+  def mainTest(args: Array[String]): Unit = {
+    println(AngularAdjustmentTest.elementDemo)
   }
 
 }

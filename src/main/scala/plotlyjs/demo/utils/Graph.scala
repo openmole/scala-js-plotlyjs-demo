@@ -1,6 +1,5 @@
 package plotlyjs.demo.utils
 
-import scala.collection.IterableOnce
 import scala.collection.immutable.HashMap
 
 class Graph[A](_hashMap: HashMap[A, Set[A]]) {
@@ -10,18 +9,22 @@ class Graph[A](_hashMap: HashMap[A, Set[A]]) {
 
   def hashMap: Map[A, Set[A]] = _hashMap
   def vertices: Set[A] = _hashMap.keySet
+  def arrows: Seq[(A, A)] = _hashMap.flatMap[(A, A)] { case (vertex, heads) => heads.map((vertex, _)) }.toSeq
 
   def arrow(v1: A, v2: A) = new Graph[A](_hashMap.map { case (vertex, heads) =>
     var newHeads = heads
     Seq((v1, v2), (v2, v1)).foreach { case (tail, head) =>
-      if(tail.equals(vertex)) newHeads = heads + head
+      if(tail == vertex) newHeads = heads + head
     }
     (vertex, newHeads)
   })
 
   def ++(suffix: Graph[A]): Graph[A] = new Graph[A](HashMap.from(_hashMap ++ suffix.hashMap))
 
-  def filter(pred: A => Boolean) = new Graph[A](_hashMap.filter { case (vertex, _) => pred.apply(vertex) })
+  def filter(pred: A => Boolean): Graph[A] = {
+    val filtering = vertices.filter(pred)
+    new Graph[A](_hashMap filter { case (vertex, _) => filtering.contains(vertex) } map { case (vertex, heads) => (vertex, heads.intersect(filtering))})
+  }
 
   def mapVertices[B](f: A => B): HashMap[A, B] = HashMap.from(vertices.map(vertex => (vertex, f(vertex))))
 
@@ -29,13 +32,5 @@ class Graph[A](_hashMap: HashMap[A, Set[A]]) {
     val mapping = mapVertices(f)
     new Graph[B](_hashMap.map { case (vertex, heads) => (mapping(vertex), heads.map(mapping)) })
   }
-
-  /*
-  def reduceMap[B](f: A => Graph[B]): Graph[B] = {
-    var graph = new Graph[B]
-    vertices.foreach(vertex => graph = graph ++ f(vertex))
-    graph
-  }
-  */
 
 }

@@ -4,7 +4,8 @@ import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.{Color, Plotly}
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.RegularDirections
-import plotlyjs.demo.utils.Data
+import plotlyjs.demo.utils.PointSet.MIN
+import plotlyjs.demo.utils.{Data, PointSet}
 import plotlyjs.demo.utils.Vectors.ImplicitVector
 
 import scala.collection.immutable.HashMap
@@ -19,17 +20,19 @@ object ParallelCoordinatesDemo {
 
     val dim = 3
     val results = Data.dim8Sample100.map(_.drop(8 - dim))
+    val pointSet = new PointSet(results)
+      .optimizationProblems(Seq.fill(dim)(MIN))
+      .lowerPlotIsBetter
+
     val directions = RegularDirections.nSphereCovering(dim, Math.PI/4 / 4)
-
-
-    val groupedResults = results.groupBy(vector =>
+    val groupedResults = pointSet.spaceNormalizedOutputs.groupBy(vector =>
       directions
         .zip(directions.map(direction => abs(vector.dot(direction))))
         .maxBy(_._2)._1
     ).values
-    println(groupedResults.size)
-    groupedResults.foreach(group => println(s"  ${group.size}"))
-    println()
+    //println(groupedResults.size)
+    //groupedResults.foreach(group => println(s"  ${group.size}"))
+    //println()
 
     val plotDataSeq = groupedResults.map(group => {
       parallelCoordinates

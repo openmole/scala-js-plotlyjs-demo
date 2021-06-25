@@ -45,4 +45,10 @@ object RegularDirections {
     }
   }
 
+  def mainTest(args: Array[String]): Unit = {
+    for(dim <- 1 to 42) {
+      println(dim, nSphereCovering(dim, Pi/4 / 4).size)
+    }
+  }
+
 }

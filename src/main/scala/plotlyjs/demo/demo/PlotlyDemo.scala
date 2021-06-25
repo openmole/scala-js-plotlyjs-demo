@@ -66,7 +66,9 @@ object PlotlyDemo {
               ParetoDemo.elementDemo,
               ParetoBisDemo.elementDemo,
               Pareto3dDemo.elementDemo,
-              AngularAdjustmentTest.elementDemo,
+              DirectionsScatterDemo.elementDemo,
+              RegularDirectionsDemo.elementDemo,
+              RegularDirectionsWithCacheDemo.elementDemo
             )
           } yield {
             Tab(demo.title,

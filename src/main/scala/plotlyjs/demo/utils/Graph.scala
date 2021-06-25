@@ -1,5 +1,6 @@
 package plotlyjs.demo.utils
 
+import scala.:+
 import scala.collection.immutable.HashMap
 
 class Graph[A](_hashMap: HashMap[A, Set[A]]) {
@@ -10,6 +11,8 @@ class Graph[A](_hashMap: HashMap[A, Set[A]]) {
   def hashMap: Map[A, Set[A]] = _hashMap
   def vertices: Set[A] = _hashMap.keySet
   def arrows: Seq[(A, A)] = _hashMap.flatMap[(A, A)] { case (vertex, heads) => heads.map((vertex, _)) }.toSeq
+
+  def add(vertex: A): Graph[A] = new Graph(_hashMap + (vertex -> Set[A]()))
 
   def arrow(tail: A, head: A) = new Graph[A](_hashMap.map { case (vertex, heads) =>
     var newHeads = heads

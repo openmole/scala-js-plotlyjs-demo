@@ -15,7 +15,7 @@ import plotlyjs.demo.utils.Vectors._
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 import scala.util.control.Breaks.{break, breakable}
 
-object AngularAdjustmentTest {
+object RegularDirectionsDemo {
 
   private val sc = sourcecode.Text {
 
@@ -112,7 +112,7 @@ object AngularAdjustmentTest {
 
       val layout = Layout
         .title(title)
-        .showlegend(true)
+        .showlegend(false)
 
       Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray, layout)
 
@@ -170,13 +170,13 @@ object AngularAdjustmentTest {
   }
 
   val elementDemo: ElementDemo = new ElementDemo {
-    def title: String = "AngularAdjustment"
+    def title: String = "Regular directions"
     def code: String = sc.source
     def element: HtmlElement = sc.value
   }
 
   def mainTest(args: Array[String]): Unit = {
-    println(AngularAdjustmentTest.elementDemo)
+    println(RegularDirectionsDemo.elementDemo)
   }
 
 }

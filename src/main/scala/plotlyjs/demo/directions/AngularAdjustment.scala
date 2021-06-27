@@ -25,7 +25,7 @@ object AngularAdjustment {
       lazy val fusion: Vector = component + remainder
     }
 
-    val maxMagnitudeComponent: Splitter = (v: Vector) => { //Max dot product on basis vectors and their negatives versions.
+    val MaxMagnitudeComponent: Splitter = (v: Vector) => { //Max dot product on basis vectors and their negatives versions.
       val maxMagnitudeIndex = v.map(math.abs).zipWithIndex.maxBy(_._1)._2
       v.zipWithIndex.map { case (c, i) => if (i == maxMagnitudeIndex) c else 0 }
     }
@@ -49,8 +49,8 @@ object AngularAdjustment {
     }
 
     val cubic: Geometry = new Geometry {
-      override def radialSplitter: Splitter = Splitter.maxMagnitudeComponent
-      override def borderNormalSplitter: Splitter = Splitter.maxMagnitudeComponent
+      override def radialSplitter: Splitter = Splitter.MaxMagnitudeComponent
+      override def borderNormalSplitter: Splitter = Splitter.MaxMagnitudeComponent
       override def space(dimension: Int): Double = 4 * 2*dimension //TODO Geometry as a GeometryFactory to set dimension at the beginning ?
     }
 

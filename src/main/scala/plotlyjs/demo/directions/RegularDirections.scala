@@ -18,7 +18,7 @@ object RegularDirections {
         val rOnCell = tan(i * alphaStep)
         val rOnSphere = Seq(rOnCell, 1).normalize.head
         val sphere = nSphereCovering(nSphereDim, alphaStep / rOnSphere).map(scale(rOnCell))
-        val maxMagnitudes = sphere.map(maxMagnitudeComponent(_).norm)
+        val maxMagnitudes = sphere.map(MaxMagnitudeComponent(_).norm)
         val inside = (sphere zip maxMagnitudes)
           .filter(_._2 <= 1).map(_._1)
         val border = (sphere zip maxMagnitudes)

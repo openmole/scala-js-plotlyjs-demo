@@ -31,27 +31,30 @@ object RegularDirectionsWithCache {
   }
 
   /*
-  class Node {
-
+  case class RecursionCall(dim: Int, angleStep: Double, nSphere: Seq[Vector] = Seq()) {
+    def nSphere(nSphere: Seq[Vector]): RecursionCall = RecursionCall(dim, angleStep, nSphere)
   }
 
-  def nSphereCoveringRecursionGraph(dim: Int, alphaStep: Double): Graph[Node] = {
-    println(s"    Seq($dim, $alphaStep),")
+  def nSphereCoveringRecursionGraph(dim: Int, angleStep: Double): (RecursionCall, Graph[RecursionCall]) = {
+    println(s"    Seq($dim, $angleStep),")
     var lines = Seq[Seq[Seq[Double]]]()
+    val recursionCall = RecursionCall(dim, angleStep)
+    var graph = new Graph(Set(recursionCall))
+
     val nSphereDim = dim - 1
     if(nSphereDim == 0) {
 
     } else {
       val alphaMax = acos(1/sqrt(dim))
-      (1 to (alphaMax / alphaStep).toInt).foreach(i => {
-        val rOnCell = tan(i * alphaStep)
+      (1 to (alphaMax / angleStep).toInt).foreach(i => {
+        val rOnCell = tan(i * angleStep)
         val rOnSphere = Seq(rOnCell, 1).normalize.head
 
-        val recursionAlphaStep = alphaStep / rOnSphere
+        val recursionAlphaStep = angleStep / rOnSphere
         val recursionDim = nSphereDim
-        lines = lines :+ Seq(Seq(dim, alphaStep), Seq(recursionDim, recursionAlphaStep))
 
-        lines = lines ++ nSphereCoveringParameters(recursionDim, recursionAlphaStep)
+        val (successorVertex, successorGraph) = nSphereCoveringRecursionGraph(recursionDim, recursionAlphaStep)
+        graph = graph ++ new Graph() ++ successorGraph
       })
     }
     lines

@@ -3,7 +3,9 @@ package plotlyjs.demo.directions
 import plotlyjs.demo.directions.AngularAdjustment.Splitter._
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.Graph
+import plotlyjs.demo.utils.Graph._
 
+import scala.language.postfixOps
 import scala.math._
 
 object RegularDirectionsWithLines {
@@ -11,12 +13,12 @@ object RegularDirectionsWithLines {
   def nSphereCovering(dim: Int, alphaStep: Double, keepCubicShape: Boolean = false): Graph[Vector] = {
     val nSphereDim = dim - 1
     if(nSphereDim == 0) {
-      new Graph(Set(Seq(-1.0), Seq(+1.0)))
+      Graph(Seq(-1.0), Seq(+1.0))
     } else {
       val alphaMax = acos(1/sqrt(dim))
 
       val cell = {
-        var graph = new Graph(Set(Seq.fill(nSphereDim)(0.0)))
+        var graph = Graph(Seq.fill(nSphereDim)(0.0))
         var prevSphere = graph;
         (1 to (alphaMax / alphaStep).toInt).foreach(i => {
           val rOnCell = tan(i * alphaStep)
@@ -26,18 +28,18 @@ object RegularDirectionsWithLines {
             graph = graph ++ sphere
             sphere.vertices.foreach(vertex => {
               if(prevSphere.vertices.size == 1) {
-                graph = graph.arrow(prevSphere.vertices.head, vertex)
+                graph = graph.added(prevSphere.vertices.head --> vertex)
               } else {
                 prevSphere.vertices.foreach(prevVertex => {
                   if(signum(prevVertex(0)) == signum(vertex(0))) {
-                    graph = graph.arrow(prevVertex, vertex)
+                    graph = graph.added(prevVertex --> vertex)
                   }
                 })
               }
             })
             prevSphere = sphere
           } else {
-            val maxMagnitude = sphere.mapVertices(maxMagnitudeComponent(_).norm)
+            val maxMagnitude = sphere.mapVertices(MaxMagnitudeComponent(_).norm)
             val inside = sphere
               .filter(maxMagnitude(_) <= 1)
             val border = sphere
@@ -57,7 +59,7 @@ object RegularDirectionsWithLines {
             vLeft ++ u ++ vRight
           })
         }).reduce(_ ++ _)
-      }).reduce(_ ++ _) ++ new Graph((0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if (c == '0') -1.0 else +1.0)).toSet[Vector])
+      }).reduce(_ ++ _) ++ Graph.fromVertices((0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if (c == '0') -1.0 else +1.0)).toSet[Vector])
 
       if(keepCubicShape) {
         cubicNSphere

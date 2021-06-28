@@ -33,9 +33,11 @@ object RegularDirectionsWithCacheDemo {
 
     val plotDiv = div()
 
-    val resultsSeq = RegularDirectionsWithCache.parametersLines.map(_.map(_.map(p => Seq(p(0), p(1).toDegrees))))
+    //val resultsSeq = RegularDirectionsWithCache.parametersLines.map(_.map(_.map(p => Seq(p(0), p(1).toDegrees))))
+    //  .reverse.head
+    val resultsSeq = RegularDirectionsWithCache.nSphereCoveringRecursionGraph(10, Math.PI/4 / 4)._2.arrows.map(arrow => Seq(arrow._1, arrow._2).map(recursionCall => Seq(recursionCall.dim.toDouble, recursionCall.angleStep.toDegrees)))
 
-    val dataSeq = resultsSeq.drop(resultsSeq.size - 1).head.map(resultLine => {
+    val dataSeq = resultsSeq.map(resultLine => {
       val xy = resultLine.transpose
       scatter
         .x(xy(0).toJSArray)

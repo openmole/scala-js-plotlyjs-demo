@@ -2,6 +2,7 @@ package plotlyjs.demo.directions
 
 import plotlyjs.demo.directions.AngularAdjustment.Splitter._
 import plotlyjs.demo.utils.Graph
+import plotlyjs.demo.utils.Graph.ImplicitTail
 import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
@@ -30,16 +31,13 @@ object RegularDirectionsWithCache {
     lines
   }
 
-  /*
   case class RecursionCall(dim: Int, angleStep: Double, nSphere: Seq[Vector] = Seq()) {
     def nSphere(nSphere: Seq[Vector]): RecursionCall = RecursionCall(dim, angleStep, nSphere)
   }
 
   def nSphereCoveringRecursionGraph(dim: Int, angleStep: Double): (RecursionCall, Graph[RecursionCall]) = {
-    println(s"    Seq($dim, $angleStep),")
-    var lines = Seq[Seq[Seq[Double]]]()
     val recursionCall = RecursionCall(dim, angleStep)
-    var graph = new Graph(Set(recursionCall))
+    var graph = Graph(recursionCall)
 
     val nSphereDim = dim - 1
     if(nSphereDim == 0) {
@@ -49,17 +47,31 @@ object RegularDirectionsWithCache {
       (1 to (alphaMax / angleStep).toInt).foreach(i => {
         val rOnCell = tan(i * angleStep)
         val rOnSphere = Seq(rOnCell, 1).normalize.head
-
         val recursionAlphaStep = angleStep / rOnSphere
         val recursionDim = nSphereDim
-
         val (successorVertex, successorGraph) = nSphereCoveringRecursionGraph(recursionDim, recursionAlphaStep)
-        graph = graph ++ new Graph() ++ successorGraph
+        graph = graph + (recursionCall --> successorVertex) ++ successorGraph
       })
     }
-    lines
+    (recursionCall, graph)
   }
-  */
+
+  def optimizedRecursionGraph(graph: Graph[RecursionCall], angleDiff: Double) = {
+    var optimizedGraph = graph
+    graph.vertices.groupBy(_.dim).values.foreach(set => {
+      val seq = set.toSeq
+      for(i1 <- 0 until seq.size - 1) {
+        val v1 = seq(i1)
+        for(i2 <- i1 + 1 until seq.size) {
+          val v2 = seq(i2)
+          if(math.abs(v1.angleStep - v2.angleStep) < angleDiff) {
+            optimizedGraph = optimizedGraph.redirected(v1, v2)
+          }
+        }
+      }
+    })
+    optimizedGraph
+  }
 
   def mainTest(args: Array[String]): Unit = {
     var dimLines = Seq[Seq[Seq[Seq[Double]]]]()

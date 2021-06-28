@@ -1,6 +1,6 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.utils.Graph.Arrow
+import plotlyjs.demo.utils.Graph._
 
 import scala.collection.immutable.HashMap
 import scala.language.postfixOps
@@ -9,29 +9,33 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
   private def hashMap: Map[A, Set[A]] = _hashMap
   def vertices: Set[A] = _hashMap.keySet
-  def headsOf(tail: A): Set[A] = _hashMap(tail)
-  def arrows: Seq[(A, A)] = _hashMap.flatMap { case (vertex, heads) => heads.map((vertex, _)) }.toSeq
+  def headsOf(vertex: A): Set[A] = _hashMap(vertex)
+  def tailsOf(vertex: A): Set[A] = _hashMap.map { case (tail, heads) if heads contains vertex => tail }.toSet
+  def arrows: Set[(A, A)] = _hashMap.flatMap { case (vertex, heads) => heads.map(head => ((vertex, head), null)) }.keySet
 
   def concat(graph: Graph[A]): Graph[A] = {
     val grownHashMap = _hashMap map { case (vertex, heads) =>
       var newHeads = heads
       if(graph.vertices contains vertex) {
-        newHeads = newHeads ++ graph.headsOf(vertex)
+        newHeads = heads ++ graph.headsOf(vertex)
       }
       (vertex, newHeads)
     }
-    val shrankHashMap = graph.hashMap filterNot { case (vertex, _) =>
+    val shrunkHashMap = graph.hashMap filterNot { case (vertex, _) =>
       grownHashMap contains vertex
     }
-    new Graph(grownHashMap ++ shrankHashMap)
+    new Graph(grownHashMap ++ shrunkHashMap)
   }
-  def ++(suffix: Graph[A]): Graph[A] = concat(suffix)
+  def ++(graph: Graph[A]): Graph[A] = concat(graph)
 
   def added(vertexToAdd: A): Graph[A] = this ++ new Graph(HashMap(vertexToAdd -> Set()))
   def +(vertex: A): Graph[A] = added(vertex)
 
   def removed(vertexToRemove: A): Graph[A] = new Graph((_hashMap - vertexToRemove) map { case (vertex, heads) => (vertex, heads - vertexToRemove) })
   def -(vertex: A): Graph[A] = removed(vertex)
+
+  def removeAll(verticesToRemove: Set[A]): Graph[A] = new Graph((_hashMap -- verticesToRemove) map { case (vertex, heads) => (vertex, heads -- verticesToRemove) })
+  def --(vertices: Set[A]): Graph[A] = removeAll(vertices)
 
   def added(arrow: Arrow[A]): Graph[A] = {
     val tail = arrow.tail
@@ -51,6 +55,16 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
   }
   def -(arrow: Arrow[A]): Graph[A] = removed(arrow)
 
+  def branchRemoved(vertex: A): Graph[A] = {
+    var graph = this
+    headsOf(vertex).foreach(head => graph = graph.branchRemoved(head))
+    graph - vertex
+  }
+
+  def redirected(redirected: A, to: A): Graph[A] = {
+    Graph(tailsOf(redirected).map(_ --> to).toArray)/* ++ branchRemoved(redirected)*/
+  }
+
   def filter(pred: A => Boolean): Graph[A] = {
     val filtering = vertices.filter(pred)
     new Graph(_hashMap filter { case (vertex, _) => filtering contains vertex } map { case (vertex, heads) => (vertex, heads intersect filtering)})
@@ -68,8 +82,8 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 object Graph {
 
   type ElementType = String
-  val VertexType : ElementType = "vertex"
-  val ArrowType : ElementType = "arrow"
+  val VertexType: ElementType = "vertex"
+  val ArrowType: ElementType = "arrow"
 
   class GraphElement[A](_elementType: ElementType) {
     def elementType: ElementType = _elementType
@@ -87,6 +101,17 @@ object Graph {
     def -->(head: A): Arrow[A] = new Arrow(tail, head)
   }
 
+  def apply[A](elements: Set[GraphElement[A]]): Graph[A] = {
+    var graph = new Graph[A]
+    elements.foreach(elem => {
+      elem.elementType match {
+        case VertexType => graph = graph + elem.asInstanceOf[Vertex[A]].vertex
+        case ArrowType => graph = graph + elem.asInstanceOf[Arrow[A]]
+      }
+    })
+    graph
+  }
+
   def apply[A](elements: GraphElement[A]*): Graph[A] = {
     var graph = new Graph[A]
     elements.foreach(elem => {
@@ -99,5 +124,11 @@ object Graph {
   }
 
   def fromVertices[A](vertices: Set[A]) = new Graph(HashMap.from(vertices.map((_, Set[A]()))))
+
+  def mainTest(args: Array[String]): Unit = {
+    val graph = Graph(1, 2, 1 --> 2) ++ Graph(3, 4, 3 --> 4, 1 --> 3)
+    println(graph.arrows)
+    println(graph.headsOf(1))
+  }
 
 }

@@ -159,12 +159,12 @@ object RegularDirectionsDemo {
         RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail))),
       onDemand(title2SL, () => scatter3dLinesDiv(
         title2SL,
-        RegularDirectionsWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 },
+        RegularDirectionsWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 }.toSeq,
         Color.rgb(0, 0, 0))),
       onDemand(title3SL, () => scatter3dLinesDiv(
         title3SL,
-        RegularDirectionsWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
-          .filter { case (v1, v2) => v1.head == +1.0 && v2.head == +1.0 } map { case (v1, v2) => (v1.normalize.tail, v2.normalize.tail) },
+        (RegularDirectionsWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
+          .filter { case (v1, v2) => v1.head == +1.0 && v2.head == +1.0 } map { case (v1, v2) => (v1.normalize.tail, v2.normalize.tail) }).toSeq,
         Color.rgb(0, 0, 0))),
     )
   }

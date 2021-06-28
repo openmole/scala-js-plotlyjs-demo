@@ -1,15 +1,17 @@
 package plotlyjs.demo.directions
 
-import plotlyjs.demo.directions.AngularAdjustment.Splitter._
+import plotlyjs.demo.directions.AngularAdjustment.Splitter.MaxMagnitudeComponent
+import plotlyjs.demo.directions.RegularDirections.nSphereCovering
 import plotlyjs.demo.utils.Graph
 import plotlyjs.demo.utils.Graph.ImplicitTail
 import plotlyjs.demo.utils.Vectors._
 
+import scala.collection.immutable.HashMap
 import scala.math._
-import scala.util.control.Breaks.{break, breakable}
 
 object RegularDirectionsWithCache {
 
+  /*
   def nSphereCoveringParameters(dim: Int, alphaStep: Double): Seq[Seq[Seq[Double]]] = {
     println(s"    Seq($dim, $alphaStep),")
     var lines = Seq[Seq[Seq[Double]]]()
@@ -31,62 +33,118 @@ object RegularDirectionsWithCache {
     }
     lines
   }
+  */
 
-  case class RecursionCall(dim: Int, angleStep: Double, nSphere: Seq[Vector] = Seq()) {
-    def nSphere(nSphere: Seq[Vector]): RecursionCall = RecursionCall(dim, angleStep, nSphere)
+  case class RecursionCall(dim: Int, angleStep: Double, rOnCell: Double/* = Double.NaN*/, previousROnCell: Double = Double.NaN, nSphere: Seq[Vector] = Seq()) {
+
+    private def withNSphere(nSphere: Seq[Vector]) = RecursionCall(dim, angleStep, rOnCell, previousROnCell, nSphere)
+
+    /*
+    def resolve(calls: Graph[RecursionCall], cache: Graph[RecursionCall], results: Graph[RecursionCall]): (Graph[RecursionCall], Graph[RecursionCall]) = {
+
+      val cachedRecursionCall = cache.directSuccessorsOf(this).head
+      val cachedNSphere = cachedRecursionCall.nSphere
+
+      if(cachedNSphere.nonEmpty) {
+        (cache, results + (this --> withNSphere(cachedNSphere.map(scale(rOnCell)))))
+      } else {
+        val nSphereDim = dim - 1
+        if(nSphereDim == 0) {
+          val nSphere = Seq(Seq(-1.0), Seq(+1.0))
+          (cache.replaced(cachedRecursionCall, cachedRecursionCall.withNSphere(nSphere)), results + (this --> withNSphere(nSphere.map(scale(rOnCell)))))
+        } else {
+
+          var updatedCache = cache
+          var updateResults = results
+
+          calls.directSuccessorsOf(this).filter(_.nSphere == Seq()).foreach(unresolvedDependency => {
+            dependenciesResolvedGraph = dependenciesResolvedGraph ++ unresolvedDependency.resolve(calls)
+          })
+
+          val cell = dependenciesResolvedGraph.directSuccessorsOf(this).flatMap(directSuccessor => {
+            val sphere = directSuccessor.nSphere
+            val maxMagnitudes = sphere.map(MaxMagnitudeComponent(_).norm)
+            val inside = (sphere zip maxMagnitudes)
+              .filter(_._2 <= 1).map(_._1)
+            val border = (sphere zip maxMagnitudes)
+              .filter(_._2 > 1)
+              .map { case (v, m) => (1/m) *: v }
+              .filter(_.norm > directSuccessor.previousROnCell)
+            inside ++ border
+          }) ++ Seq(Seq.fill(dim - 1)(0.0))
+
+          val cubicNSphere = cell.flatMap(v => {
+            (0 to dim).flatMap(insert => {
+              val (vLeft, vRight) = v.splitAt(insert)
+              Seq(Seq(-1.0), Seq(+1.0)).map(u => {
+                vLeft ++ u ++ vRight
+              })
+            })
+          }) ++ (0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if(c == '0') -1.0 else +1.0))
+
+          dependenciesResolvedGraph.replaced(this, withNSphere(cubicNSphere.map(normalize).toSeq))
+        }
+      }
+    }
+    */
   }
 
-  def nSphereCoveringRecursionGraph(dim: Int, angleStep: Double): (RecursionCall, Graph[RecursionCall]) = {
-    val recursionCall = RecursionCall(dim, angleStep)
+  def recursionGraph(recursionCall: RecursionCall): (RecursionCall, Graph[RecursionCall]) = {
+    val dim = recursionCall.dim
+    val angleStep = recursionCall.angleStep
+
     var graph = Graph(recursionCall)
 
-    val nSphereDim = dim - 1
+    val nSphereDim = recursionCall.dim - 1
     if(nSphereDim == 0) {
 
     } else {
       val alphaMax = acos(1/sqrt(dim))
       (1 to (alphaMax / angleStep).toInt).foreach(i => {
+        val previousROnCell = tan((i - 1) * angleStep)
         val rOnCell = tan(i * angleStep)
         val rOnSphere = Seq(rOnCell, 1).normalize.head
         val recursionAlphaStep = angleStep / rOnSphere
         val recursionDim = nSphereDim
-        val (successorVertex, successorGraph) = nSphereCoveringRecursionGraph(recursionDim, recursionAlphaStep)
+        val (successorVertex, successorGraph) = recursionGraph(RecursionCall(recursionDim, recursionAlphaStep, rOnCell, previousROnCell))
         graph = graph + (recursionCall --> successorVertex) ++ successorGraph
       })
     }
     (recursionCall, graph)
   }
 
-  //not ready yet
-  def optimizedRecursionGraph(graph: Graph[RecursionCall], angleDiff: Double): Graph[RecursionCall] = {
-    var optimizedGraph = graph
-    var done = false
-    while(!done) {
-      done = true
-      breakable {
-        optimizedGraph.vertices.groupBy(_.dim).toSeq.sortBy(_._1).map(_._2).map(_.toSeq).foreach(dimGroup => {
-          for(i1 <- 0 until dimGroup.size - 1) {
-            val v1 = dimGroup(i1)
-            for(i2 <- i1 + 1 until dimGroup.size) {
-              val v2 = dimGroup(i2)
-              if(math.abs(v1.angleStep - v2.angleStep) < angleDiff) {
-                optimizedGraph = optimizedGraph.redirected(v1 --> v2)
-                done = false
-                break
-              }
-            }
-          }
-        })
-      }
-    }
-    optimizedGraph
+  def substituteGroups(graph: Graph[RecursionCall], angleDiff: Double): Iterable[Set[RecursionCall]] = {
+    graph.vertices.groupBy(_.dim).values.flatMap(dimGroup => {
+      Graph.group(dimGroup, (v1: RecursionCall, v2: RecursionCall) => math.abs(v1.angleStep - v2.angleStep) < angleDiff)
+    })
   }
 
   /*
-  def recursionCallGroups(graph: Graph[RecursionCall]): Graph[RecursionCall] = {
-
+  def substituteGroups(graph: Graph[RecursionCall], angleDiff: Double): Map[RecursionCall, Int] = {
+    var i = 0
+    HashMap.from(graph.vertices.groupBy(_.dim).values.flatMap(dimGroup => {
+      Graph.group(dimGroup, (v1: RecursionCall, v2: RecursionCall) => math.abs(v1.angleStep - v2.angleStep) < angleDiff).flatMap(group => {
+        group.map(recursionCall => {
+          i = i + 1
+          (recursionCall, i)
+        })
+      })
+    }))
   }
   */
+
+  def substituteMap(substituteGroups: Iterable[Set[RecursionCall]]): Map[RecursionCall, RecursionCall] = {
+    HashMap.from(substituteGroups.flatMap(group => {
+      val substitute = RecursionCall(group.head.dim, group.map(_.angleStep).sum/group.size, 0)
+      group.map(recursionCall => (recursionCall, substitute))
+    }))
+  }
+
+  def executeRecursionCalls(graph: Graph[RecursionCall], substitutes: Map[RecursionCall, RecursionCall]) = {
+
+  }
+
+
 
   def mainTest(args: Array[String]): Unit = {
     /*
@@ -104,8 +162,8 @@ object RegularDirectionsWithCache {
     println(dimLines)
     */
 
-    val graph = RegularDirectionsWithCache.nSphereCoveringRecursionGraph(10, Math.PI/4 / 4)._2
-    RegularDirectionsWithCache.optimizedRecursionGraph(graph, Math.PI/4 / 128)
+    val graph = RegularDirectionsWithCache.recursionGraph(RecursionCall(10, Math.PI/4 / 4, 1))._2
+    RegularDirectionsWithCache.substituteGroups(graph, Math.PI/4 / 128)
   }
 
   //val parametersLines = Seq(Seq(Seq(Seq(0.0))))

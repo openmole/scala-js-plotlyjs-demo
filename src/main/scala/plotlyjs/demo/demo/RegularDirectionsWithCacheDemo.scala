@@ -1,11 +1,12 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import org.openmole.plotlyjs.PlotMode.lines
+import org.openmole.plotlyjs.PlotMode.{lines, markers}
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.RegularDirectionsWithCache.RecursionCall
 import plotlyjs.demo.directions.{RegularDirections, RegularDirectionsWithCache}
+import plotlyjs.demo.utils.Graph.ImplicitTail
 import plotlyjs.demo.utils.PointSet.MIN
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.{Data, Graph, PointSet}
@@ -34,7 +35,7 @@ object RegularDirectionsWithCacheDemo {
 
     //val resultsSeq = RegularDirectionsWithCache.parametersLines.map(_.map(_.map(p => Seq(p(0), p(1).toDegrees))))
     //  .reverse.head
-    val graph = RegularDirectionsWithCache.nSphereCoveringRecursionGraph(10, Math.PI/4 / 4)._2
+    val graph = RegularDirectionsWithCache.recursionGraph(RecursionCall(10, Math.PI/4 / 4, 1))._2
 
     def lineSeqFrom(graph: Graph[RecursionCall]) = {
       graph.arrows.map(arrow => Seq(arrow._1, arrow._2).map(recursionCall => Seq(recursionCall.dim.toDouble, recursionCall.angleStep.toDegrees)))
@@ -50,6 +51,7 @@ object RegularDirectionsWithCacheDemo {
         scatter
           .x(xy(0).toJSArray)
           .y(xy(1).toJSArray)
+          //.set(marker.size(1))
           .setMode(lines)
           .line(line
             .width(1)
@@ -72,7 +74,11 @@ object RegularDirectionsWithCacheDemo {
 
     div(
       graphDiv(graph),
-      graphDiv(RegularDirectionsWithCache.optimizedRecursionGraph(graph, Math.PI/4 / 128)),
+      graphDiv(RegularDirectionsWithCache.substituteGroups(graph, Math.PI/4 / 32)
+        .map(_.map(Graph(_)).reduceLeft((g1, g2) => {
+          g1 + (g1.vertices.head --> g2.vertices.head)
+        })).reduce(_ ++ _)
+      ),
     )
   }
 

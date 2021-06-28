@@ -6,6 +6,7 @@ import plotlyjs.demo.utils.Graph.ImplicitTail
 import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
+import scala.util.control.Breaks.{break, breakable}
 
 object RegularDirectionsWithCache {
 
@@ -56,24 +57,39 @@ object RegularDirectionsWithCache {
     (recursionCall, graph)
   }
 
-  def optimizedRecursionGraph(graph: Graph[RecursionCall], angleDiff: Double) = {
+  //not ready yet
+  def optimizedRecursionGraph(graph: Graph[RecursionCall], angleDiff: Double): Graph[RecursionCall] = {
     var optimizedGraph = graph
-    graph.vertices.groupBy(_.dim).values.foreach(set => {
-      val seq = set.toSeq
-      for(i1 <- 0 until seq.size - 1) {
-        val v1 = seq(i1)
-        for(i2 <- i1 + 1 until seq.size) {
-          val v2 = seq(i2)
-          if(math.abs(v1.angleStep - v2.angleStep) < angleDiff) {
-            optimizedGraph = optimizedGraph.redirected(v1, v2)
+    var done = false
+    while(!done) {
+      done = true
+      breakable {
+        optimizedGraph.vertices.groupBy(_.dim).toSeq.sortBy(_._1).map(_._2).map(_.toSeq).foreach(dimGroup => {
+          for(i1 <- 0 until dimGroup.size - 1) {
+            val v1 = dimGroup(i1)
+            for(i2 <- i1 + 1 until dimGroup.size) {
+              val v2 = dimGroup(i2)
+              if(math.abs(v1.angleStep - v2.angleStep) < angleDiff) {
+                optimizedGraph = optimizedGraph.redirected(v1 --> v2)
+                done = false
+                break
+              }
+            }
           }
-        }
+        })
       }
-    })
+    }
     optimizedGraph
   }
 
+  /*
+  def recursionCallGroups(graph: Graph[RecursionCall]): Graph[RecursionCall] = {
+
+  }
+  */
+
   def mainTest(args: Array[String]): Unit = {
+    /*
     var dimLines = Seq[Seq[Seq[Seq[Double]]]]()
     val maxDim = 10
     println("Seq(")
@@ -86,6 +102,10 @@ object RegularDirectionsWithCache {
     println(")")
     println()
     println(dimLines)
+    */
+
+    val graph = RegularDirectionsWithCache.nSphereCoveringRecursionGraph(10, Math.PI/4 / 4)._2
+    RegularDirectionsWithCache.optimizedRecursionGraph(graph, Math.PI/4 / 128)
   }
 
   //val parametersLines = Seq(Seq(Seq(Seq(0.0))))

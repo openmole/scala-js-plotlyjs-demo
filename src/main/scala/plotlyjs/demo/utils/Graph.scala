@@ -9,8 +9,9 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
   private def hashMap: Map[A, Set[A]] = _hashMap
   def vertices: Set[A] = _hashMap.keySet
-  def headsOf(vertex: A): Set[A] = _hashMap(vertex)
-  def tailsOf(vertex: A): Set[A] = _hashMap.map { case (tail, heads) if heads contains vertex => tail }.toSet
+  //def headsOf(vertex: A): Set[A] = if(_hashMap.contains(vertex)) _hashMap(vertex)
+  def headsOf(vertex: A): Set[A] = if(_hashMap.contains(vertex)) _hashMap(vertex) else Set[A]()
+  def tailsOf(vertex: A): Set[A] = _hashMap.filter(_._2 contains vertex).keySet
   def arrows: Set[(A, A)] = _hashMap.flatMap { case (vertex, heads) => heads.map(head => ((vertex, head), null)) }.keySet
 
   def concat(graph: Graph[A]): Graph[A] = {
@@ -61,8 +62,10 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
     graph - vertex
   }
 
-  def redirected(redirected: A, to: A): Graph[A] = {
-    Graph(tailsOf(redirected).map(_ --> to).toArray)/* ++ branchRemoved(redirected)*/
+  def redirected(arrow: Arrow[A]): Graph[A] = {
+    val redirected = arrow.tail
+    val to = arrow.head
+    branchRemoved(redirected) ++ Graph.from(tailsOf(redirected).map(_ --> to))
   }
 
   def filter(pred: A => Boolean): Graph[A] = {
@@ -101,7 +104,7 @@ object Graph {
     def -->(head: A): Arrow[A] = new Arrow(tail, head)
   }
 
-  def apply[A](elements: Set[GraphElement[A]]): Graph[A] = {
+  def apply[A](elements: GraphElement[A]*): Graph[A] = {
     var graph = new Graph[A]
     elements.foreach(elem => {
       elem.elementType match {
@@ -112,7 +115,7 @@ object Graph {
     graph
   }
 
-  def apply[A](elements: GraphElement[A]*): Graph[A] = {
+  def from[A](elements: Set[GraphElement[A]]): Graph[A] = {
     var graph = new Graph[A]
     elements.foreach(elem => {
       elem.elementType match {

@@ -35,7 +35,7 @@ object RegularDirectionsWithCacheDemo {
 
     //val resultsSeq = RegularDirectionsWithCache.parametersLines.map(_.map(_.map(p => Seq(p(0), p(1).toDegrees))))
     //  .reverse.head
-    val graph = RegularDirectionsWithCache.recursionGraph(RecursionCall(10, Math.PI/4 / 4, 1))._2
+    val graph = RegularDirectionsWithCache.recursionGraph(RecursionCall(10, Math.PI/4 / 4, 1))
 
     def lineSeqFrom(graph: Graph[RecursionCall]) = {
       graph.arrows.map(arrow => Seq(arrow._1, arrow._2).map(recursionCall => Seq(recursionCall.dim.toDouble, recursionCall.angleStep.toDegrees)))

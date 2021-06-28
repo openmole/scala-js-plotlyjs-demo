@@ -15,6 +15,24 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
   def directPredecessorsOf(vertex: A): Set[A] = _hashMap.filter(_._2 contains vertex).keySet
 
+  def uniqueDirectSuccessorOf(vertex: A): A = {
+    val dso = directSuccessorsOf(vertex)
+    if(dso.size == 1) {
+      dso.head
+    } else {
+      throw new Exception("not unique")
+    }
+  }
+
+  def uniqueDirectPredecessorOf(vertex: A): A = {
+    val dpo = directPredecessorsOf(vertex)
+    if(dpo.size == 1) {
+      dpo.head
+    } else {
+      throw new Exception("not unique")
+    }
+  }
+
   def successorsOf(vertex: A): Set[A] = {
     val directSuccessors = directSuccessorsOf(vertex)
     directSuccessors ++ directSuccessors.flatMap(successorsOf)
@@ -175,14 +193,13 @@ object Graph {
 
 
   def group[A](set: Set[A], pred: (A, A) => Boolean): Iterable[Set[A]] = {
-    var graph = Graph[A]()
+    var graph = Graph.fromVertices(set)
     val seq = set.toSeq
     for(i1 <- 0 until seq.size - 1) {
       val v1 = seq(i1)
       for(i2 <- i1 + 1 until seq.size) {
         val v2 = seq(i2)
         if(pred(v1, v2)) {
-          graph = graph ++ Graph(v1, v2)
           graph = graph + (graph.terminalSuccessorsOf(v1).head --> graph.terminalSuccessorsOf(v2).head)
         }
       }

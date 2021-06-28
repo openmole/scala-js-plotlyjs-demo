@@ -135,6 +135,7 @@ object RegularDirectionsDemo {
     val title3S = "Building method – 3-sphere cell"
     val title2SL = "Building method with lines – 2-sphere"
     val title3SL = "Building method with lines – 3-sphere cell"
+    val titleRecursive = "Cached building method"
 
     div(
       scatter3dDiv(
@@ -166,6 +167,11 @@ object RegularDirectionsDemo {
         (RegularDirectionsWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
           .filter { case (v1, v2) => v1.head == +1.0 && v2.head == +1.0 } map { case (v1, v2) => (v1.normalize.tail, v2.normalize.tail) }).toSeq,
         Color.rgb(0, 0, 0))),
+      onDemand(titleRecursive, () => scatter3dDiv(
+        titleRecursive,
+        Seq(Seq(0.0, 0.0, 0.0)),
+        RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0),
+      )),
     )
   }
 

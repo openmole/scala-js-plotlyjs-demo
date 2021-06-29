@@ -7,13 +7,12 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
-import plotlyjs.demo.directions.RegularDirectionsWithLines
-import plotlyjs.demo.directions._
-import plotlyjs.demo.utils.{Data, Graph}
+import plotlyjs.demo.directions.{RegularDirectionsWithLines, _}
+import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Vectors._
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
-import scala.util.control.Breaks.{break, breakable}
+import scala.util.control.Breaks.breakable
 
 object RegularDirectionsDemo {
 
@@ -170,8 +169,11 @@ object RegularDirectionsDemo {
       onDemand(titleRecursive, () => scatter3dDiv(
         titleRecursive,
         Seq(Seq(0.0, 0.0, 0.0)),
-        RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0),
-      )),
+        RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0))),
+      scatter3dDiv(
+        "Restricted space transformation – 2-sphere",
+        Seq(Seq(0.0, 0.0, 0.0)),
+        Data.centeredNCube(dimension, p, hollow = true).map(RestrictedSpaceTransformation.fromSquareToCircle).filter(_.nonEmpty).map(_.get).filter(_.head >= 0)),
     )
   }
 

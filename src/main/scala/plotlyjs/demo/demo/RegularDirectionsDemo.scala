@@ -136,6 +136,12 @@ object RegularDirectionsDemo {
     val title3SL = "Building method with lines – 3-sphere cell"
     val titleRecursive = "Cached building method"
 
+    lazy val restrictedSpaceTransformation = Data
+      .centeredNCube(dimension, p, hollow = true)
+      .map(RestrictedSpaceTransformation.fromSquareToCircle)
+      .filter(_.nonEmpty)
+      .map(_.get)
+
     div(
       scatter3dDiv(
         "Cube – no adjustment",
@@ -172,8 +178,8 @@ object RegularDirectionsDemo {
         RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0))),
       scatter3dDiv(
         "Restricted space transformation – 2-sphere",
-        Seq(Seq(0.0, 0.0, 0.0)),
-        Data.centeredNCube(dimension, p, hollow = true).map(RestrictedSpaceTransformation.fromSquareToCircle).filter(_.nonEmpty).map(_.get).filter(_.head >= 0)),
+        restrictedSpaceTransformation.map(RestrictedSpaceTransformation.fromCircleToSquare).filter(_.head >= 0),
+        restrictedSpaceTransformation.filter(_.head >= 0)),
     )
   }
 

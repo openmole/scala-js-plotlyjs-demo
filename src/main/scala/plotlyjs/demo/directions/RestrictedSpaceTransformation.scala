@@ -129,14 +129,15 @@ object RestrictedSpaceTransformation {
   }
 
   def mainTest(args: Array[String]): Unit = {
-    fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)).map(fromCircleToSquare)
-    /*
-    val p = 32
-    for(dimension <- 1 to 42) {
+    //fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)).map(fromCircleToSquare)
+
+    val p = 4
+    for(dimension <- 1 to 8) {
       val result = RestrictedSpaceTransformation.fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
       println(dimension, result.size)
     }
-    */
+    //TODO Fix that with a space adjustment ? From cube to sphere with a constant area ?
+
   }
 
 }

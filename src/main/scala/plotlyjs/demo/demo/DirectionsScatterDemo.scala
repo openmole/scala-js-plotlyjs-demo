@@ -41,7 +41,7 @@ object DirectionsScatterDemo {
       .lowerPlotIsBetter
 
     val groupedResults = pointSet.spaceNormalizedOutputs.groupBy(vector =>
-      RestrictedSpaceTransformation.fromCircleToSquare(normalize(vector)).map(c => Math.rint(c/1))
+      RestrictedSpaceTransformation.fromCircleToSquare(normalize(vector)).map(c => Math.rint(1 * c))
     )
 
     val plotDataSeq = groupedResults.map { case (direction, vectors) =>
@@ -54,7 +54,12 @@ object DirectionsScatterDemo {
         ._result
     }
 
-    Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray)
+    val layout = Layout.title("Directions scatter")
+
+    val config = Config//.autosizable(false)//.staticPlot(true)
+
+    //TODO disable automatic zoom on trace focus
+    Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray, layout, config)
 
     plotDiv
   }

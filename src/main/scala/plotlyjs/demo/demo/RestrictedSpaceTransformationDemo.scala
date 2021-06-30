@@ -1,13 +1,13 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.RestrictedSpaceTransformation
 import plotlyjs.demo.utils.Data
+import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -40,12 +40,6 @@ object RestrictedSpaceTransformationDemo {
       Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray, layout)
 
       plotDiv
-    }
-
-    def onDemand(text: String, supplier: () => ReactiveHtmlElement[org.scalajs.dom.html.Div]) = {
-      val content = Var(div())
-      content.set(div(button(text, inContext { _ => onClick.mapTo(supplier()) --> content.writer })))
-      div(child <-- content.signal)
     }
 
     val dimension = 3

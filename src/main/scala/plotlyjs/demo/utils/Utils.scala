@@ -15,6 +15,10 @@ package plotlyjs.demo.utils
  * You should have received a copy of the GNU General Public License
  */
 
+import com.raquo.laminar.api.L._
+import com.raquo.laminar.nodes.ReactiveHtmlElement
+import org.scalajs.dom.html
+
 import scala.scalajs.js.JSConverters._
 object Utils {
 
@@ -199,4 +203,11 @@ object Utils {
     6.5,
     6.2,
     5.9).toJSArray
+
+  def onDemand(text: String, supplier: () => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {
+    val content = Var(div())
+    content.set(div(button(text, inContext { _ => onClick.mapTo(supplier()) --> content.writer })))
+    div(child <-- content.signal)
+  }
+
 }

@@ -9,6 +9,7 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.{RegularDirectionsWithLines, _}
 import plotlyjs.demo.utils.Data
+import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -118,12 +119,6 @@ object RegularDirectionsDemo {
       plotDiv
     }
 
-    def onDemand(text: String, supplier: () => ReactiveHtmlElement[org.scalajs.dom.html.Div]) = {
-      val content = Var(div())
-      content.set(div(button(text, inContext { _ => onClick.mapTo(supplier()) --> content.writer })))
-      div(child <-- content.signal)
-    }
-
     val dimension = 3
     val p = 32
     val points = Data.centeredNCube(dimension, p, hollow = true).filter(_.head >= 0)
@@ -137,10 +132,11 @@ object RegularDirectionsDemo {
     val titleRecursive = "Cached building method"
 
     lazy val restrictedSpaceTransformation = Data
-      .centeredNCube(dimension, p, hollow = true)
+      .centeredNCube(dimension, 2 * p, hollow = true)
       .map(RestrictedSpaceTransformation.fromSquareToCircle)
       .filter(_.nonEmpty)
       .map(_.get)
+    val titleRST = "Restricted space transformation – 2-sphere"
 
     div(
       scatter3dDiv(
@@ -176,10 +172,10 @@ object RegularDirectionsDemo {
         titleRecursive,
         Seq(Seq(0.0, 0.0, 0.0)),
         RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0))),
-      scatter3dDiv(
-        "Restricted space transformation – 2-sphere",
+      onDemand(titleRST, () => scatter3dDiv(
+        titleRST,
         restrictedSpaceTransformation.map(RestrictedSpaceTransformation.fromCircleToSquare).filter(_.head >= 0),
-        restrictedSpaceTransformation.filter(_.head >= 0)),
+        restrictedSpaceTransformation.filter(_.head >= 0))),
     )
   }
 

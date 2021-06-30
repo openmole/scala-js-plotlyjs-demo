@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.RegularDirections
+import plotlyjs.demo.directions.{RegularDirections, RestrictedSpaceTransformation}
 import plotlyjs.demo.utils.PointSet.MIN
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.{Data, PointSet, Utils}
@@ -40,17 +40,15 @@ object DirectionsScatterDemo {
       .optimizationProblems(Seq.fill(dim)(MIN))
       .lowerPlotIsBetter
 
-    val directions = RegularDirections.nSphereCovering(dim, Math.PI/4 / 2)
     val groupedResults = pointSet.spaceNormalizedOutputs.groupBy(vector =>
-      directions
-        .zip(directions.map(direction => abs(vector.dot(direction))))
-        .maxBy(_._2)._1
+      RestrictedSpaceTransformation.fromCircleToSquare(normalize(vector)).map(c => Math.rint(c/1))
     )
 
     val plotDataSeq = groupedResults.map { case (direction, vectors) =>
       val points = vectors.map(v => Seq(v.parallelComponent(direction).norm, v.orthogonalComponent(direction).norm))
       val xy = points.transpose
       scatter
+        .name(direction.vectorToString)
         .x(xy(0).toJSArray)
         .y(xy(1).toJSArray)
         ._result

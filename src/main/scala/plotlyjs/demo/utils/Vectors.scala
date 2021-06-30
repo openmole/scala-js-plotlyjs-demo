@@ -95,6 +95,7 @@ object Vectors {
     def ^(ov: Vector): Double = angle(ov)
     //
 
+    def vectorToString: String = "(" + v.mkString(",") + ")"
   }
   //
 

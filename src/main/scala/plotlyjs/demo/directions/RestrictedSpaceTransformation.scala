@@ -57,14 +57,14 @@ object RestrictedSpaceTransformation {
       val nSphereRadiusProjection = projection(nSphereRadius)(_)
 
       val cellCellAdjustment = nSphereRadiusProjection(nSphereRadiusRegularization(radiusOnCell)) / radiusOnCell
-      val radiusOnCellAdjustment = nSphereRadiusRegularization(dimensionNormalization(radiusOnCell)) / radiusOnCell
+      val adjustedRadiusOnCell = nSphereRadiusRegularization(dimensionNormalization(radiusOnCell))
 
       val recursionInput = backToFullSpace(cellVectorMaxMagnitude, cellVectorMaxMagnitude.remainderSpaceRemainder.scale(1/cellCellAdjustment))
       val circleCellVectorOption = fromSquareToCircle(recursionInput)
       if(circleCellVectorOption.isEmpty) {
         None
       } else {
-        val adjustedCircleCellVector = circleCellVectorOption.get.scale(radiusOnCellAdjustment)
+        val adjustedCircleCellVector = circleCellVectorOption.get.toNorm(adjustedRadiusOnCell)
         val adjustedCircleCellVectorMaxMagnitude = MaxMagnitude(adjustedCircleCellVector)
         if(adjustedCircleCellVectorMaxMagnitude.value > nSphereRadius || adjustedCircleCellVectorMaxMagnitude.index != cellVectorMaxMagnitude.index) {
           None
@@ -109,13 +109,14 @@ object RestrictedSpaceTransformation {
       val nSphereRadiusInverseRegularization = inverseRegularization(nSphereRadius)(_)
       val dimensionInverseNormalization = inverseNormalization(dimension)(_)
 
-      val inverseRadiusOnCellAdjustment = dimensionInverseNormalization(nSphereRadiusInverseRegularization(adjustedRadiusOnCell)) / adjustedRadiusOnCell
-      val inverseCellCellAdjustment = nSphereRadiusInverseRegularization(nSphereRadiusInverseProjection(adjustedRadiusOnCell)) / adjustedRadiusOnCell
+      val radiusOnCell = dimensionInverseNormalization(nSphereRadiusInverseRegularization(adjustedRadiusOnCell))
+      val projectedRadius = MaxMagnitude(circleVector).remainderSpaceRemainder.norm
+      val inverseCellCellAdjustment = nSphereRadiusInverseRegularization(nSphereRadiusInverseProjection(projectedRadius)) / projectedRadius
 
-      val circleCellVector = adjustedCircleCellVector.scale(inverseRadiusOnCellAdjustment)
+      val circleCellVector = adjustedCircleCellVector.toNorm(radiusOnCell)
       val recursionOutput = fromCircleToSquare(circleCellVector)
       val recursionOutputMaxMagnitude = MaxMagnitude(recursionOutput)
-      val cellVector = backToFullSpace(recursionOutputMaxMagnitude, recursionOutputMaxMagnitude.remainderSpaceRemainder.scale(1 / inverseCellCellAdjustment))
+      val cellVector = backToFullSpace(recursionOutputMaxMagnitude, recursionOutputMaxMagnitude.remainderSpaceRemainder.scale(1/inverseCellCellAdjustment))
 
       val squareVector = backToFullSpace(inverseProjectCircleVectorMaxMagnitude, cellVector)
 
@@ -128,16 +129,14 @@ object RestrictedSpaceTransformation {
   }
 
   def mainTest(args: Array[String]): Unit = {
-    val dimension = 3
+    fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)).map(fromCircleToSquare)
+    /*
     val p = 32
-    val result = Data
-      .centeredNCube(dimension, p, hollow = true)
-      .map(RestrictedSpaceTransformation.fromSquareToCircle)
-      .filter(_.nonEmpty)
-      .map(_.get)
-      .map(RestrictedSpaceTransformation.fromCircleToSquare)
-      .filter(_.head >= 0)
-    println(result)
+    for(dimension <- 1 to 42) {
+      val result = RestrictedSpaceTransformation.fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
+      println(dimension, result.size)
+    }
+    */
   }
 
 }

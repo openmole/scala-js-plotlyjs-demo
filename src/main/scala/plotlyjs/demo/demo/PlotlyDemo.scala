@@ -68,7 +68,8 @@ object PlotlyDemo {
               Pareto3dDemo.elementDemo,
               DirectionsScatterDemo.elementDemo,
               RegularDirectionsDemo.elementDemo,
-              RegularDirectionsWithCacheDemo.elementDemo
+              RegularDirectionsWithCacheDemo.elementDemo,
+              RestrictedSpaceTransformationDemo.elementDemo,
             )
           } yield {
             Tab(demo.title,

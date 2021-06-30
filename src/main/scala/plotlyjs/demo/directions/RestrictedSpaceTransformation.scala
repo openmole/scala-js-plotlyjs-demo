@@ -10,10 +10,10 @@ object RestrictedSpaceTransformation {
   case class MaxMagnitude(vector: Vector) {
     lazy val index: Int = vector.map(math.abs).zipWithIndex.maxBy(_._1)._2
     lazy val coordinate: Double = vector(index)
-    lazy val signum: Double = scala.math.signum(coordinate)
+    //lazy val signum: Double = scala.math.signum(coordinate)
     lazy val value: Double = abs(coordinate)
-    lazy val fullSpaceComponent: Vector = vector.zipWithIndex.map { case (c, i) => if(i == index) c else 0 }
-    lazy val fullSpaceRemainder: Vector = vector - fullSpaceComponent
+    //lazy val fullSpaceComponent: Vector = vector.zipWithIndex.map { case (c, i) => if(i == index) c else 0 }
+    //lazy val fullSpaceRemainder: Vector = vector - fullSpaceComponent
     lazy val remainderSpaceRemainder: Vector = vector.zipWithIndex.filterNot(_._2 == index).map(_._1)
   }
 
@@ -123,6 +123,10 @@ object RestrictedSpaceTransformation {
     }
   }
 
+  def fromSquareToCircle(squareVectors: Seq[Vector]): Seq[Vector] = {
+    squareVectors.map(fromSquareToCircle).filter(_.nonEmpty).map(_.get)
+  }
+
   def mainTest(args: Array[String]): Unit = {
     val dimension = 3
     val p = 32
@@ -135,41 +139,5 @@ object RestrictedSpaceTransformation {
       .filter(_.head >= 0)
     println(result)
   }
-
-  /*
-  def fromSquareToCircle(squareVector: Vector): Vector = {
-    val dimension = squareVector.dimension
-
-    val maxMagnitude = MaxMagnitude(squareVector)
-    val squareRemainderInsideCell = maxMagnitude.remainderSpaceRemainder
-
-    val circleRemainderInsideCell = fromSquareToCircle(squareRemainderInsideCell)
-    //check for rejection
-    val (left, right) = circleRemainderInsideCell.splitAt(maxMagnitude.index)
-    val circleRemainderVector = left ++ Seq(maxMagnitude.coordinate) ++ right
-    
-    val maxAngle = acos(1/(maxMagnitude.value * sqrt(dimension + 1)))
-    val angle = maxMagnitude.value * maxAngle
-    val radius = maxMagnitude.value * tan(angle)
-    circleRemainderVector.toNorm(radius)
-  }
-  */
-
-  /*
-  def fromSquareToCircle(squareVector: Vector): Unit = {
-    val dimension = squareVector.dimension
-
-    val maxMagnitude = MaxMagnitude(squareVector)
-    val squareRemainderInCell = maxMagnitude.remainderSpaceRemainder
-    val cellRadialProportion = MaxMagnitude(squareRemainderInCell).value / maxMagnitude.value
-    val maxAngle = acos(1/sqrt(dimension))
-    val angle = cellRadialProportion * maxAngle
-    val cellRadius = maxMagnitude.value * tan(angle)
-    val circleRemainderOnCell = fromSquareToCircle(squareRemainderInCell).scale()
-
-
-    //normalize
-  }
-  */
 
 }

@@ -7,16 +7,16 @@ import scala.math._
 
 object RestrictedSpaceTransformation2 {
 
-  def regularization(maxAngle: Double)(radiusProportion: Double): Double = {
-    tan(radiusProportion * maxAngle)
+  def regularization(maxAngle: Double)(radiusOnFaceProportion: Double): Double = {
+    tan(radiusOnFaceProportion * maxAngle)
   }
 
-  def inverseRegularization(maxAngle: Double)(regularizedRadiusProportion: Double): Double = {
-    atan(regularizedRadiusProportion) / maxAngle
+  def inverseRegularization(maxAngle: Double)(regularizedRadiusOnFaceProportion: Double): Double = {
+    atan(regularizedRadiusOnFaceProportion) / maxAngle
   }
 
-  def projection(relativeRadius: Double): Double = {
-    sin(atan(relativeRadius))
+  def projection(relativeRadiusOnFace: Double): Double = {
+    sin(atan(relativeRadiusOnFace))
   }
 
   def inverseProjection(projectedRelativeRadius: Double): Double = {
@@ -27,38 +27,73 @@ object RestrictedSpaceTransformation2 {
     absoluteReference * relativeFunction(absoluteInput / absoluteReference)
   } // inverse(absoluteFunction(relativeFunction)) = absoluteFunction(inverse(relativeFunction))
 
-  def radiusRegularization(maxAngle: Double, maxRadius: Double)(radius: Double): Double = {
-    val absoluteRegularization = absoluteFunction(regularization(maxAngle), maxRadius)(_)
-    absoluteRegularization(radius)
+  def radiusRegularization(maxAngle: Double, maxRadiusOnFace: Double)(radiusOnFace: Double): Double = {
+    val absoluteRegularization = absoluteFunction(regularization(maxAngle), maxRadiusOnFace)(_)
+    absoluteRegularization(radiusOnFace)
   }
 
-  //TODO
-  def inverseRadiusRegularization = ???
-
-  def recursionRegularizationFactor(maxAngle: Double, maxRadius: Double, referenceRadius: Double)(radius: Double): Double = {
-    val _radiusRegularization = radiusRegularization(maxAngle, maxRadius)(_)
-    val absoluteProjection = absoluteFunction(projection, referenceRadius)(_)
-    absoluteProjection(_radiusRegularization(radius)) / radius / maxAngle
+  def inverseRadiusRegularization(maxAngle: Double, maxRadiusOnFace: Double)(regularizedRadiusOnFace: Double): Double = {
+    val inverseAbsoluteRegularization = absoluteFunction(inverseRegularization(maxAngle), maxRadiusOnFace)(_)
+    inverseAbsoluteRegularization(regularizedRadiusOnFace)
   }
 
-  //TODO
-  def inverseRecursionRegularizationFactor = ???
+  def spaceRegularization(maxAngle: Double, maxRadiusOnFace: Double, nSphereRadius: Double)(radiusOnFace: Double): Double = {
+    val radiusRegularization = RestrictedSpaceTransformation2.radiusRegularization(maxAngle, maxRadiusOnFace)(_)
+    val absoluteProjection = absoluteFunction(projection, nSphereRadius)(_)
+    absoluteProjection(radiusRegularization(radiusOnFace))
+  }
 
-  /*
-  recursionRegularizationFactor(maxAngle, maxRadius, referenceRadius)(radius)
-  = absoluteProjection(_radiusRegularization(radius)) / radius / maxAngle
-  = absoluteProjection(radiusRegularization(maxAngle, maxRadius)(radius)) / radius / maxAngle
-  = absoluteFunction(projection, referenceRadius)(absoluteFunction(regularization(maxAngle), maxRadius)(radius)) / radius / maxAngle
-  = referenceRadius * projection(maxRadius * regularization(maxAngle)(radius / maxRadius) / referenceRadius) / radius / maxAngle
-  = referenceRadius * sin(atan(maxRadius * tan(radius / maxRadius * maxAngle) / referenceRadius)) / radius / maxAngle
-  radius -> 0 => (tan -> sin, atan -> asin)
-  -> referenceRadius * sin(asin(maxRadius * sin(radius / maxRadius * maxAngle) / referenceRadius)) / radius / maxAngle
-  -> = referenceRadius * maxRadius * sin(radius / maxRadius * maxAngle) / referenceRadius / radius / maxAngle
-  -> = maxRadius * sin(radius / maxRadius * maxAngle) / radius / maxAngle
-  (x -> 0 => sin(x) -> x), (radius -> 0 => radius / maxRadius * maxAngle -> 0)
-  -> maxRadius * radius / maxRadius * maxAngle / radius / maxAngle
-  -> = 1
-  recursionRegularizationFactor(math.Pi/4, 8, 6)(0.0000001) = 1.0000000000000002
-  */
+  def inverseSpaceRegularization(maxAngle: Double, maxRadiusOnFace: Double, nSphereRadius: Double)(projectedRadius: Double): Double = {
+    val inverseRadiusRegularization = RestrictedSpaceTransformation2.inverseRadiusRegularization(maxAngle, maxRadiusOnFace)(_)
+    val inverseAbsoluteProjection = absoluteFunction(inverseProjection, nSphereRadius)(_)
+    inverseRadiusRegularization(inverseAbsoluteProjection(projectedRadius))
+  }
+
+  def factorFunction(function: Double => Double)(input: Double): Double = {
+    function(input) / input
+  }
+
+  def spaceRegularizationFactor(maxAngle: Double, maxRadiusOnFace: Double, nSphereRadius: Double)(radiusOnFace: Double): Double = {
+    factorFunction(spaceRegularization(maxAngle, maxRadiusOnFace, nSphereRadius))(radiusOnFace)
+  }
+
+  def inverseSpaceRegularizationFactor(maxAngle: Double, maxRadiusOnFace: Double, nSphereRadius: Double)(regularizedRadiusOnFace: Double): Double = {
+    factorFunction(inverseSpaceRegularization(maxAngle, maxRadiusOnFace, nSphereRadius))(regularizedRadiusOnFace)
+  }
+
+  def spaceRegularizationFactorZeroConsistent(maxAngle: Double, maxRadiusOnFace: Double, nSphereRadius: Double)(radiusOnFace: Double): Double = {
+    spaceRegularizationFactor(maxAngle, maxRadiusOnFace, nSphereRadius)(radiusOnFace) / maxAngle
+  }
+
+  def inverseSpaceRegularizationFactorZeroConsistent(maxAngle: Double, maxRadiusOnFace: Double, nSphereRadius: Double)(projectedRadius: Double): Double = {
+    inverseSpaceRegularizationFactor(maxAngle, maxRadiusOnFace, nSphereRadius)(projectedRadius) * maxAngle
+  }
+
+  def computeMaxAngle(nSphereRadius: Double, maxRadiusOnFace: Double): Double = {
+    atan(maxRadiusOnFace / nSphereRadius)
+  }
+
+  def trigonometryTest(): Unit = {
+    val nSphereRadius = 42
+    val maxRadiusOnFace = nSphereRadius
+    val maxAngle = computeMaxAngle(nSphereRadius, maxRadiusOnFace)
+
+    println(0.42, " " + inverseRegularization(maxAngle)(regularization(maxAngle)(0.42)))
+    println(1.42, " " + inverseProjection(projection(1.42)))
+    println(0.42 * maxRadiusOnFace, " " + inverseRadiusRegularization(maxAngle, maxRadiusOnFace)(radiusRegularization(maxAngle, maxRadiusOnFace)(0.42 * maxRadiusOnFace)))
+    println(0.42 * maxRadiusOnFace, " " + inverseSpaceRegularization(maxAngle, maxRadiusOnFace, nSphereRadius)(spaceRegularization(maxAngle, maxRadiusOnFace, nSphereRadius)(0.42 * maxRadiusOnFace)))
+    val almostZero = 0.0000001
+    println(maxAngle, " " + spaceRegularizationFactor(maxAngle, maxRadiusOnFace, nSphereRadius)(almostZero))
+    println(1/maxAngle, " " + inverseSpaceRegularizationFactor(maxAngle, maxRadiusOnFace, nSphereRadius)(almostZero))
+    println(1, " " + spaceRegularizationFactorZeroConsistent(maxAngle, maxRadiusOnFace, nSphereRadius)(almostZero))
+    println(1, " " + inverseSpaceRegularizationFactorZeroConsistent(maxAngle, maxRadiusOnFace, nSphereRadius)(almostZero))
+  }
+
+  case class MaxMagnitude(vector: Vector) {
+    lazy val index: Int = vector.map(math.abs).zipWithIndex.maxBy(_._1)._2
+    lazy val coordinate: Double = vector(index)
+    lazy val value: Double = abs(coordinate)
+    lazy val remainderSpaceRemainder: Vector = vector.zipWithIndex.filterNot(_._2 == index).map(_._1)
+  }
 
 }

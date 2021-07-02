@@ -5,7 +5,7 @@ import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.RestrictedSpaceTransformation
+import plotlyjs.demo.directions.{RestrictedSpaceTransformation, RestrictedSpaceTransformation2, RestrictedSpaceTransformation3}
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -15,6 +15,32 @@ import scala.scalajs.js.JSConverters.JSRichIterableOnce
 object RestrictedSpaceTransformationDemo {
 
   private val sc = sourcecode.Text {
+
+    lazy val lineChartDiv = {
+      val plotDiv = div()
+
+      import plotlyjs.demo.directions.RestrictedSpaceTransformation3.F
+      val f = F(3, 1)
+      val plotDataSeq = {
+        Seq(f.regularization(_), f.projection(_), f.projectionFactor(_), f.projectionProportion(_))
+        .zip(Seq("regularization", "projection", "projectionFactor", "projectionProportion"))
+        .map { case (function, name) =>
+          val n = 10
+          val xs = (0.0000001 +: (1 to n).map(_.toDouble)).map(_ / n)
+          val ys = xs.map(function(_))
+          linechart.lines
+            .name(name)
+            .x(xs.toJSArray)
+            .y(ys.toJSArray)
+            .setMode(lines)
+            ._result
+        }
+      }
+
+      Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray)
+
+      plotDiv
+    }
 
     def scatter3dData(points: Seq[Seq[Double]]) = {
       val pointsT = points.transpose
@@ -43,7 +69,7 @@ object RestrictedSpaceTransformationDemo {
     }
 
     val dimension = 3
-    val p = 32
+    val p = 31
     lazy val cube = Data.centeredNCube(dimension, p, hollow = true)
     lazy val sphere = RestrictedSpaceTransformation.fromSquareToCircle(cube)
 
@@ -59,7 +85,11 @@ object RestrictedSpaceTransformationDemo {
       seq
     }
 
-    onDemand("Load", () => div(fromSquareToCircle(3, cube).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From square to circle – $i times", points) } ++ fromCircleToSquare(3, sphere).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From circle to square – $i times", points) }))
+    div(
+      onDemand("Functions graph", () => lineChartDiv),
+      onDemand("RST3", () => scatter3dDiv("RST3", RestrictedSpaceTransformation3.fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)))),
+      onDemand("Load", () => div(fromSquareToCircle(3, cube).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From square to circle – $i times", points) } ++ fromCircleToSquare(3, sphere).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From circle to square – $i times", points) }))
+    )
   }
 
   val elementDemo: ElementDemo = new ElementDemo {

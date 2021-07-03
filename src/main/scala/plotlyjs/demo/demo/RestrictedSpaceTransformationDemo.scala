@@ -22,9 +22,19 @@ object RestrictedSpaceTransformationDemo {
       import plotlyjs.demo.directions.RestrictedSpaceTransformation3.F
       val f = F(3, 1)
       val plotDataSeq = {
-        Seq(f.regularization(_), f.projection(_), f.projectionFactor(_), f.projectionProportion(_))
-        .zip(Seq("regularization", "projection", "projectionFactor", "projectionProportion"))
-        .map { case (function, name) =>
+        //Seq(f.regularization(_), f.projection(_), f.projectionFactor(_), f.projectionProportion(_))
+        //.zip(Seq("regularization", "projection", "projectionFactor", "projectionProportion"))
+        Seq[(String, Double => Double)](
+          ("regularization", f.regularization),
+          ("projection", f.projection),
+          ("projectionFactor", f.projectionFactor),
+          ("projectionProportion", f.projectionProportion),
+          ("inverseRegularization test", r => f.inverseRegularization(f.regularization(r))),
+          ("inverseProjection test", r => f.inverseProjection(f.projection(r))),
+          ("inverseProjectionFactor test", r => f.projectionFactor(r) * f.inverseProjectionFactor(f.projection(r))),
+          ("inverseProjectionProportion test", r => f.projectionProportion(r) * f.inverseProjectionProportion(f.projection(r)))
+        )
+        .map { case (name, function) =>
           val n = 10
           val xs = (0.0000001 +: (1 to n).map(_.toDouble)).map(_ / n)
           val ys = xs.map(function(_))

@@ -36,11 +36,19 @@ object RestrictedSpaceTransformation3 {
     def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = squareRadius * sqrt(dimension)
     def radiusFromCircleToSquare(dimension: Int)(circleRadius: Double): Double = circleRadius / sqrt(dimension)
 
+    /*
     def vectorFromSquareToCircle(squareVector: Vector): Vector = {
       val squareRadius = F.squareRadius(squareVector)
       val circleRadius = radiusFromSquareToCircle(dimension(squareVector))(squareRadius)
       squareVector.toNorm(circleRadius)
     }
+
+    def vectorFromCircleToSquare(circleVector: Vector): Vector = {
+      val circleRadius = F.circleRadius(circleVector)
+      val squareRadius = radiusFromCircleToSquare(dimension(circleVector))(circleRadius)
+      ???
+    }
+    */
 
   }
 
@@ -63,6 +71,16 @@ object RestrictedSpaceTransformation3 {
       )
     }
 
+    def inverseRegularization(regularizedSquareRadius: Double): Double = {
+      val radiusFromSquareToCircle = F.radiusFromSquareToCircle(dimension - 1)(_)
+      val radiusFromCircleToSquare = F.radiusFromCircleToSquare(dimension - 1)(_)
+      radiusFromCircleToSquare(
+        maxCircleRadius * atan(
+          tan(maxAngle) * radiusFromSquareToCircle(regularizedSquareRadius) / maxCircleRadius
+        ) / maxAngle
+      )
+    }
+
     def projection(squareRadius: Double): Double = {
       val radiusFromSquareToCircle = F.radiusFromSquareToCircle(dimension - 1)(_)
       nSphereRadius * sin(atan(
@@ -70,8 +88,21 @@ object RestrictedSpaceTransformation3 {
       ))
     }
 
+    def inverseProjection(circleRadius: Double): Double = {
+      val radiusFromCircleToSquare = F.radiusFromCircleToSquare(dimension - 1)(_)
+      inverseRegularization(radiusFromCircleToSquare(
+        nCubeRadius * tan(asin(
+          circleRadius / nSphereRadius
+        ))
+      ))
+    }
+
     def projectionFactor(squareRadius: Double): Double = {
       projection(squareRadius) / squareRadius
+    }
+
+    def inverseProjectionFactor(circleRadius: Double): Double = {
+      inverseProjection(circleRadius) / circleRadius
     }
 
     val projectionFactorZeroLimit: Double = {
@@ -81,6 +112,10 @@ object RestrictedSpaceTransformation3 {
 
     def projectionProportion(squareRadius: Double): Double = {
       projectionFactor(squareRadius) / projectionFactorZeroLimit
+    }
+
+    def inverseProjectionProportion(circleRadius: Double): Double = {
+      projectionFactorZeroLimit * inverseProjectionFactor(circleRadius)
     }
 
   }
@@ -150,6 +185,15 @@ object RestrictedSpaceTransformation3 {
       println(s"dimension = $dimension")
       val result = fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
       println(dimension, result.size)
+    }
+  }
+
+  def fromCircleToSquare(circleVector: Vector): Vector = {
+    val dimension = circleVector.dimension
+    if(dimension == 1) {
+      circleVector
+    } else {
+      ???
     }
   }
 

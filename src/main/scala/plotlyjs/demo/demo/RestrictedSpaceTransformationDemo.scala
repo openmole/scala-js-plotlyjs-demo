@@ -5,7 +5,7 @@ import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.{RestrictedSpaceTransformation, RestrictedSpaceTransformation2, RestrictedSpaceTransformation3}
+import plotlyjs.demo.directions.{RestrictedSpaceTransformation, RestrictedSpaceTransformation2, RestrictedSpaceTransformation3, RestrictedSpaceTransformation4}
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -16,11 +16,11 @@ object RestrictedSpaceTransformationDemo {
 
   private val sc = sourcecode.Text {
 
-    lazy val lineChartDiv = {
+    def lineChartDiv(dimension: Int) = {
       val plotDiv = div()
 
-      import plotlyjs.demo.directions.RestrictedSpaceTransformation3.F
-      val f = F(3, 1)
+      import plotlyjs.demo.directions.RestrictedSpaceTransformation4.F
+      val f = F(dimension, null, 1)
       val plotDataSeq = {
         //Seq(f.regularization(_), f.projection(_), f.projectionFactor(_), f.projectionProportion(_))
         //.zip(Seq("regularization", "projection", "projectionFactor", "projectionProportion"))
@@ -29,13 +29,10 @@ object RestrictedSpaceTransformationDemo {
           ("projection", f.projection),
           ("projectionFactor", f.projectionFactor),
           ("projectionProportion", f.projectionProportion),
-          ("inverseRegularization test", r => f.inverseRegularization(f.regularization(r))),
-          ("inverseProjection test", r => f.inverseProjection(f.projection(r))),
-          ("inverseProjectionFactor test", r => f.projectionFactor(r) * f.inverseProjectionFactor(f.projection(r))),
-          ("inverseProjectionProportion test", r => f.projectionProportion(r) * f.inverseProjectionProportion(f.projection(r)))
+          ("inverseRegularizationTest", r => f.inverseRegularizationTest(r)),
         )
         .map { case (name, function) =>
-          val n = 10
+          val n = 100
           val xs = (0.0000001 +: (1 to n).map(_.toDouble)).map(_ / n)
           val ys = xs.map(function(_))
           linechart.lines
@@ -50,6 +47,10 @@ object RestrictedSpaceTransformationDemo {
       Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray)
 
       plotDiv
+    }
+
+    def onDemandLineChartDiv(dimension: Int) = {
+      onDemand(s"Functions graph – dimension $dimension", () => lineChartDiv(dimension))
     }
 
     def scatter3dData(points: Seq[Seq[Double]]) = {
@@ -96,8 +97,10 @@ object RestrictedSpaceTransformationDemo {
     }
 
     div(
-      onDemand("Functions graph", () => lineChartDiv),
-      onDemand("RST3", () => scatter3dDiv("RST3", RestrictedSpaceTransformation3.fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)))),
+      onDemandLineChartDiv(3),
+      onDemandLineChartDiv(30),
+      onDemand("RST4", () => scatter3dDiv("RST4", RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)))),
+      onDemand("RST4 inv", () => scatter3dDiv("RST4 inv", RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)).map(RestrictedSpaceTransformation4.fromCircleToSquare))),
       onDemand("Load", () => div(fromSquareToCircle(3, cube).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From square to circle – $i times", points) } ++ fromCircleToSquare(3, sphere).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From circle to square – $i times", points) }))
     )
   }

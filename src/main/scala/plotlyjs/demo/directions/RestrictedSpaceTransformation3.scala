@@ -25,16 +25,29 @@ object RestrictedSpaceTransformation3 {
   object F {
 
     def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
-    def toSquareRadius(squareVector: Vector, squareRadius: Double): Vector = {
-      (squareRadius / F.squareRadius(squareVector)) *: squareVector
+    def toSquareRadius(vector: Vector, squareRadius: Double): Vector = {
+      (squareRadius / F.squareRadius(vector)) *: vector
     }
     def circleRadius(circleVector: Vector): Double = norm(circleVector)
-    def toCircleRadius(circleVector: Vector, circleRadius: Double): Vector = {
-      (circleRadius / F.circleRadius(circleVector)) *: circleVector
+    def toCircleRadius(vector: Vector, circleRadius: Double): Vector = {
+      (circleRadius / F.circleRadius(vector)) *: vector
     }
 
-    def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = squareRadius * sqrt(dimension)
-    def radiusFromCircleToSquare(dimension: Int)(circleRadius: Double): Double = circleRadius / sqrt(dimension)
+    def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = {
+      squareRadius * sqrt(dimension)
+    }
+    def radiusFromCircleToSquare(dimension: Int)(circleRadius: Double): Double = {
+      circleRadius / sqrt(dimension)
+    }
+
+    def fromSquareVector(squareVector: Vector): F = {
+      F(dimension(squareVector), squareRadius(squareVector))
+    }
+
+    def fromCircleVector(circleVector: Vector): F = {
+      val dimension = circleVector.dimension
+      F(dimension, radiusFromCircleToSquare(dimension)(circleRadius(circleVector)))
+    }
 
     /*
     def vectorFromSquareToCircle(squareVector: Vector): Vector = {
@@ -88,11 +101,11 @@ object RestrictedSpaceTransformation3 {
       ))
     }
 
-    def inverseProjection(circleRadius: Double): Double = {
+    def inverseProjection(projectedRadius: Double): Double = {
       val radiusFromCircleToSquare = F.radiusFromCircleToSquare(dimension - 1)(_)
       inverseRegularization(radiusFromCircleToSquare(
         nCubeRadius * tan(asin(
-          circleRadius / nSphereRadius
+          projectedRadius / nSphereRadius
         ))
       ))
     }
@@ -101,8 +114,8 @@ object RestrictedSpaceTransformation3 {
       projection(squareRadius) / squareRadius
     }
 
-    def inverseProjectionFactor(circleRadius: Double): Double = {
-      inverseProjection(circleRadius) / circleRadius
+    def inverseProjectionFactor(projectedRadius: Double): Double = {
+      inverseProjection(projectedRadius) / projectedRadius
     }
 
     val projectionFactorZeroLimit: Double = {
@@ -114,8 +127,8 @@ object RestrictedSpaceTransformation3 {
       projectionFactor(squareRadius) / projectionFactorZeroLimit
     }
 
-    def inverseProjectionProportion(circleRadius: Double): Double = {
-      projectionFactorZeroLimit * inverseProjectionFactor(circleRadius)
+    def inverseProjectionProportion(projectedRadius: Double): Double = {
+      projectionFactorZeroLimit * inverseProjectionFactor(projectedRadius)
     }
 
   }
@@ -141,21 +154,22 @@ object RestrictedSpaceTransformation3 {
 
     val squareVectorDimension = squareVector.dimension
     if(squareVectorDimension == 1) Some(squareVector) else {
-      val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
-      val nCubeRadius = F.squareRadius(squareVector)
-      val f = F(squareVectorDimension, nCubeRadius)
+      val f = F.fromSquareVector(squareVector)
 
+      val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
       val squareVectorOnFace = squareVectorMaxMagnitude.remainderSpaceRemainder
       val squareRadiusOnFace = F.squareRadius(squareVectorOnFace)
 
       if(squareRadiusOnFace == 0) Some(squareVectorOnFace) else {
+
         val regularizedSquareRadiusOnFace = f.regularization(squareRadiusOnFace)
         //assertProportion(regularizedSquareRadiusOnFace / squareRadiusOnFace)
-        val spaceContractionFactor = f.projectionProportion(squareRadiusOnFace)
-        //assertProportion(spaceContractionFactor)
-
         val radiusRegularizedSquareVectorOnFace = F.toSquareRadius(squareVectorOnFace, regularizedSquareRadiusOnFace)
-        val radiusAndSpaceRegularizedSquareVectorOnFace = MaxMagnitude(radiusRegularizedSquareVectorOnFace).applyToRemainder(scale(1/spaceContractionFactor))
+
+        val spaceFactor = f.projectionProportion(squareRadiusOnFace)
+        //assertProportion(spaceFactor)
+        val radiusAndSpaceRegularizedSquareVectorOnFace = MaxMagnitude(radiusRegularizedSquareVectorOnFace).applyToRemainder(scale(1/spaceFactor))
+
         fromSquareToCircle(radiusAndSpaceRegularizedSquareVectorOnFace, tab + 1).flatMap(circleVectorOnFace => {
           val cut = true
           //tabPrintln(MaxMagnitude(circleVectorOnFace).indices + " " + MaxMagnitude(squareVectorOnFace).indices)
@@ -184,7 +198,7 @@ object RestrictedSpaceTransformation3 {
     for(_ <- 0 to 0) {
       println(s"dimension = $dimension")
       val result = fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
-      println(dimension, result.size)
+      println(dimension, p, result.size)
     }
   }
 
@@ -193,7 +207,39 @@ object RestrictedSpaceTransformation3 {
     if(dimension == 1) {
       circleVector
     } else {
-      ???
+      val f = F.fromCircleVector(circleVector)
+
+      val projectedRadius = F.circleRadius(MaxMagnitude(circleVector).remainderSpaceRemainder)
+
+      val circleOnFaceSquareVector = F.toSquareRadius(circleVector, f.nCubeRadius)
+      val circleOnFaceSquareVectorMaxMagnitude = MaxMagnitude(circleOnFaceSquareVector)
+      val circleVectorOnFace = circleOnFaceSquareVectorMaxMagnitude.remainderSpaceRemainder
+
+      val radiusAndSpaceRegularizedSquareVectorOnFace = fromCircleToSquare(circleVectorOnFace)
+
+      val spaceFactor = f.inverseProjectionProportion(projectedRadius)
+      val radiusRegularizedSquareVectorOnFace = MaxMagnitude(radiusAndSpaceRegularizedSquareVectorOnFace).applyToRemainder(scale(1/spaceFactor))
+
+      val regularizedSquareRadiusOnFace = F.squareRadius(radiusRegularizedSquareVectorOnFace)
+      val squareRadiusOnFace = f.inverseRegularization(regularizedSquareRadiusOnFace)
+      val squareVectorOnFace = F.toSquareRadius(radiusRegularizedSquareVectorOnFace, squareRadiusOnFace)
+
+      val squareVector = circleOnFaceSquareVectorMaxMagnitude.reconnect(squareVectorOnFace)
+
+      squareVector
+    }
+  }
+
+  def fromCircleToSquareTest(dimension: Int, p: Int): Unit = {
+    //val p = 4
+    for(_ <- 0 to 0) {
+      println(s"dimension = $dimension")
+      val inputs = Data.centeredNCube(dimension, p, hollow = true)
+      val outputs = fromSquareToCircle(inputs)
+      (inputs zip outputs) foreach { case (squareVector, circleVector) =>
+        val recoveredInput = fromCircleToSquare(circleVector)
+        println(norm(squareVector - recoveredInput))
+      }
     }
   }
 

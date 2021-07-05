@@ -13,6 +13,12 @@ object Vectors {
   def toColumnMatrix(v: Vector): Matrix = toRowMatrix(v).transpose
 
   def replace(v: Vector, i: Int, c: Double): Vector = v.zipWithIndex map { case (cv, iv) => if (iv == i) c else cv }
+  def insert(v: Vector, i: Int, c: Double): Vector = {
+    val (left, right) = v.splitAt(i)
+    left ++ Seq(c) ++ right
+  }
+  def remove(v: Vector, i: Int): Seq[Double] = v.zipWithIndex.filterNot(_._2 == i).map(_._1)
+
   def norm(v: Vector, p: Int): Double = pow(v.map(abs).map(pow(_, p)).sum, 1.0/p)
   def scale(v: Vector, s: Double): Vector = v.map(_ * s)
   def normalize(v: Vector, p: Int): Vector = {
@@ -34,6 +40,8 @@ object Vectors {
 
   //Currying
   def replace(i: Int, c: Double)(v: Vector): Vector = replace(v, i, c)
+  def insert(i: Int, c: Double)(v: Vector): Vector = insert(v, i, c)
+  def remove(i: Int)(v: Vector): Vector = remove(v, i)
   def norm(p: Int)(v: Vector): Double = norm(v, p)
   def scale(s: Double)(v: Vector): Vector = scale(v, s)
   def normalize(p: Int)(v: Vector): Vector = normalize(v, p)
@@ -69,6 +77,8 @@ object Vectors {
 
     //Currying copy
     def replace(i: Int, c: Double): Vector = Vectors.replace(i, c)(v)
+    def insert(i: Int, c: Double): Vector = Vectors.insert(i, c)(v)
+    def remove(i: Int): Vector = Vectors.remove(i)(v)
     def norm(p: Int): Double = Vectors.norm(p)(v)
     def scale(s: Double): Vector = Vectors.scale(s)(v)
     def normalize(p: Int): Vector = Vectors.normalize(p)(v)

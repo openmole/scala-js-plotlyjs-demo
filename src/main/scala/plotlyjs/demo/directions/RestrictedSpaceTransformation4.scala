@@ -142,11 +142,15 @@ object RestrictedSpaceTransformation4 {
 
     def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
     def toSquareRadius(vector: Vector, squareRadius: Double): Vector = {
-      (squareRadius / F.squareRadius(vector)) *: vector
+      if(norm(vector) == 0) vector else {
+        (squareRadius / F.squareRadius(vector)) *: vector
+      }
     }
     def circleRadius(circleVector: Vector): Double = norm(circleVector)
     def toCircleRadius(vector: Vector, circleRadius: Double): Vector = {
-      (circleRadius / F.circleRadius(vector)) *: vector
+      if(norm(vector) == 0) vector else {
+        (circleRadius / F.circleRadius(vector)) *: vector
+      }
     }
 
     def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = {
@@ -176,7 +180,9 @@ object RestrictedSpaceTransformation4 {
 
     def fromCircleVector(circleVector: Vector): F = {
       val dimension = circleVector.dimension
-      F(dimension, MaxMagnitude(vectorFromCircleToSquare(circleVector)), radiusFromCircleToSquare(dimension)(circleRadius(circleVector)))
+      val squareVector = vectorFromCircleToSquare(circleVector)
+      val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
+      F(dimension, squareVectorMaxMagnitude, squareVectorMaxMagnitude.value)
     }
 
     def inverseRegularizationTest(): Unit = {
@@ -259,14 +265,25 @@ object RestrictedSpaceTransformation4 {
       val f = F.fromCircleVector(circleVector)
       //println(circleVector)
       val circleVectorOnFace = f.inverseProjection(circleVector)
-      //println(circleVectorOnFace)
-      println()
+      println("inverseProjection : " + norm(f.projection(circleVectorOnFace) - circleVector))
       val adjustedRegularizedSquareVectorOnFace = fromCircleToSquare(circleVectorOnFace)
-      //println(adjustedRegularizedSquareVectorOnFace)
-      val regularizedSquareVectorOnFace = f.inverseAdjustment(adjustedRegularizedSquareVectorOnFace)
+      val regularizedSquareVectorOnFace: Vector = {
+        if(dimension(adjustedRegularizedSquareVectorOnFace) == 1) adjustedRegularizedSquareVectorOnFace else {
+          f.inverseAdjustment(adjustedRegularizedSquareVectorOnFace)
+        }
+      }
+      if(dimension(adjustedRegularizedSquareVectorOnFace) > 1) {
+        println(adjustedRegularizedSquareVectorOnFace)
+        println(regularizedSquareVectorOnFace)
+        println("inverseAdjustment : " + norm(f.adjustment(regularizedSquareVectorOnFace).get - adjustedRegularizedSquareVectorOnFace))
+      }
       val squareVectorOnFace = f.inverseRegularization(regularizedSquareVectorOnFace)
+      println("inverseRegularization : " + norm(f.regularization(squareVectorOnFace) - regularizedSquareVectorOnFace))
+      println("reconnect...")
+      println(squareVectorOnFace)
       val squareVector = f.maxMagnitude.reconnect(squareVectorOnFace)
-      println()
+      println(squareVector)
+      println("...done.")
       squareVector
     }
   }

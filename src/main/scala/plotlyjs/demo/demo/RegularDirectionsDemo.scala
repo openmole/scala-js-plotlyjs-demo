@@ -17,7 +17,7 @@ import scala.util.control.Breaks.breakable
 
 object RegularDirectionsDemo {
 
-  private val sc = sourcecode.Text {
+  lazy private val sc = sourcecode.Text {
 
     def scatter3dData(name: String, points: Seq[Seq[Double]], color: Color) = {
       val pointsT = points.transpose

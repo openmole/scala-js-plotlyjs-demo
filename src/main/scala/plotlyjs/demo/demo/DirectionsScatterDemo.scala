@@ -27,7 +27,7 @@ import scala.scalajs.js.JSConverters.JSRichIterableOnce
  */
 object DirectionsScatterDemo {
 
-  private val sc = sourcecode.Text {
+  private lazy val sc = sourcecode.Text {
 
     val plotDiv = div()
 

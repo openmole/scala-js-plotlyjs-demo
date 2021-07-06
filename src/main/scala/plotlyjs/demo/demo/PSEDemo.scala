@@ -33,7 +33,7 @@ object PSEDemo {
 
   import org.openmole.plotlyjs.ScatterTernaryDataBuilder._
 
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
 
     val plotDiv = div()
 

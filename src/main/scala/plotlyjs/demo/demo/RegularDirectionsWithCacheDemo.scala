@@ -31,7 +31,7 @@ import scala.scalajs.js.JSConverters.JSRichIterableOnce
  */
 object RegularDirectionsWithCacheDemo {
 
-  private val sc = sourcecode.Text {
+  lazy private val sc = sourcecode.Text {
 
     //val resultsSeq = RegularDirectionsWithCache.parametersLines.map(_.map(_.map(p => Seq(p(0), p(1).toDegrees))))
     //  .reverse.head

@@ -13,7 +13,7 @@ import plotlyjs.demo.utils.Data._
 import scala.scalajs.js.JSConverters._
 
 object PSESubPlots {
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
 
     val plotDiv = div()
 

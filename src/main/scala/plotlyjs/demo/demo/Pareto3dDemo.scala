@@ -13,7 +13,7 @@ import scala.scalajs.js.JSConverters._
 
 object Pareto3dDemo {
 
-  private val sc = sourcecode.Text {
+  lazy private val sc = sourcecode.Text {
 
     val plotDiv = div()
 

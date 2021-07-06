@@ -15,7 +15,7 @@ import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 object RestrictedSpaceTransformationDemo {
 
-  private val sc = sourcecode.Text {
+  lazy private val sc = sourcecode.Text {
 
     def lineChartDiv(dimension: Int) = {
       val plotDiv = div()

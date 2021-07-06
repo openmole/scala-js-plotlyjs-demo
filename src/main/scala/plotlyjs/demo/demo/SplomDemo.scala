@@ -29,7 +29,7 @@ import plotlyjs.demo.utils.Utils
 
 object SplomDemo {
 
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
 
     import org.openmole.plotlyjs.SplomDataBuilder._
     import org.openmole.plotlyjs.Layout._

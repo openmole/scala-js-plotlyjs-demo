@@ -26,8 +26,7 @@ import scala.scalajs.js.JSConverters._
 
 object LineChartDemo {
 
-  val sc = sourcecode.Text {
-
+  lazy val sc = sourcecode.Text {
     val plotDiv = div()
 
     val layout = Layout

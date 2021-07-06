@@ -26,7 +26,7 @@ import plotlyjs.demo.utils.Utils
  */
 object ScatterDemo {
 
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
     val hoverText = Var("")
 
     val plotDiv = div()

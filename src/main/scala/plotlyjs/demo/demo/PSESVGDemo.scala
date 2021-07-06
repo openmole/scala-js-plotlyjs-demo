@@ -14,7 +14,7 @@ import scala.annotation.tailrec
 
 
 object PSESVGDemo {
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
 
     val gridSize = 800
 

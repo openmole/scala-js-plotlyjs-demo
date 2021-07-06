@@ -27,7 +27,7 @@ import plotlyjs.demo.utils.Utils
 
 object HeatMapDemo {
 
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
 
     val plotDiv = div()
 

@@ -29,7 +29,7 @@ import scala.scalajs._
 object HistogramDemo {
 
   import org.openmole.plotlyjs.HistogramDataBuilder._
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
     val plotDiv = div()
 
     val layout = Layout

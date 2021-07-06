@@ -72,7 +72,7 @@ object PlotlyDemo {
               RestrictedSpaceTransformationDemo.elementDemo,
             )
           } yield {
-            Tab(demo.title,
+            lazy val demoDiv = {
               div(
                 h3(demo.title),
                 div(containerFluid,
@@ -82,7 +82,17 @@ object PlotlyDemo {
                   )
                 )
               )
-            )
+            }
+            val demoVar = Var(div())
+            val lazyDemo = true
+            if(lazyDemo) {
+              Tab(demo.title,
+                div(child <-- demoVar.signal),
+                () => { demoVar.set(demoDiv) }
+              )
+            } else {
+              Tab(demo.title, demoDiv)
+            }
           },
           tabStyle = navbar_pills
         ).build.render

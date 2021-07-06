@@ -28,7 +28,7 @@ import scala.scalajs._
 
 object BoxDemo {
 
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
     val clickText = Var("")
 
     val plotDiv = div()

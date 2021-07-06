@@ -14,7 +14,7 @@ import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 object ParallelCoordinatesDemo {
 
-  private val sc = sourcecode.Text {
+  lazy private val sc = sourcecode.Text {
 
     val plotDiv = div()
 

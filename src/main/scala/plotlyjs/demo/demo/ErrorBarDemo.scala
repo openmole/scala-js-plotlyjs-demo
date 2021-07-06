@@ -28,7 +28,7 @@ import scala.scalajs._
 
 object ErrorBarDemo {
 
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
 
     val plotDiv = div()
 

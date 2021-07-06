@@ -36,7 +36,7 @@ object ParetoDemo {
 
   import org.openmole.plotlyjs.ScatterPolarDataBuilder._
 
-  val sc = sourcecode.Text {
+  lazy val sc = sourcecode.Text {
 
     val plotDiv = div()
 

@@ -22,13 +22,11 @@ object RestrictedSpaceTransformationDemo {
       import plotlyjs.demo.directions.RestrictedSpaceTransformation4.F
       val f = F(dimension, null, 1)
       val plotDataSeq = {
-        //Seq(f.regularization(_), f.projection(_), f.projectionFactor(_), f.projectionProportion(_))
-        //.zip(Seq("regularization", "projection", "projectionFactor", "projectionProportion"))
         Seq[(String, Double => Double)](
           ("regularization", f.regularization),
           ("projection", f.projection),
-          ("projectionFactor", f.projectionFactor),
-          ("projectionProportion", f.projectionProportion),
+          ("adjustmentFactor", f.adjustmentFactor),
+          ("adjustmentProportion", f.adjustmentProportion),
           ("inverseRegularizationTest", r => f.inverseRegularizationTest(r)),
         )
         .map { case (name, function) =>
@@ -100,7 +98,7 @@ object RestrictedSpaceTransformationDemo {
       onDemandLineChartDiv(3),
       onDemandLineChartDiv(30),
       onDemand("RST4", () => scatter3dDiv("RST4", RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)))),
-      onDemand("RST4 inv", () => scatter3dDiv("RST4 inv", RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)).map(RestrictedSpaceTransformation4.fromCircleToSquare))),
+      onDemand("RST4 inv", () => scatter3dDiv("RST4 inv", RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(3, 64, hollow = true)).map(RestrictedSpaceTransformation4.fromCircleToSquare))),
       onDemand("Load", () => div(fromSquareToCircle(3, cube).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From square to circle – $i times", points) } ++ fromCircleToSquare(3, sphere).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From circle to square – $i times", points) }))
     )
   }

@@ -1,7 +1,6 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
@@ -126,56 +125,55 @@ object RegularDirectionsDemo {
     val alphaStep = Math.PI/4 / (p/2.0)
     val linesAlphaStep = 2 * alphaStep
 
-    val title3S = "Building method – 3-sphere cell"
-    val title2SL = "Building method with lines – 2-sphere"
-    val title3SL = "Building method with lines – 3-sphere cell"
-    val titleRecursive = "Cached building method"
-
-    lazy val restrictedSpaceTransformation = Data
-      .centeredNCube(dimension, 2 * p, hollow = true)
-      .map(RestrictedSpaceTransformation.fromSquareToCircle)
-      .filter(_.nonEmpty)
-      .map(_.get)
-    val titleRST = "Restricted space transformation – 2-sphere"
+    lazy val restrictedSpaceTransformation = RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p, hollow = true))
 
     div(
-      scatter3dDiv(
-        "Cube – no adjustment",
+      onDemand("Cube – no adjustment", title => scatter3dDiv(
+        title,
         points,
-        points.map(normalize)),
-      scatter3dDiv(
-        "Radial angular adjustment",
+        points.map(normalize)
+      )),
+      onDemand("Radial angular adjustment", title => scatter3dDiv(
+        title,
         points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)),
-        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(normalize)),
-      scatter3dDiv(
-        "Cartesian angular adjustment",
+        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(normalize)
+      )),
+      onDemand("Cartesian angular adjustment", title => scatter3dDiv(
+        title,
         points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null),
-        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(normalize)),
-      scatter3dDiv(
-        "Building method – 2-sphere",
+        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(normalize)
+      )),
+      onDemand("Building method – 2-sphere", title => scatter3dDiv(
+        title,
         RegularDirections.nSphereCovering(dimension, alphaStep, keepCubicShape = true).filter(_.head >= 0),
-        RegularDirections.nSphereCovering(dimension, alphaStep).filter(_.head >= 0)),
-      onDemand(title3S, () => scatter3dDiv(
-        title3S,
+        RegularDirections.nSphereCovering(dimension, alphaStep).filter(_.head >= 0)
+      )),
+      onDemand("Building method – 3-sphere cell", title => scatter3dDiv(
+        title,
         RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
-        RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail))),
-      onDemand(title2SL, () => scatter3dLinesDiv(
-        title2SL,
+        RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail)
+      )),
+      onDemand("Building method with lines – 2-sphere", title => scatter3dLinesDiv(
+        title,
         RegularDirectionsWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 }.toSeq,
-        Color.rgb(0, 0, 0))),
-      onDemand(title3SL, () => scatter3dLinesDiv(
-        title3SL,
+        Color.rgb(0, 0, 0)
+      )),
+      onDemand("Building method with lines – 3-sphere cell", title => scatter3dLinesDiv(
+        title,
         (RegularDirectionsWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
           .filter { case (v1, v2) => v1.head == +1.0 && v2.head == +1.0 } map { case (v1, v2) => (v1.normalize.tail, v2.normalize.tail) }).toSeq,
-        Color.rgb(0, 0, 0))),
-      onDemand(titleRecursive, () => scatter3dDiv(
-        titleRecursive,
+        Color.rgb(0, 0, 0)
+      )),
+      onDemand("Cached building method", title => scatter3dDiv(
+        title,
         Seq(Seq(0.0, 0.0, 0.0)),
-        RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0))),
-      onDemand(titleRST, () => scatter3dDiv(
-        titleRST,
+        RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0)
+      )),
+      onDemand("Restricted space transformation – 2-sphere", title => scatter3dDiv(
+        title,
         restrictedSpaceTransformation.map(RestrictedSpaceTransformation4.fromCircleToSquare).filter(_.head >= 0),
-        restrictedSpaceTransformation.filter(_.head >= 0))),
+        restrictedSpaceTransformation.filter(_.head >= 0)
+      )),
     )
   }
 

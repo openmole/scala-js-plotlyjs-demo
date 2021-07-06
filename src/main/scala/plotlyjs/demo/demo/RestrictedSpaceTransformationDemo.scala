@@ -5,8 +5,8 @@ import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
+import plotlyjs.demo.directions.{RestrictedSpaceTransformation4 => RST4}
 import plotlyjs.demo.directions.RestrictedSpaceTransformation4.MaxMagnitude
-import plotlyjs.demo.directions.{RestrictedSpaceTransformation, RestrictedSpaceTransformation2, RestrictedSpaceTransformation3, RestrictedSpaceTransformation4}
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -82,25 +82,23 @@ object RestrictedSpaceTransformationDemo {
     val p = 31
     lazy val cube = Data.centeredNCube(dimension, p, hollow = true)
     lazy val cubeSectors0 = cube.filter(v => MaxMagnitude(MaxMagnitude(v).remainderSpaceRemainder).index == 0)
-    lazy val sphere = RestrictedSpaceTransformation.fromSquareToCircle(cube)
+    lazy val sphere = RST4.fromSquareToCircle(cube)
 
     def fromSquareToCircle(n: Int, points: Seq[Vector]) = {
       var seq = Seq(points)
-      for(_ <- 0 until n) seq = seq :+ RestrictedSpaceTransformation4.fromSquareToCircle(seq.reverse.head)
+      for(_ <- 0 until n) seq = seq :+ RST4.fromSquareToCircle(seq.reverse.head)
       seq
     }
 
     def fromCircleToSquare(n: Int, points: Seq[Vector]) = {
       var seq = Seq(points)
-      for(_ <- 0 until n) seq = seq :+ seq.reverse.head.map(RestrictedSpaceTransformation4.fromCircleToSquare)
+      for(_ <- 0 until n) seq = seq :+ seq.reverse.head.map(RST4.fromCircleToSquare)
       seq
     }
 
     div(
       onDemandLineChartDiv(3),
       onDemandLineChartDiv(30),
-      onDemand("RST4", () => scatter3dDiv("RST4", RestrictedSpaceTransformation4.fromSquareToCircle(cube))),
-      onDemand("RST4 inv", () => scatter3dDiv("RST4 inv", RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(3, 64, hollow = true)).map(RestrictedSpaceTransformation4.fromCircleToSquare))),
       onDemand("Load", () => div(fromSquareToCircle(3, cube).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From square to circle – $i times", points) } ++ fromCircleToSquare(3, sphere).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From circle to square – $i times", points) }))
     )
   }

@@ -5,7 +5,7 @@ import org.openmole.plotlyjs.PlotMode.{markers, markersAndText}
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.RegularDirections
+import plotlyjs.demo.directions.{RestrictedSpaceTransformation4 => RST4}
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.{Data, PointSet}
 
@@ -38,7 +38,7 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val geometry = RegularDirections.nSphereCovering(5, 23.toRadians).filter(_.max <= 0) //Data.lowSphericalCorner(8, 2)
+    val geometry = Data.highSphericalCorner(8, 5)
     val results = Data.dim8Sample100
 
     val nbObjectives = geometry.head.size

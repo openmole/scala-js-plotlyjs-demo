@@ -11,16 +11,12 @@ object RestrictedSpaceTransformation4 {
     lazy val index: Int = vector.map(abs).zipWithIndex.maxBy(_._1)._2
     lazy val coordinate: Double = vector(index)
     lazy val value: Double = abs(coordinate)
-
-    lazy val indices: Seq[Int] = vector.map(abs).zipWithIndex.filter(_._1 == value).map(_._2)
-
     lazy val fullSpaceComponent: Vector = vector.zipWithIndex.map { case (c, i) => if(i == index) c else 0 }
     lazy val fullSpaceRemainder: Vector = vector - fullSpaceComponent
     lazy val remainderSpaceRemainder: Vector = vector.zipWithIndex.filterNot(_._2 == index).map(_._1)
     def reconnect(newRemainderSpaceRemainder: Vector): Vector = {
       newRemainderSpaceRemainder.insert(index, coordinate)
     }
-    def applyToRemainder(f: Vector => Vector): Vector = reconnect(f(remainderSpaceRemainder))
   }
 
   case class F(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Double) {
@@ -309,7 +305,7 @@ object RestrictedSpaceTransformation4 {
 
   def fromCircleToSquareTest(): Unit = {
     val dimension = 3
-    val p = 6
+    val p = 7
     val cubeFaces = Data.centeredNCube(dimension, p, hollow = true)
     cubeFaces.foreach(squareVector => {
       fromCircleToSquareTest(squareVector).foreach(println)

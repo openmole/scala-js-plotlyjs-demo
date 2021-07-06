@@ -210,4 +210,10 @@ object Utils {
     div(child <-- content.signal)
   }
 
+  def onDemand(title: String, supplier: String => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {
+    val content = Var(div())
+    content.set(div(button(title, inContext { _ => onClick.mapTo(supplier(title)) --> content.writer })))
+    div(child <-- content.signal)
+  }
+
 }

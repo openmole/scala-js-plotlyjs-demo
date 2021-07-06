@@ -88,7 +88,6 @@ object RestrictedSpaceTransformation4 {
 
     val adjustmentFactorZeroLimit: Double = {
       // Depends on radiusFromSquareToCircle and radiusFromCircleToSquare.
-      //sqrt(dimension * (dimension - 1))
       sqrt(dimension) * atan(sqrt(dimension - 1))
     }
 
@@ -96,11 +95,11 @@ object RestrictedSpaceTransformation4 {
       adjustmentFactor(squareRadiusOnFace) / adjustmentFactorZeroLimit
     }
 
-    def adjustment(squareRadiusOnFace: Double, spaceComponent: Vector): Option[Vector] = {
-      if(squareRadiusOnFace == 0/*spaceComponent.isEmpty*/) Some(spaceComponent) else {
+    def adjustment(squareRadiusOnFace: Double, spaceComponent: Vector, regularizedSquareRadiusOnFace: Double): Option[Vector] = {
+      if(squareRadiusOnFace == 0) Some(spaceComponent) else {
         val spaceFactor = adjustmentProportion(squareRadiusOnFace)
         val adjustedSpaceComponent = (1/spaceFactor) *: spaceComponent
-        if(F.squareRadius(adjustedSpaceComponent) > squareRadiusOnFace) None else {
+        if(F.squareRadius(adjustedSpaceComponent) > regularizedSquareRadiusOnFace) None else {
           Some(adjustedSpaceComponent)
         }
       }
@@ -122,7 +121,6 @@ object RestrictedSpaceTransformation4 {
     */
 
     def projection(circleVectorOnFace: Vector): Vector = {
-      //val circleOnFaceSquareVector = circleVectorOnFace.insert(faceIndex, nCubeRadius)
       val circleOnFaceSquareVector = maxMagnitude.reconnect(circleVectorOnFace)
       val circleVector = F.toCircleRadius(circleOnFaceSquareVector, nSphereRadius)
       circleVector
@@ -130,7 +128,7 @@ object RestrictedSpaceTransformation4 {
 
     def inverseProjection(circleVector: Vector): Vector = {
       val circleOnFaceSquareVector = F.toSquareRadius(circleVector, nCubeRadius)
-      val circleVectorOnFace = circleOnFaceSquareVector.remove(maxMagnitude.index)//TODO change to remainder
+      val circleVectorOnFace = circleOnFaceSquareVector.remove(maxMagnitude.index)//TODO change to remainder ?
       circleVectorOnFace
     }
 
@@ -142,6 +140,7 @@ object RestrictedSpaceTransformation4 {
 
   object F {
 
+    //Geometry
     def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
     def toSquareRadius(vector: Vector, squareRadius: Double): Vector = {
       if(norm(vector) == 0) vector else {
@@ -173,9 +172,9 @@ object RestrictedSpaceTransformation4 {
       val squareRadius = radiusFromCircleToSquare(dimension(circleVector))(circleRadius)
       toSquareRadius(circleVector, squareRadius)
     }
+    //
 
-
-
+    //Factory
     def fromSquareVector(squareVector: Vector): F = {
       F(dimension(squareVector), MaxMagnitude(squareVector), squareRadius(squareVector))
     }
@@ -186,7 +185,9 @@ object RestrictedSpaceTransformation4 {
       val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
       F(dimension, squareVectorMaxMagnitude, squareVectorMaxMagnitude.value)
     }
+    //
 
+    //Tests
     def inverseRegularizationTest(): Unit = {
       val dimension = 3
       val p = 8
@@ -222,6 +223,7 @@ object RestrictedSpaceTransformation4 {
         println(f.inverseProjectionTest(squareVectorOnFace))
       })
     }
+    //
 
   }
 
@@ -238,26 +240,29 @@ object RestrictedSpaceTransformation4 {
       val spaceComponent = squareVectorOnFaceMaxMagnitude.fullSpaceRemainder
 
       val regularizedRadiusComponent = f.regularization(radiusComponent)
-      val adjustedSpaceComponentOption = f.adjustment(squareRadiusOnFace, spaceComponent)
+      val regularizedSquareRadiusOnFace = F.squareRadius(regularizedRadiusComponent)
+      val adjustedSpaceComponentOption = f.adjustment(squareRadiusOnFace, spaceComponent, regularizedSquareRadiusOnFace)
 
       adjustedSpaceComponentOption.flatMap(adjustedSpaceComponent => {
         val regularizedAndAdjustedSquareVectorOnFace = regularizedRadiusComponent + adjustedSpaceComponent
         fromSquareToCircle(regularizedAndAdjustedSquareVectorOnFace)
       }).flatMap(circleVectorOnFace => {
-        val cut = true
-        if(cut && (F.squareRadius(circleVectorOnFace) > f.maxSquareRadius || (MaxMagnitude(circleVectorOnFace).indices intersect MaxMagnitude(squareVectorOnFace).indices).isEmpty)) {
-          //tabPrintln(s"cut : ${circleVectorOnFace.vectorToString}")
-          None
-        } else {
+        val sameFace = F.squareRadius(circleVectorOnFace) <= f.maxSquareRadius
+        if(sameFace) {
           val circleVector = f.projection(circleVectorOnFace)
           Some(circleVector)
-        }
+        } else None
       })
     }
   }
 
   def fromSquareToCircle(squareVectors: Seq[Vector]): Seq[Vector] = {
     squareVectors.map(fromSquareToCircle).filter(_.nonEmpty).map(_.get)
+  }
+
+  def fromSquareToCircleTest(dimension: Int, p: Int): Unit = {
+    val result = fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
+    println(dimension, p, result.size)
   }
 
   def fromSquareToCircleTest(maxDimension: Int): Unit = {

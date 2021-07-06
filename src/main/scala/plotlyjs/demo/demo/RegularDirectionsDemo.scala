@@ -174,7 +174,7 @@ object RegularDirectionsDemo {
         RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0))),
       onDemand(titleRST, () => scatter3dDiv(
         titleRST,
-        restrictedSpaceTransformation.map(RestrictedSpaceTransformation.fromCircleToSquare).filter(_.head >= 0),
+        restrictedSpaceTransformation.map(RestrictedSpaceTransformation4.fromCircleToSquare).filter(_.head >= 0),
         restrictedSpaceTransformation.filter(_.head >= 0))),
     )
   }

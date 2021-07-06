@@ -31,7 +31,7 @@ object DirectionsScatterDemo {
 
     val plotDiv = div()
 
-    val dim = 4
+    val dim = 3
     val p = 8
     val results = Data.lowSphericalCorner(dim, p)//Data.dim8Sample100.map(_.drop(8 - dim))
     val pointSet = new PointSet(results)

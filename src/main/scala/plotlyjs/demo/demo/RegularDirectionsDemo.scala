@@ -7,6 +7,7 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.{RegularDirectionsWithLines, _}
+import plotlyjs.demo.directions.{RestrictedSpaceTransformation4 => RST4}
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -89,7 +90,8 @@ object RegularDirectionsDemo {
     }
 
     def scatter3dLinesDataSeq(lineSegments: Seq[(Seq[Double], Seq[Double])], color: Color) = {
-      polylines(lineSegments).map(polyline => {
+      val seqLines: Seq[Seq[Seq[Double]]] = lineSegments.map { case (v1, v2) => Seq(v1, v2) }
+      /*polylines(lineSegments)*/seqLines.map(polyline => {
         val coordinates = polyline.transpose
         scatter3d
           .x(coordinates(0).toJSArray)
@@ -125,7 +127,7 @@ object RegularDirectionsDemo {
     val alphaStep = Math.PI/4 / (p/2.0)
     val linesAlphaStep = 2 * alphaStep
 
-    lazy val restrictedSpaceTransformation = RestrictedSpaceTransformation4.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p, hollow = true))
+    lazy val sphereRST = RST4.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p, hollow = true))
 
     div(
       onDemand("Cube – no adjustment", title => scatter3dDiv(
@@ -171,9 +173,14 @@ object RegularDirectionsDemo {
       )),
       onDemand("Restricted space transformation – 2-sphere", title => scatter3dDiv(
         title,
-        restrictedSpaceTransformation.map(RestrictedSpaceTransformation4.fromCircleToSquare).filter(_.head >= 0),
-        restrictedSpaceTransformation.filter(_.head >= 0)
+        sphereRST.map(RST4.fromCircleToSquare).filter(_.head >= 0),
+        sphereRST.filter(_.head >= 0)
       )),
+      onDemand("Restricted space transformation with lines – 2-sphere", title => scatter3dLinesDiv(
+        title,
+        RST4.fromSquareToCircle(Data.centeredNCube(dimension, p/2, hollow = true)).map(circleVector => (circleVector, RST4.fromCircleToSquare(circleVector))).filter(_._1.head >= 0),
+        Color.rgb(0, 0, 0)
+      ))
     )
   }
 

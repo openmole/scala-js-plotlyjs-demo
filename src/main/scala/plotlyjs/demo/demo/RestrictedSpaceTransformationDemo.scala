@@ -28,7 +28,7 @@ object RestrictedSpaceTransformationDemo {
           ("projection", f.projection),
           ("adjustmentFactor", f.adjustmentFactor),
           ("adjustmentProportion", f.adjustmentProportion),
-          ("inverseRegularizationTest", r => f.inverseRegularizationTest(r)),
+          //("inverseRegularizationTest", r => f.inverseRegularizationTest(r)),
         )
         .map { case (name, function) =>
           val n = 100

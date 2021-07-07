@@ -13,6 +13,7 @@ object Vectors {
   def toColumnMatrix(v: Vector): Matrix = toRowMatrix(v).transpose
 
   def replace(v: Vector, i: Int, c: Double): Vector = v.zipWithIndex map { case (cv, iv) => if (iv == i) c else cv }
+  //def swap(v: Vector, i1: Int, i2: Int): Vector = replace(replace(v, i1, v(i2)), i2, v(i1))
   def insert(v: Vector, i: Int, c: Double): Vector = {
     val (left, right) = v.splitAt(i)
     left ++ Seq(c) ++ right
@@ -27,7 +28,9 @@ object Vectors {
   }
   def toNorm(v: Vector, p: Int, d: Double): Vector = scale(normalize(v, p), d)
   def add(v1: Vector, v2: Vector): Vector = v1 zip v2 map { case (c1, c2) => c1 + c2 }
+  def add(v: Vector, c: Double): Vector = v.map(_ + c)
   def sub(v1: Vector, v2: Vector): Vector = v1 zip v2 map { case (c1, c2) => c1 - c2 }
+  def sub(v: Vector, c: Double): Vector = v.map(_ - c)
   def mul(v1: Vector, v2: Vector): Vector = v1 zip v2 map { case (c1, c2) => c1 * c2 }
   def dot(v1: Vector, v2: Vector): Double = mul(v1, v2).sum
   def angle(v1: Vector, v2: Vector): Double = acos(dot(v1, v2) / (norm(v1) * norm(v2)))
@@ -40,6 +43,7 @@ object Vectors {
 
   //Currying
   def replace(i: Int, c: Double)(v: Vector): Vector = replace(v, i, c)
+  //def swap(i1: Int, i2: Int)(v: Vector): Vector = swap(v, i1, i2)
   def insert(i: Int, c: Double)(v: Vector): Vector = insert(v, i, c)
   def remove(i: Int)(v: Vector): Vector = remove(v, i)
   def norm(p: Int)(v: Vector): Double = norm(v, p)
@@ -47,7 +51,9 @@ object Vectors {
   def normalize(p: Int)(v: Vector): Vector = normalize(v, p)
   def toNorm(p: Int, d: Double)(v: Vector): Vector = toNorm(v, p, d)
   def add(v2: Vector): Vector => Vector = (v1: Vector) => add(v1, v2)
+  def add(c: Double)(v: Vector): Vector = add(v, c)
   def sub(v2: Vector): Vector => Vector = (v1: Vector) => sub(v1, v2)
+  def sub(c: Double)(v: Vector): Vector = sub(v, c)
   def mul(v2: Vector): Vector => Vector = (v1: Vector) => mul(v1, v2)
   def dot(v2: Vector): Vector => Double = (v1: Vector) => dot(v1, v2)
   def angle(v2: Vector): Vector => Double = (v1: Vector) => angle(v1, v2)
@@ -77,6 +83,7 @@ object Vectors {
 
     //Currying copy
     def replace(i: Int, c: Double): Vector = Vectors.replace(i, c)(v)
+    //def swap(i1: Int, i2: Int): Vector = Vectors.swap(i1, i2)(v)
     def insert(i: Int, c: Double): Vector = Vectors.insert(i, c)(v)
     def remove(i: Int): Vector = Vectors.remove(i)(v)
     def norm(p: Int): Double = Vectors.norm(p)(v)
@@ -84,7 +91,9 @@ object Vectors {
     def normalize(p: Int): Vector = Vectors.normalize(p)(v)
     def toNorm(p: Int, d: Double): Vector = Vectors.toNorm(p, d)(v)
     def add(ov: Vector): Vector = Vectors.add(ov)(v)
+    def add(c: Double): Vector = Vectors.add(c)(v)
     def sub(ov: Vector): Vector = Vectors.sub(ov)(v)
+    def sub(c: Double): Vector = Vectors.sub(c)(v)
     def mul(ov: Vector): Vector = Vectors.mul(ov)(v)
     def dot(ov: Vector): Double = Vectors.dot(ov)(v)
     def angle(ov: Vector): Double = Vectors.angle(ov)(v)

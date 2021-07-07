@@ -30,7 +30,7 @@ object RestrictedSpaceTransformationDemo {
         )
         .map { case (name, function) =>
           val n = 100
-          val xs = (0.0000001 +: (1 to n).map(_.toDouble)).map(_ / n)
+          val xs = (0 to n).map(_.toDouble).map(_ / n)
           val ys = xs.map(function(_))
           linechart.lines
             .name(name)

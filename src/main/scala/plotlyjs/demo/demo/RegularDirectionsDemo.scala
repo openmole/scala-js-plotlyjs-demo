@@ -1,6 +1,6 @@
 package plotlyjs.demo.demo
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.{HtmlElement, div}
 import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
@@ -8,7 +8,8 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.angularadjustment.{AngularAdjustment, CubicAngularAdjustment}
 import plotlyjs.demo.directions.buildingmethod.{BuildingMethod, BuildingMethodWithCache, BuildingMethodWithLines}
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.Transformation
+import plotlyjs.demo.directions.restrictedspacetransformation.v4._
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -122,13 +123,32 @@ object RegularDirectionsDemo {
     }
 
     val dimension = 3
-    val p = 32
-    val points = Data.centeredNCube(dimension, p, hollow = true).filter(_.head >= 0)
+    val p = 31
+    lazy val points = Data.centeredNCube(dimension, p, hollow = true).filter(_.head >= 0)
 
     val alphaStep = Math.PI/4 / (p/2.0)
     val linesAlphaStep = 2 * alphaStep
 
-    lazy val sphereRST = Transformation.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p, hollow = true))
+    lazy val sphereRST = Transformation.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p + 1, hollow = true))
+    lazy val cubeWithLineRST = {
+      val radius = 8
+      Data
+        .integerNCube(dimension, 2 * radius + 1, hollow = true)
+        .map[IndexVector](sub(radius.toDouble)(_))
+        .flatMap(IndexedTransformation.fromIndexToCircle)
+        .map(IndexedTransformation.fromCircleToIndex)
+        .map(indexVector => (indexVector, IndexedTransformation.neighbourhood(indexVector)))
+
+        .map { case (indexVector, neighbourhood) =>
+          println(neighbourhood)
+          (indexVector, neighbourhood)
+        }
+
+        .flatMap {
+          case (indexVector, neighbourhood) if neighbourhood.nonEmpty => neighbourhood.map(neighbour => (indexVector.vector, neighbour.vector))
+          case _ => None
+        }
+    }
 
     div(
       onDemand("Cube – no adjustment", title => scatter3dDiv(
@@ -177,11 +197,21 @@ object RegularDirectionsDemo {
         sphereRST.map(Transformation.fromCircleToSquare).filter(_.head >= 0),
         sphereRST.filter(_.head >= 0)
       )),
-      onDemand("Restricted space transformation with lines – 2-sphere", title => scatter3dLinesDiv(
+      onDemand("RST with transformation lines – 2-dimensional", title => scatter3dLinesDiv(
         title,
         Transformation.fromSquareToCircle(Data.centeredNCube(dimension, p/2, hollow = true)).map(circleVector => (circleVector, Transformation.fromCircleToSquare(circleVector))).filter(_._1.head >= 0),
         Color.rgb(0, 0, 0)
-      ))
+      )),
+      onDemand("Restricted space transformation with lines – 2-cube", title => scatter3dLinesDiv(
+        title,
+        cubeWithLineRST.filter(_._1.head >= 0),
+        Color.rgb(0, 0, 0)
+      )),
+      onDemand("Restricted space transformation with lines – 2-sphere", title => scatter3dLinesDiv(
+        title,
+        cubeWithLineRST.map(line => (IndexedTransformation.fromIndexToCircle(line._1).get, IndexedTransformation.fromIndexToCircle(line._2).get)).filter(_._1.head >= 0),
+        Color.rgb(0, 0, 0)
+      )),
     )
   }
 

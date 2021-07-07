@@ -65,13 +65,15 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
     ))
   }
 
-  def adjustmentFactor(squareRadiusOnFace: Double): Double = {
-    projection(regularization(squareRadiusOnFace)) / squareRadiusOnFace
-  }
-
   val adjustmentFactorZeroLimit: Double = {
     // Depends on radiusFromSquareToCircle and radiusFromCircleToSquare.
     sqrt(dimension) * atan(sqrt(dimension - 1))
+  }
+
+  def adjustmentFactor(squareRadiusOnFace: Double): Double = {
+    if(squareRadiusOnFace == 0) adjustmentFactorZeroLimit else {
+      projection(regularization(squareRadiusOnFace)) / squareRadiusOnFace
+    }
   }
 
   def adjustmentProportion(squareRadiusOnFace: Double): Double = {
@@ -79,12 +81,10 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
   }
 
   def adjustment(squareRadiusOnFace: Double, spaceComponent: Vector, regularizedSquareRadiusOnFace: Double): Option[Vector] = {
-    if (squareRadiusOnFace == 0) Some(spaceComponent) else {
-      val spaceFactor = adjustmentProportion(squareRadiusOnFace)
-      val adjustedSpaceComponent = (1 / spaceFactor) *: spaceComponent
-      if (squareRadius(adjustedSpaceComponent) > regularizedSquareRadiusOnFace) None else {
-        Some(adjustedSpaceComponent)
-      }
+    val spaceFactor = adjustmentProportion(squareRadiusOnFace)
+    val adjustedSpaceComponent = (1 / spaceFactor) *: spaceComponent
+    if (squareRadius(adjustedSpaceComponent) > regularizedSquareRadiusOnFace) None else {
+      Some(adjustedSpaceComponent)
     }
   }
 

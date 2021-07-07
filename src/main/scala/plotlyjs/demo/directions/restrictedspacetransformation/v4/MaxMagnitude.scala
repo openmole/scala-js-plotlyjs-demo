@@ -8,6 +8,7 @@ case class MaxMagnitude(vector: Vector) {
 
   lazy val index: Int = vector.map(abs).zipWithIndex.maxBy(_._1)._2
   lazy val coordinate: Double = vector(index)
+  lazy val signum: Double = math.signum(coordinate)
   lazy val value: Double = abs(coordinate)
   lazy val fullSpaceComponent: Vector = vector.zipWithIndex.map { case (c, i) => if (i == index) c else 0 }
   lazy val fullSpaceRemainder: Vector = vector - fullSpaceComponent

@@ -1,13 +1,13 @@
-package plotlyjs.demo.directions
+package plotlyjs.demo.directions.buildingmethod
 
-import plotlyjs.demo.directions.AngularAdjustment.Splitter.MaxMagnitudeComponent
+import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Splitter._
 import plotlyjs.demo.utils.Graph
-import plotlyjs.demo.utils.Graph.ImplicitTail
+import plotlyjs.demo.utils.Graph._
 import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
 
-object RegularDirectionsWithCache {
+object BuildingMethodWithCache {
 
   case class RecursionCall(dim: Int, angleStep: Double, rOnCell: Double = 1, previousROnCell: Double = Double.NaN, nSphere: Seq[Vector] = Seq()) {
 

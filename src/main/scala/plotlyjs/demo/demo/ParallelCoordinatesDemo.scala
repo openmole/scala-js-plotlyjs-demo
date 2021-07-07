@@ -3,7 +3,7 @@ package plotlyjs.demo.demo
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.{Color, Plotly}
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.RegularDirections
+import plotlyjs.demo.directions.buildingmethod.BuildingMethod
 import plotlyjs.demo.utils.PointSet.MIN
 import plotlyjs.demo.utils.{Data, PointSet}
 import plotlyjs.demo.utils.Vectors.ImplicitVector
@@ -24,7 +24,7 @@ object ParallelCoordinatesDemo {
       .optimizationProblems(Seq.fill(dim)(MIN))
       .lowerPlotIsBetter
 
-    val directions = RegularDirections.nSphereCovering(dim, Math.PI/4 / 4)
+    val directions = BuildingMethod.nSphereCovering(dim, Math.PI/4 / 4)
     val groupedResults = pointSet.spaceNormalizedOutputs.groupBy(vector =>
       directions
         .zip(directions.map(direction => abs(vector.dot(direction))))

@@ -1,4 +1,4 @@
-package plotlyjs.demo.directions
+package plotlyjs.demo.directions.restrictedspacetransformation
 
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Vectors._
@@ -136,6 +136,7 @@ object RestrictedSpaceTransformation2 {
     lazy val indices: Seq[Int] = vector.map(abs).zipWithIndex.filter(_._1 == value).map(_._2)
 
     lazy val remainderSpaceRemainder: Vector = vector.zipWithIndex.filterNot(_._2 == index).map(_._1)
+
     def reconnect(newRemainderSpaceRemainder: Vector): Seq[Double] = {
       val (left, right) = newRemainderSpaceRemainder.splitAt(index)
       left ++ Seq(coordinate) ++ right
@@ -155,10 +156,11 @@ object RestrictedSpaceTransformation2 {
   }
 
   def fromSquareToCircle(squareVector: Vector, tab: Int = 0): Option[Vector] = {
-    def tabPrintln(text: String = ""): Unit = {}//println(" ".repeat(tab) + text)
+    def tabPrintln(text: String = ""): Unit = {} //println(" ".repeat(tab) + text)
+
     tabPrintln(s"squareVector = $squareVector")
     val squareVectorDimension = squareVector.dimension
-    if(squareVectorDimension == 1) Some(squareVector) else {
+    if (squareVectorDimension == 1) Some(squareVector) else {
       val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
       val nCubeRadius = squareVectorMaxMagnitude.value
       val nSphereRadius = radiusFromSquareToCircle(squareVectorDimension, nCubeRadius)
@@ -170,15 +172,15 @@ object RestrictedSpaceTransformation2 {
       val squareVectorOnFaceMaxMagnitude = MaxMagnitude(squareVectorOnFace)
       val squareRadiusOnFace = squareVectorOnFaceMaxMagnitude.value
 
-      if(squareRadiusOnFace == 0) Some(squareVectorOnFace) else {
+      if (squareRadiusOnFace == 0) Some(squareVectorOnFace) else {
         val circleRadiusOnFace = radiusFromSquareToCircle(dimension(squareVectorOnFace), squareRadiusOnFace)
 
         val spaceRegularizationRadius = spaceRegularizationNoLoss(maxAngle, maxCircleRadiusOnFace, nCubeRadius, nSphereRadius)(circleRadiusOnFace)
-        val spaceContractionFactor = /*min(*/spaceRegularizationRadius / circleRadiusOnFace/*, 1)*/
+        val spaceContractionFactor = /*min(*/ spaceRegularizationRadius / circleRadiusOnFace /*, 1)*/
         val regularizedCircleRadiusOnFace = radiusRegularization(maxAngle, maxCircleRadiusOnFace)(circleRadiusOnFace)
         assertProportion(regularizedCircleRadiusOnFace / circleRadiusOnFace)
 
-        val recursionInput = squareVectorOnFaceMaxMagnitude.reconnect(squareVectorOnFaceMaxMagnitude.remainderSpaceRemainder.scale(1/spaceContractionFactor))
+        val recursionInput = squareVectorOnFaceMaxMagnitude.reconnect(squareVectorOnFaceMaxMagnitude.remainderSpaceRemainder.scale(1 / spaceContractionFactor))
         tabPrintln(s"recursionInput = $recursionInput")
         fromSquareToCircle(recursionInput, tab + 1).map(circleVectorOnFace => {
           tabPrintln(s"circleVectorOnFace = $circleVectorOnFace")
@@ -196,7 +198,7 @@ object RestrictedSpaceTransformation2 {
         //tabPrintln(regularizedCircleVectorOnFaceMaxMagnitude.value)
 
         val cut = true
-        if(cut && (regularizedCircleVectorOnFaceMaxMagnitude.value > nCubeRadius || !regularizedCircleVectorOnFaceMaxMagnitude.indices.contains(squareVectorOnFaceMaxMagnitude.index))) {
+        if (cut && (regularizedCircleVectorOnFaceMaxMagnitude.value > nCubeRadius || !regularizedCircleVectorOnFaceMaxMagnitude.indices.contains(squareVectorOnFaceMaxMagnitude.index))) {
           tabPrintln("cut")
           println("cut")
           None
@@ -224,7 +226,7 @@ object RestrictedSpaceTransformation2 {
 
   def fromSquareToCircleTest(): Unit = {
     val p = 4
-    for(dimension <- 1 to 5) {
+    for (dimension <- 1 to 5) {
       println(s"dimension = $dimension")
 
       val result = fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))

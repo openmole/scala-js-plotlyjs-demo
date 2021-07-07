@@ -5,9 +5,10 @@ import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.AngularAdjustment.Geometry
-import plotlyjs.demo.directions.{RegularDirectionsWithLines, _}
-import plotlyjs.demo.directions.{RestrictedSpaceTransformation4 => RST4}
+import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Geometry
+import plotlyjs.demo.directions.angularadjustment.{AngularAdjustment, CubicAngularAdjustment}
+import plotlyjs.demo.directions.buildingmethod.{BuildingMethod, BuildingMethodWithCache, BuildingMethodWithLines}
+import plotlyjs.demo.directions.restrictedspacetransformation.{RestrictedSpaceTransformation4 => RST4}
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -147,29 +148,29 @@ object RegularDirectionsDemo {
       )),
       onDemand("Building method – 2-sphere", title => scatter3dDiv(
         title,
-        RegularDirections.nSphereCovering(dimension, alphaStep, keepCubicShape = true).filter(_.head >= 0),
-        RegularDirections.nSphereCovering(dimension, alphaStep).filter(_.head >= 0)
+        BuildingMethod.nSphereCovering(dimension, alphaStep, keepCubicShape = true).filter(_.head >= 0),
+        BuildingMethod.nSphereCovering(dimension, alphaStep).filter(_.head >= 0)
       )),
       onDemand("Building method – 3-sphere cell", title => scatter3dDiv(
         title,
-        RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
-        RegularDirections.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail)
+        BuildingMethod.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
+        BuildingMethod.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail)
       )),
       onDemand("Building method with lines – 2-sphere", title => scatter3dLinesDiv(
         title,
-        RegularDirectionsWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 }.toSeq,
+        BuildingMethodWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 }.toSeq,
         Color.rgb(0, 0, 0)
       )),
       onDemand("Building method with lines – 3-sphere cell", title => scatter3dLinesDiv(
         title,
-        (RegularDirectionsWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
+        (BuildingMethodWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
           .filter { case (v1, v2) => v1.head == +1.0 && v2.head == +1.0 } map { case (v1, v2) => (v1.normalize.tail, v2.normalize.tail) }).toSeq,
         Color.rgb(0, 0, 0)
       )),
       onDemand("Cached building method", title => scatter3dDiv(
         title,
         Seq(Seq(0.0, 0.0, 0.0)),
-        RegularDirectionsWithCache.nSphereCovering(dimension, alphaStep, 0)
+        BuildingMethodWithCache.nSphereCovering(dimension, alphaStep, 0)
       )),
       onDemand("Restricted space transformation – 2-sphere", title => scatter3dDiv(
         title,

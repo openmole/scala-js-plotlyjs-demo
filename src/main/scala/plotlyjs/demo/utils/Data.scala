@@ -1,7 +1,7 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.directions.AngularAdjustment.{Geometry, cellRadialAdjustment}
-import plotlyjs.demo.directions.RestrictedSpaceTransformation4
+import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.{Geometry, cellRadialAdjustment}
+import plotlyjs.demo.directions.restrictedspacetransformation.RestrictedSpaceTransformation4
 import plotlyjs.demo.utils.Vectors._
 
 object Data {

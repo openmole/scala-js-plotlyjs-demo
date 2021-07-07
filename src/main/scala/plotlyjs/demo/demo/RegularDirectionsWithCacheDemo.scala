@@ -1,17 +1,14 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import org.openmole.plotlyjs.PlotMode.{lines, markers}
+import org.openmole.plotlyjs.PlotMode.lines
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.RegularDirectionsWithCache.RecursionCall
-import plotlyjs.demo.directions.{RegularDirections, RegularDirectionsWithCache}
+import plotlyjs.demo.directions.buildingmethod.BuildingMethodWithCache
+import plotlyjs.demo.directions.buildingmethod.BuildingMethodWithCache.RecursionCall
+import plotlyjs.demo.utils.Graph
 import plotlyjs.demo.utils.Graph.ImplicitTail
-import plotlyjs.demo.utils.PointSet.MIN
-import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.utils.{Data, Graph, PointSet}
 
-import scala.math.abs
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 /*
@@ -35,7 +32,7 @@ object RegularDirectionsWithCacheDemo {
 
     //val resultsSeq = RegularDirectionsWithCache.parametersLines.map(_.map(_.map(p => Seq(p(0), p(1).toDegrees))))
     //  .reverse.head
-    val graph = RegularDirectionsWithCache.recursionGraph(RecursionCall(10, Math.PI/4 / 4, 1))
+    val graph = BuildingMethodWithCache.recursionGraph(RecursionCall(10, Math.PI/4 / 4, 1))
 
     def lineSeqFrom(graph: Graph[RecursionCall]) = {
       graph.arrows.map(arrow => Seq(arrow._1, arrow._2).map(recursionCall => Seq(recursionCall.dim.toDouble, recursionCall.angleStep.toDegrees)))
@@ -74,7 +71,7 @@ object RegularDirectionsWithCacheDemo {
 
     div(
       graphDiv(graph),
-      graphDiv(RegularDirectionsWithCache.substituteGroups(graph, Math.PI/4 / 32)
+      graphDiv(BuildingMethodWithCache.substituteGroups(graph, Math.PI/4 / 32)
         .map(_.map(Graph(_)).reduceLeft((g1, g2) => {
           g1 + (g1.vertices.head --> g2.vertices.head)
         })).reduce(_ ++ _)

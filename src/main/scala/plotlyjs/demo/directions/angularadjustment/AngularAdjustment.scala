@@ -1,17 +1,20 @@
-package plotlyjs.demo.directions
+package plotlyjs.demo.directions.angularadjustment
 
+import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Geometry._
+import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Splitter._
 import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.directions.AngularAdjustment.Geometry.Geometry
-import plotlyjs.demo.directions.AngularAdjustment.Splitter._
 
 object AngularAdjustment {
 
   object Splitter {
 
     type Splitter = Vector => Vector
+
     implicit class ImplicitSplitter(splitter: Splitter) {
       def component: Splitter = splitter
+
       def remainder(vector: Vector): Vector = vector - component(vector)
+
       def split(vector: Vector): Splitting = {
         val componentOfVector = component(vector)
         (componentOfVector, vector - componentOfVector)
@@ -19,6 +22,7 @@ object AngularAdjustment {
     }
 
     type Splitting = (Vector, Vector)
+
     implicit class ImplicitSplitting(splitting: Splitting) {
       val component: Vector = splitting._1
       val remainder: Vector = splitting._2
@@ -41,8 +45,11 @@ object AngularAdjustment {
 
     trait Geometry { //TODO a splitter list, one for each space (n, n-1, n-2, ..., 2, 1 ?) – for the future point generation algorithm ?
       def radialSplitter: Splitter //future n to (n-1)-cell projector
+
       def borderNormalSplitter: Splitter //future n-1 to (n-2)-cell projector
+
       def radialSplit(vector: Vector): Splitting = radialSplitter.split(vector)
+
       def borderNormalSplit(vector: Vector): Splitting = borderNormalSplitter.split(vector)
 
       def space(dimension: Int): Double
@@ -50,8 +57,10 @@ object AngularAdjustment {
 
     val cubic: Geometry = new Geometry {
       override def radialSplitter: Splitter = Splitter.MaxMagnitudeComponent
+
       override def borderNormalSplitter: Splitter = Splitter.MaxMagnitudeComponent
-      override def space(dimension: Int): Double = 4 * 2*dimension //TODO Geometry as a GeometryFactory to set dimension at the beginning ?
+
+      override def space(dimension: Int): Double = 4 * 2 * dimension //TODO Geometry as a GeometryFactory to set dimension at the beginning ?
     }
 
     //TODO simplex ?
@@ -65,7 +74,7 @@ object AngularAdjustment {
     val (borderNormalComponent, _) = geometry.borderNormalSplit(remainderToAdjust)
     val centerToBorderProportion = norm(borderNormalComponent) / sphericalRadius
 
-    val touchingBorderRemainder = (1/centerToBorderProportion) *: remainderToAdjust
+    val touchingBorderRemainder = (1 / centerToBorderProportion) *: remainderToAdjust
     val touchingBorder = componentToKeep + touchingBorderRemainder
     val maxAngle = touchingBorder ^ sphericalRadialDirection
 
@@ -75,13 +84,12 @@ object AngularAdjustment {
     val adjustedRemainder = remainderToAdjust toNorm newRemainderLength
     val adjustedVector = componentToKeep + adjustedRemainder
 
-    if(adjustedVector.count(_.isNaN) == 0) adjustedVector else vector
+    if (adjustedVector.count(_.isNaN) == 0) adjustedVector else vector
   }
 
   def cellBorderParallelAdjustment(geometry: Geometry, vector: Vector): Vector = {
     val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
     val (borderNormalComponent, borderParallelComponent) = geometry.borderNormalSplit(remainderToAdjust)
-
 
 
     val adjustedRemainder = ???
@@ -91,16 +99,16 @@ object AngularAdjustment {
   }
 
   def nSphereSurface(n: Int, r: Double): Double = {
-    import scala.math.{pow, Pi}
-    if(n % 2 == 0) {
-      pow(2, n/2 + 1) * pow(Pi, n/2) * pow(r, n) / (1 to n-1 by 2).map(_.toDouble).product
+    import scala.math.{Pi, pow}
+    if (n % 2 == 0) {
+      pow(2, n / 2 + 1) * pow(Pi, n / 2) * pow(r, n) / (1 to n - 1 by 2).map(_.toDouble).product
     } else {
-      pow(Pi, (n+1)/2) * pow(r, n) / (1.0/2.0 * (1 to (n-1)/2).map(_.toDouble).product)
+      pow(Pi, (n + 1) / 2) * pow(r, n) / (1.0 / 2.0 * (1 to (n - 1) / 2).map(_.toDouble).product)
     }
   }
 
   def spacialAdjustment(geometry: Geometry, dimension: Int): Double = {
-    math.pow(geometry.space(dimension) / nSphereSurface(dimension - 1, 1), 1.0/dimension)
+    math.pow(geometry.space(dimension) / nSphereSurface(dimension - 1, 1), 1.0 / dimension)
   }
 
   def spacialAdjustedNormalization(geometry: Geometry, vector: Vector): Vector = {

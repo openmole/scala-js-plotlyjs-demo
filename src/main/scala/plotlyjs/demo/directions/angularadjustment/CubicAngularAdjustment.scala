@@ -1,7 +1,7 @@
-package plotlyjs.demo.directions
+package plotlyjs.demo.directions.angularadjustment
 
-import plotlyjs.demo.utils.Matrices._
 import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.Matrices._
 
 import scala.math._
 
@@ -27,9 +27,9 @@ object CubicAngularAdjustment {
     val cellIndices = 0 until dimension - 1
 
     def cellIndex(spaceIndex: Int) = {
-      if(spaceIndex == maxMagnitudeIndex) {
+      if (spaceIndex == maxMagnitudeIndex) {
         -1
-      } else if(spaceIndex > maxMagnitudeIndex) {
+      } else if (spaceIndex > maxMagnitudeIndex) {
         spaceIndex - 1
       } else {
         spaceIndex
@@ -37,14 +37,14 @@ object CubicAngularAdjustment {
     }
 
     def spaceIndex(cellIndex: Int) = {
-      if(cellIndex >= maxMagnitudeIndex) {
+      if (cellIndex >= maxMagnitudeIndex) {
         cellIndex + 1
       } else {
         cellIndex
       }
     }
 
-    val proportions = cellIndices.map(spaceIndex).map(i => abs(vector(i))/radius)
+    val proportions = cellIndices.map(spaceIndex).map(i => abs(vector(i)) / radius)
 
     val startVectors = cellIndices.map(spaceIndex).map(i => vector.replace(i, 0))
     val stopVectors = cellIndices.map(spaceIndex).map(i => vector.replace(i, signum(vector(i)) * radius))
@@ -54,19 +54,20 @@ object CubicAngularAdjustment {
 
     val computedValues = targetedAngles.map(sin).map(pow(_, 2))
     val invertedCoefficientsMatrix =
-      matrix(cellIndices.length, cellIndices.length, { case (i, _) => computedValues(i)/(computedValues.sum - 1) })
-      .mapWithIndex { case (i, j, c) => if(i == j) c - 1 else c}
+      matrix(cellIndices.length, cellIndices.length, { case (i, _) => computedValues(i) / (computedValues.sum - 1) })
+        .mapWithIndex { case (i, j, c) => if (i == j) c - 1 else c }
     /*//Test
     val coefficientsMatrix =
       matrix(cellIndices.length, cellIndices.length, { case (i, _) => computedValues(i) })
         .mapWithIndex { case (i, j, c) => if(i == j) c - 1 else c }
     println(coefficientsMatrix * invertedCoefficientsMatrix)
-    *///
+    */
+    //
     val constantsVector = cellIndices.map(i => -computedValues(i) * pow(radius, 2))
     val solutions = invertedCoefficientsMatrix mulColumn constantsVector
     val cellAbsoluteCoordinates = solutions.map(sqrt)
 
-    val adjustedVector = spaceIndices.map(i => if(i == maxMagnitudeIndex) vector(i) else signum(vector(i)) * cellAbsoluteCoordinates(cellIndex(i)))
+    val adjustedVector = spaceIndices.map(i => if (i == maxMagnitudeIndex) vector(i) else signum(vector(i)) * cellAbsoluteCoordinates(cellIndex(i)))
 
     adjustedVector
 

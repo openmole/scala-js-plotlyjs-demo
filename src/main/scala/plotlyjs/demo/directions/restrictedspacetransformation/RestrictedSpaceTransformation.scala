@@ -1,4 +1,4 @@
-package plotlyjs.demo.directions
+package plotlyjs.demo.directions.restrictedspacetransformation
 
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Vectors._
@@ -22,11 +22,11 @@ object RestrictedSpaceTransformation {
   }
 
   def regularization(nSphereRadius: Double)(radiusOnCell: Double): Double = {
-    nSphereRadius * tan(radiusOnCell/nSphereRadius * Pi/4)
+    nSphereRadius * tan(radiusOnCell / nSphereRadius * Pi / 4)
   }
 
   def projection(nSphereRadius: Double)(radiusOnCell: Double): Double = {
-    nSphereRadius * sin(atan(radiusOnCell/nSphereRadius))
+    nSphereRadius * sin(atan(radiusOnCell / nSphereRadius))
   }
 
   //include in MaxMagnitude ?
@@ -43,7 +43,7 @@ object RestrictedSpaceTransformation {
 
   def fromSquareToCircle(squareVector: Vector): Option[Vector] = {
     val dimension = squareVector.dimension
-    if(dimension == 1) {
+    if (dimension == 1) {
       Option(squareVector)
     } else {
       val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
@@ -59,14 +59,14 @@ object RestrictedSpaceTransformation {
       val cellCellAdjustment = nSphereRadiusProjection(nSphereRadiusRegularization(radiusOnCell)) / radiusOnCell
       val adjustedRadiusOnCell = nSphereRadiusRegularization(dimensionNormalization(radiusOnCell))
 
-      val recursionInput = backToFullSpace(cellVectorMaxMagnitude, cellVectorMaxMagnitude.remainderSpaceRemainder.scale(1/cellCellAdjustment))
+      val recursionInput = backToFullSpace(cellVectorMaxMagnitude, cellVectorMaxMagnitude.remainderSpaceRemainder.scale(1 / cellCellAdjustment))
       val circleCellVectorOption = fromSquareToCircle(recursionInput)
-      if(circleCellVectorOption.isEmpty) {
+      if (circleCellVectorOption.isEmpty) {
         None
       } else {
         val adjustedCircleCellVector = circleCellVectorOption.get.toNorm(adjustedRadiusOnCell)
         val adjustedCircleCellVectorMaxMagnitude = MaxMagnitude(adjustedCircleCellVector)
-        if(adjustedCircleCellVectorMaxMagnitude.value > nSphereRadius || adjustedCircleCellVectorMaxMagnitude.index != cellVectorMaxMagnitude.index) {
+        if (adjustedCircleCellVectorMaxMagnitude.value > nSphereRadius || adjustedCircleCellVectorMaxMagnitude.index != cellVectorMaxMagnitude.index) {
           None
         } else {
           val circleVector = project(backToFullSpace(squareVectorMaxMagnitude, adjustedCircleCellVector))
@@ -79,15 +79,15 @@ object RestrictedSpaceTransformation {
   def inverseProject(vector: Vector): Vector = {
     val radius = norm(vector)
     val maxMagnitude = MaxMagnitude(vector)
-    (radius/maxMagnitude.value) *: vector
+    (radius / maxMagnitude.value) *: vector
   }
 
   def inverseProjection(nSphereRadius: Double)(radiusOnCell: Double): Double = {
-    tan(asin(radiusOnCell/nSphereRadius)) * nSphereRadius
+    tan(asin(radiusOnCell / nSphereRadius)) * nSphereRadius
   }
 
   def inverseRegularization(nSphereRadius: Double)(radiusOnCell: Double): Double = {
-    atan(radiusOnCell/nSphereRadius) * nSphereRadius / (Pi/4)
+    atan(radiusOnCell / nSphereRadius) * nSphereRadius / (Pi / 4)
   }
 
   def inverseNormalization(dimension: Int)(radiusOnCell: Double): Double = {
@@ -96,7 +96,7 @@ object RestrictedSpaceTransformation {
 
   def fromCircleToSquare(circleVector: Vector): Vector = {
     val dimension = circleVector.dimension
-    if(dimension == 1) {
+    if (dimension == 1) {
       circleVector
     } else {
       val nSphereRadius = circleVector.norm
@@ -116,7 +116,7 @@ object RestrictedSpaceTransformation {
       val circleCellVector = adjustedCircleCellVector.toNorm(radiusOnCell)
       val recursionOutput = fromCircleToSquare(circleCellVector)
       val recursionOutputMaxMagnitude = MaxMagnitude(recursionOutput)
-      val cellVector = backToFullSpace(recursionOutputMaxMagnitude, recursionOutputMaxMagnitude.remainderSpaceRemainder.scale(1/inverseCellCellAdjustment))
+      val cellVector = backToFullSpace(recursionOutputMaxMagnitude, recursionOutputMaxMagnitude.remainderSpaceRemainder.scale(1 / inverseCellCellAdjustment))
 
       val squareVector = backToFullSpace(inverseProjectCircleVectorMaxMagnitude, cellVector)
 
@@ -132,7 +132,7 @@ object RestrictedSpaceTransformation {
     //fromSquareToCircle(Data.centeredNCube(3, 32, hollow = true)).map(fromCircleToSquare)
 
     val p = 4
-    for(dimension <- 1 to 8) {
+    for (dimension <- 1 to 8) {
       val result = RestrictedSpaceTransformation.fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
       println(dimension, result.size)
     }

@@ -83,11 +83,15 @@ object PlotlyDemo {
                 )
               )
             }
-            val demoVar = Var(div())
             val lazyDemo = true
             if(lazyDemo) {
+              val demoVar = Var(div("Default value"))
+              //demoVar.set()
+              //val loadingDiv = div("Loading message test", onMountInsert { _ => demoDiv} /*inContext( { _ => onLoad.mapTo(demoDiv) --> demoVar.writer})*/)
+              val tabContainer = div(/*name := "tabContainer", */child <-- demoVar.signal)
               Tab(demo.title,
-                div(child <-- demoVar.signal),
+                tabContainer,
+                //() => { render(scalajs.dom.document.body/*.children.namedItem("tabContainer")*/, demoDiv)/*demoVar.set(/*loadingDiv*/demoDiv)*/ }
                 () => { demoVar.set(demoDiv) }
               )
             } else {

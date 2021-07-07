@@ -1,18 +1,18 @@
-package plotlyjs.demo.directions
+package plotlyjs.demo.directions.buildingmethod
 
-import plotlyjs.demo.directions.AngularAdjustment.Splitter._
+import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Splitter._
 import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
 
-object RegularDirections {
+object BuildingMethod {
 
   def nSphereCovering(dim: Int, alphaStep: Double, keepCubicShape: Boolean = false): Seq[Vector] = {
     val nSphereDim = dim - 1
-    if(nSphereDim == 0) {
+    if (nSphereDim == 0) {
       Seq(Seq(-1.0), Seq(+1.0))
     } else {
-      val alphaMax = acos(1/sqrt(dim))
+      val alphaMax = acos(1 / sqrt(dim))
 
       val cell = (1 to (alphaMax / alphaStep).toInt).flatMap(i => {
         val rOnCell = tan(i * alphaStep)
@@ -23,7 +23,7 @@ object RegularDirections {
           .filter(_._2 <= 1).map(_._1)
         val border = (sphere zip maxMagnitudes)
           .filter(_._2 > 1)
-          .map { case (v, m) => (1/m) *: v }
+          .map { case (v, m) => (1 / m) *: v }
           .filter(_.norm > tan((i - 1) * alphaStep))
         inside ++ border
       }) ++ Seq(Seq.fill(dim - 1)(0.0))
@@ -35,9 +35,9 @@ object RegularDirections {
             vLeft ++ u ++ vRight
           })
         })
-      }) ++ (0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if(c == '0') -1.0 else +1.0))
+      }) ++ (0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if (c == '0') -1.0 else +1.0))
 
-      if(keepCubicShape) {
+      if (keepCubicShape) {
         cubicNSphere
       } else {
         cubicNSphere.map(normalize)
@@ -46,8 +46,8 @@ object RegularDirections {
   }
 
   def mainTest(args: Array[String]): Unit = {
-    for(dim <- 1 to 42) {
-      println(dim, nSphereCovering(dim, Pi/4 / 4).size)
+    for (dim <- 1 to 42) {
+      println(dim, nSphereCovering(dim, Pi / 4 / 4).size)
     }
   }
 

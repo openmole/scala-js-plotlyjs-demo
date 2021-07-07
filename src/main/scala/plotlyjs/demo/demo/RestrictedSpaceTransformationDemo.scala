@@ -5,8 +5,8 @@ import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.{RestrictedSpaceTransformation4 => RST4}
-import plotlyjs.demo.directions.RestrictedSpaceTransformation4.MaxMagnitude
+import plotlyjs.demo.directions.restrictedspacetransformation.{RestrictedSpaceTransformation4 => RST4}
+import plotlyjs.demo.directions.restrictedspacetransformation.RestrictedSpaceTransformation4.MaxMagnitude
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -20,7 +20,7 @@ object RestrictedSpaceTransformationDemo {
     def lineChartDiv(dimension: Int) = {
       val plotDiv = div()
 
-      import plotlyjs.demo.directions.RestrictedSpaceTransformation4.F
+      import plotlyjs.demo.directions.restrictedspacetransformation.RestrictedSpaceTransformation4.F
       val f = F(dimension, null, 1)
       val plotDataSeq = {
         Seq[(String, Double => Double)](
@@ -43,13 +43,11 @@ object RestrictedSpaceTransformationDemo {
         }
       }
 
-      Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray)
+      val layout = Layout.title(s"Functions graph – dimension $dimension")
+
+      Plotly.plot(plotDiv.ref, plotDataSeq.toJSArray, layout)
 
       plotDiv
-    }
-
-    def onDemandLineChartDiv(dimension: Int) = {
-      onDemand(s"Functions graph – dimension $dimension", () => lineChartDiv(dimension))
     }
 
     def scatter3dData(points: Seq[Seq[Double]]) = {
@@ -97,8 +95,8 @@ object RestrictedSpaceTransformationDemo {
     }
 
     div(
-      onDemandLineChartDiv(3),
-      onDemandLineChartDiv(30),
+      lineChartDiv(3),
+      lineChartDiv(30),
       onDemand("Load", () => div(fromSquareToCircle(3, cube).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From square to circle – $i times", points) } ++ fromCircleToSquare(3, sphere).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From circle to square – $i times", points) }))
     )
   }

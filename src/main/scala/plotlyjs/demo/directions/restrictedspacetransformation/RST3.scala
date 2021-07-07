@@ -5,7 +5,7 @@ import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
 
-object RestrictedSpaceTransformation3 {
+object RST3 {
 
   case class MaxMagnitude(vector: Vector) {
     lazy val index: Int = vector.map(abs).zipWithIndex.maxBy(_._1)._2

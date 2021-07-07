@@ -8,7 +8,7 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.angularadjustment.{AngularAdjustment, CubicAngularAdjustment}
 import plotlyjs.demo.directions.buildingmethod.{BuildingMethod, BuildingMethodWithCache, BuildingMethodWithLines}
-import plotlyjs.demo.directions.restrictedspacetransformation.{RestrictedSpaceTransformation4 => RST4}
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.Transformation
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -128,7 +128,7 @@ object RegularDirectionsDemo {
     val alphaStep = Math.PI/4 / (p/2.0)
     val linesAlphaStep = 2 * alphaStep
 
-    lazy val sphereRST = RST4.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p, hollow = true))
+    lazy val sphereRST = Transformation.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p, hollow = true))
 
     div(
       onDemand("Cube – no adjustment", title => scatter3dDiv(
@@ -174,12 +174,12 @@ object RegularDirectionsDemo {
       )),
       onDemand("Restricted space transformation – 2-sphere", title => scatter3dDiv(
         title,
-        sphereRST.map(RST4.fromCircleToSquare).filter(_.head >= 0),
+        sphereRST.map(Transformation.fromCircleToSquare).filter(_.head >= 0),
         sphereRST.filter(_.head >= 0)
       )),
       onDemand("Restricted space transformation with lines – 2-sphere", title => scatter3dLinesDiv(
         title,
-        RST4.fromSquareToCircle(Data.centeredNCube(dimension, p/2, hollow = true)).map(circleVector => (circleVector, RST4.fromCircleToSquare(circleVector))).filter(_._1.head >= 0),
+        Transformation.fromSquareToCircle(Data.centeredNCube(dimension, p/2, hollow = true)).map(circleVector => (circleVector, Transformation.fromCircleToSquare(circleVector))).filter(_._1.head >= 0),
         Color.rgb(0, 0, 0)
       ))
     )

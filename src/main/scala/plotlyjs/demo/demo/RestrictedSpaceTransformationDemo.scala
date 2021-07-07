@@ -5,8 +5,7 @@ import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.restrictedspacetransformation.{RestrictedSpaceTransformation4 => RST4}
-import plotlyjs.demo.directions.restrictedspacetransformation.RestrictedSpaceTransformation4.MaxMagnitude
+import plotlyjs.demo.directions.restrictedspacetransformation.v4._
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
@@ -20,15 +19,14 @@ object RestrictedSpaceTransformationDemo {
     def lineChartDiv(dimension: Int) = {
       val plotDiv = div()
 
-      import plotlyjs.demo.directions.restrictedspacetransformation.RestrictedSpaceTransformation4.F
-      val f = F(dimension, null, 1)
+      val g = new Geometry(dimension, null, 1)
       val plotDataSeq = {
         Seq[(String, Double => Double)](
-          ("regularization", f.regularization),
-          ("projection", f.projection),
-          ("adjustmentFactor", f.adjustmentFactor),
-          ("adjustmentProportion", f.adjustmentProportion),
-          //("inverseRegularizationTest", r => f.inverseRegularizationTest(r)),
+          ("regularization", g.regularization),
+          ("projection", g.projection),
+          ("adjustmentFactor", g.adjustmentFactor),
+          ("adjustmentProportion", g.adjustmentProportion),
+          //("inverseRegularizationTest", r => g.inverseRegularizationTest(r)),
         )
         .map { case (name, function) =>
           val n = 100
@@ -80,17 +78,17 @@ object RestrictedSpaceTransformationDemo {
     val p = 31
     lazy val cube = Data.centeredNCube(dimension, p, hollow = true)
     lazy val cubeSectors0 = cube.filter(v => MaxMagnitude(MaxMagnitude(v).remainderSpaceRemainder).index == 0)
-    lazy val sphere = RST4.fromSquareToCircle(cube)
+    lazy val sphere = Transformation.fromSquareToCircle(cube)
 
     def fromSquareToCircle(n: Int, points: Seq[Vector]) = {
       var seq = Seq(points)
-      for(_ <- 0 until n) seq = seq :+ RST4.fromSquareToCircle(seq.reverse.head)
+      for(_ <- 0 until n) seq = seq :+ Transformation.fromSquareToCircle(seq.reverse.head)
       seq
     }
 
     def fromCircleToSquare(n: Int, points: Seq[Vector]) = {
       var seq = Seq(points)
-      for(_ <- 0 until n) seq = seq :+ seq.reverse.head.map(RST4.fromCircleToSquare)
+      for(_ <- 0 until n) seq = seq :+ seq.reverse.head.map(Transformation.fromCircleToSquare)
       seq
     }
 

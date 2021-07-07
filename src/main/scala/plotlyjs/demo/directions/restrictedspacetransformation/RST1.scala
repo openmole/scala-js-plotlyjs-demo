@@ -5,7 +5,7 @@ import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
 
-object RestrictedSpaceTransformation {
+object RST1 {
 
   case class MaxMagnitude(vector: Vector) {
     lazy val index: Int = vector.map(math.abs).zipWithIndex.maxBy(_._1)._2
@@ -133,7 +133,7 @@ object RestrictedSpaceTransformation {
 
     val p = 4
     for (dimension <- 1 to 8) {
-      val result = RestrictedSpaceTransformation.fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
+      val result = RST1.fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
       println(dimension, result.size)
     }
     //TODO Fix that with a space adjustment ? From cube to sphere with a constant area ?

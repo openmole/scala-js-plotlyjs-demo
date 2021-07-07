@@ -5,7 +5,7 @@ import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
 
-object RestrictedSpaceTransformation2 {
+object RST2 {
 
   private def assertProportion(proportion: Double): Unit = assert(0 <= proportion && proportion <= 1)
 
@@ -56,26 +56,26 @@ object RestrictedSpaceTransformation2 {
   }
 
   def spaceRegularization(maxAngle: Double, maxRadiusOnFace: Double, nCubeRadius: Double, nSphereRadius: Double)(radiusOnFace: Double): Double = {
-    val radiusRegularization = RestrictedSpaceTransformation2.radiusRegularization(maxAngle, maxRadiusOnFace)(_)
-    val radiusProjection = RestrictedSpaceTransformation2.radiusProjection(nCubeRadius, nSphereRadius)(_)
+    val radiusRegularization = RST2.radiusRegularization(maxAngle, maxRadiusOnFace)(_)
+    val radiusProjection = RST2.radiusProjection(nCubeRadius, nSphereRadius)(_)
     radiusProjection(radiusRegularization(radiusOnFace))
   }
 
   def inverseSpaceRegularization(maxAngle: Double, maxRadiusOnFace: Double, nCubeRadius: Double, nSphereRadius: Double)(projectedRegularizedRadius: Double): Double = {
-    val inverseRadiusRegularization = RestrictedSpaceTransformation2.inverseRadiusRegularization(maxAngle, maxRadiusOnFace)(_)
-    val inverseRadiusProjection = RestrictedSpaceTransformation2.inverseRadiusProjection(nCubeRadius, nSphereRadius)(_)
+    val inverseRadiusRegularization = RST2.inverseRadiusRegularization(maxAngle, maxRadiusOnFace)(_)
+    val inverseRadiusProjection = RST2.inverseRadiusProjection(nCubeRadius, nSphereRadius)(_)
     inverseRadiusRegularization(inverseRadiusProjection(projectedRegularizedRadius))
   }
 
   def spaceRegularizationNoLoss(maxAngle: Double, maxRadiusOnFace: Double, nCubeRadius: Double, nSphereRadius: Double)(radiusOnFace: Double): Double = {
-    val spaceRegularization = RestrictedSpaceTransformation2.spaceRegularization(maxAngle, maxRadiusOnFace, nCubeRadius, nSphereRadius)(_)
+    val spaceRegularization = RST2.spaceRegularization(maxAngle, maxRadiusOnFace, nCubeRadius, nSphereRadius)(_)
     //val radiusProjection = RestrictedSpaceTransformation2.radiusProjection(nCubeRadius, nSphereRadius)(_)
     spaceRegularization(radiusOnFace) / spaceRegularization(maxRadiusOnFace)
   }
 
   def inverseSpaceRegularizationNoLoss(maxAngle: Double, maxRadiusOnFace: Double, nCubeRadius: Double, nSphereRadius: Double)(noLossProjectedRegularizedRadius: Double): Double = {
-    val inverseSpaceRegularization = RestrictedSpaceTransformation2.inverseSpaceRegularization(maxAngle, maxRadiusOnFace, nCubeRadius, nSphereRadius)(_)
-    val spaceRegularization = RestrictedSpaceTransformation2.spaceRegularization(maxAngle, maxRadiusOnFace, nCubeRadius, nSphereRadius)(_)
+    val inverseSpaceRegularization = RST2.inverseSpaceRegularization(maxAngle, maxRadiusOnFace, nCubeRadius, nSphereRadius)(_)
+    val spaceRegularization = RST2.spaceRegularization(maxAngle, maxRadiusOnFace, nCubeRadius, nSphereRadius)(_)
     inverseSpaceRegularization(noLossProjectedRegularizedRadius * spaceRegularization(maxRadiusOnFace))
   }
 

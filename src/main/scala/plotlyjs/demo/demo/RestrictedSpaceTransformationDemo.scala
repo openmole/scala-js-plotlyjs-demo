@@ -78,11 +78,11 @@ object RestrictedSpaceTransformationDemo {
     val p = 31
     lazy val cube = Data.centeredNCube(dimension, p, hollow = true)
     lazy val cubeSectors0 = cube.filter(v => MaxMagnitude(MaxMagnitude(v).remainderSpaceRemainder).index == 0)
-    lazy val sphere = Transformation.fromSquareToCircle(cube)
+    lazy val sphere = cube.flatMap(Transformation.fromSquareToCircle)
 
     def fromSquareToCircle(n: Int, points: Seq[Vector]) = {
       var seq = Seq(points)
-      for(_ <- 0 until n) seq = seq :+ Transformation.fromSquareToCircle(seq.reverse.head)
+      for(_ <- 0 until n) seq = seq :+ seq.reverse.head.flatMap(Transformation.fromSquareToCircle)
       seq
     }
 

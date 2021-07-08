@@ -37,7 +37,7 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val geometry = Data.highSphericalCorner(5, 5)
+    val geometry = Data.highSphericalCorner(8, 5)
     val results = Data.dim8Sample100
 
     val nbObjectives = geometry.head.size

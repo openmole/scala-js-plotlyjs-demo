@@ -13,7 +13,6 @@ object Vectors {
   def toColumnMatrix(v: Vector): Matrix = toRowMatrix(v).transpose
 
   def replace(v: Vector, i: Int, c: Double): Vector = v.zipWithIndex map { case (cv, iv) => if (iv == i) c else cv }
-  //def swap(v: Vector, i1: Int, i2: Int): Vector = replace(replace(v, i1, v(i2)), i2, v(i1))
   def insert(v: Vector, i: Int, c: Double): Vector = {
     val (left, right) = v.splitAt(i)
     left ++ Seq(c) ++ right
@@ -43,7 +42,6 @@ object Vectors {
 
   //Currying
   def replace(i: Int, c: Double)(v: Vector): Vector = replace(v, i, c)
-  //def swap(i1: Int, i2: Int)(v: Vector): Vector = swap(v, i1, i2)
   def insert(i: Int, c: Double)(v: Vector): Vector = insert(v, i, c)
   def remove(i: Int)(v: Vector): Vector = remove(v, i)
   def norm(p: Int)(v: Vector): Double = norm(v, p)
@@ -83,7 +81,6 @@ object Vectors {
 
     //Currying copy
     def replace(i: Int, c: Double): Vector = Vectors.replace(i, c)(v)
-    //def swap(i1: Int, i2: Int): Vector = Vectors.swap(i1, i2)(v)
     def insert(i: Int, c: Double): Vector = Vectors.insert(i, c)(v)
     def remove(i: Int): Vector = Vectors.remove(i)(v)
     def norm(p: Int): Double = Vectors.norm(p)(v)

@@ -289,7 +289,7 @@ object Data {
   }
   def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = normalizedNCube(n, p, hollow = true).filter(_.contains(0))
   def highCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(lowCorner(n, p))
-  def highSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = Transformation.fromSquareToCircle(highCorner(n, p))//.map(cellRadialAdjustment(Geometry.cubic, _)).map(Vectors.normalize)
+  def highSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = highCorner(n, p).flatMap(Transformation.fromSquareToCircle)
   def lowSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(highSphericalCorner(n, p))
 
   def limitAngle(normalSpacePoints: Seq[Seq[Double]]): Seq[Seq[Double]] = {

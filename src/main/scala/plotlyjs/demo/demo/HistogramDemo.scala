@@ -33,7 +33,7 @@ object HistogramDemo {
     val plotDiv = div()
 
     val layout = Layout
-      .title("My line plot")
+      .title("My histogram")
       .grid(grid.columns(3).rows(1).pattern(Pattern.coupled))
       .showlegend(true)
 

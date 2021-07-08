@@ -1,6 +1,8 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L.{HtmlElement, div}
+import org.openmole.plotlyjs.HistNorm.{percent, probability}
+import org.openmole.plotlyjs.HistogramDataBuilder.HistogramDataBuilder
 import org.openmole.plotlyjs.PlotMode._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
@@ -8,12 +10,14 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.angularadjustment.{AngularAdjustment, CubicAngularAdjustment}
 import plotlyjs.demo.directions.buildingmethod.{BuildingMethod, BuildingMethodWithCache, BuildingMethodWithLines}
-import plotlyjs.demo.directions.restrictedspacetransformation.v4._
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.Evaluation._
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.{Evaluation, IndexedTransformation, Transformation}
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.Vectors._
 
+import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 import scala.util.control.Breaks.breakable
 
@@ -129,7 +133,7 @@ object RegularDirectionsDemo {
     val alphaStep = Math.PI/4 / (p/2.0)
     val linesAlphaStep = 2 * alphaStep
 
-    lazy val sphereRST = Transformation.fromSquareToCircle(Data.centeredNCube(dimension, 2 * p + 1, hollow = true))
+    val radius = p/2
     lazy val cubeWithLineRST = {
       val radius = 8
       Data
@@ -138,12 +142,6 @@ object RegularDirectionsDemo {
         .flatMap(IndexedTransformation.fromIndexToCircle)
         .map(IndexedTransformation.fromCircleToIndex)
         .map(indexVector => (indexVector, IndexedTransformation.neighbourhood(indexVector)))
-
-        .map { case (indexVector, neighbourhood) =>
-          println(neighbourhood)
-          (indexVector, neighbourhood)
-        }
-
         .flatMap {
           case (indexVector, neighbourhood) if neighbourhood.nonEmpty => neighbourhood.map(neighbour => (indexVector.vector, neighbour.vector))
           case _ => None
@@ -181,7 +179,7 @@ object RegularDirectionsDemo {
         BuildingMethodWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 }.toSeq,
         Color.rgb(0, 0, 0)
       )),
-      onDemand("Building method with lines – 3-sphere cell", title => scatter3dLinesDiv(
+      onDemand("Building method with lines – 3-sphere face", title => scatter3dLinesDiv(
         title,
         (BuildingMethodWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
           .filter { case (v1, v2) => v1.head == +1.0 && v2.head == +1.0 } map { case (v1, v2) => (v1.normalize.tail, v2.normalize.tail) }).toSeq,
@@ -192,26 +190,120 @@ object RegularDirectionsDemo {
         Seq(Seq(0.0, 0.0, 0.0)),
         BuildingMethodWithCache.nSphereCovering(dimension, alphaStep, 0)
       )),
-      onDemand("Restricted space transformation – 2-sphere", title => scatter3dDiv(
+      onDemand("Restricted space transformation – index", title => scatter3dDiv(
         title,
-        sphereRST.map(Transformation.fromCircleToSquare).filter(_.head >= 0),
-        sphereRST.filter(_.head >= 0)
+        IndexedTransformation.centeredNCubeSurface(3, 8).map[Vector](iv => iv).toSeq,
+        Seq(Seq.fill(3)(0.0))
       )),
-      onDemand("RST with transformation lines – 2-dimensional", title => scatter3dLinesDiv(
+      onDemand("Restricted space transformation – 2-sphere", title => {
+        val sphereRST = IndexedTransformation.circle(dimension, radius)
+        scatter3dDiv(
+          title,
+          sphereRST.map[Vector](IndexedTransformation.fromCircleToIndex).filter(_.head >= 0).toSeq,
+          sphereRST.filter(_.head >= 0).toSeq
+        )
+      }),
+      onDemand("Restricted space transformation – 3-sphere face", title => {
+        val radius = 12
+        val _3_sphere = IndexedTransformation
+          .circle(4, radius)
+          .map[(Vector, Vector)](circleVector => (IndexedTransformation.fromCircleToIndex(circleVector), circleVector))
+          .filter(_._1.head == radius)
+          .map { case (indexVector, circleVector) => (indexVector.tail, circleVector.tail) }
+        scatter3dDiv(
+          title,
+          _3_sphere.map(_._1).toSeq,
+          _3_sphere.map(_._2).toSeq
+        )
+      }),
+      onDemand("RST with transformation lines", title => scatter3dLinesDiv(
         title,
-        Transformation.fromSquareToCircle(Data.centeredNCube(dimension, p/2, hollow = true)).map(circleVector => (circleVector, Transformation.fromCircleToSquare(circleVector))).filter(_._1.head >= 0),
+        IndexedTransformation.circle(3, 8).map[(Vector, Vector)](circleVector => (circleVector, IndexedTransformation.fromCircleToIndex(circleVector))).filter(_._1.head >= 0).toSeq,
         Color.rgb(0, 0, 0)
       )),
-      onDemand("Restricted space transformation with lines – 2-cube", title => scatter3dLinesDiv(
+      onDemand("RST with lines – 2-cube", title => scatter3dLinesDiv(
         title,
         cubeWithLineRST.filter(_._1.head >= 0),
         Color.rgb(0, 0, 0)
       )),
-      onDemand("Restricted space transformation with lines – 2-sphere", title => scatter3dLinesDiv(
+      onDemand("RST with lines – 2-sphere", title => scatter3dLinesDiv(
         title,
         cubeWithLineRST.map(line => (IndexedTransformation.fromIndexToCircle(line._1).get, IndexedTransformation.fromIndexToCircle(line._2).get)).filter(_._1.head >= 0),
         Color.rgb(0, 0, 0)
       )),
+      onDemand("RST evaluation by neighbourhood", title => {
+
+        val dimension = 4
+        val radius = 8
+
+        val plotDiv = div()
+
+        val evaluation = Evaluation.evaluationByNeighbourhood(dimension, radius).toSeq
+          .map(_.map(_.toDegrees))
+          .transpose
+
+        val dataRef = histogram
+          .x(evaluation(0).toJSArray)
+          .name("No transform")
+          .xbins(Bin.start(0).end(360).size(1))
+
+        val dataTest = histogram
+          .x(evaluation(1).toJSArray)
+          .name("Restricted space transformation")
+          .xbins(Bin.start(0).end(360).size(1))
+
+        val layout = Layout
+          .title(s"Angles between neighbours – dimension $dimension, radius = $radius")
+          .showlegend(true)
+
+        Plotly.newPlot(plotDiv.ref, js.Array(dataRef, dataTest), layout = layout)
+
+        plotDiv
+      }),
+      onDemand("RST evaluation by difference", title => {
+
+        val dimension = 6
+        val radius = 3
+
+        val plotDiv = div()
+
+        val data = histogram
+          .x(evaluationDiff(dimension, radius).map(_.toDegrees).toJSArray)
+          .xbins(Bin.start(0).end(360).size(0.1))
+
+        val layout = Layout
+          .title(s"Angles diff to max magnitude – dimension $dimension, radius = $radius")
+          .showlegend(true)
+
+        Plotly.newPlot(plotDiv.ref, js.Array(data), layout = layout)
+
+        plotDiv
+      }),
+      onDemand("RST evaluation by a single point", title => {
+
+        val evaluation = singleEvaluation(30)
+
+        val plotDiv = div()
+
+        val referenceData = linechart
+          .name("Reference")
+          .setMode(lines)
+          .y(evaluation(0).toJSArray)
+        val testData = linechart
+          .name("Restricted space transformation")
+          .setMode(lines)
+          .y(evaluation(1).toJSArray)
+
+        val layout = Layout
+          .title("Evaluation")
+          .showlegend(true)
+          .xaxis(axis.title("dimension"))
+          .yaxis(axis.title("angle"))
+
+        Plotly.newPlot(plotDiv.ref, js.Array(referenceData, testData), layout)
+
+        plotDiv
+      }),
     )
   }
 

@@ -70,6 +70,7 @@ object PlotlyDemo {
               RegularDirectionsDemo.elementDemo,
               RegularDirectionsWithCacheDemo.elementDemo,
               RestrictedSpaceTransformationDemo.elementDemo,
+              ScatterPPSEDemo.elementDemo,
             )
           } yield {
             lazy val demoDiv = {

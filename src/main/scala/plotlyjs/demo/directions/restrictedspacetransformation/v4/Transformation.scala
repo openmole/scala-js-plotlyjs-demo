@@ -1,6 +1,5 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
-import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Vectors._
 
 object Transformation {
@@ -34,27 +33,6 @@ object Transformation {
     }
   }
 
-  def fromSquareToCircle(squareVectors: Seq[Vector]): Seq[Vector] = {
-    squareVectors.map(fromSquareToCircle).filter(_.nonEmpty).map(_.get)
-  }
-
-  def fromSquareToCircleTest(dimension: Int, p: Int): Unit = {
-    val result = fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
-    println(dimension, p, result.size)
-  }
-
-  def fromSquareToCircleTest(maxDimension: Int): Unit = {
-    for (dimension <- 1 to maxDimension) {
-      var p = 1
-      var result = Seq[Vector]()
-      do {
-        p += 1
-        result = fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
-      } while (result.isEmpty)
-      println(dimension, p, result.size)
-    }
-  }
-
   def fromCircleToSquare(circleVector: Vector): Vector = {
     if (dimension(circleVector) == 1) circleVector else {
       val g = Geometry.fromCircleVector(circleVector)
@@ -75,23 +53,6 @@ object Transformation {
 
       squareVector
     }
-  }
-
-  def fromCircleToSquareTest(squareVector: Vector): Option[Double] = {
-    val circleVectorOption = fromSquareToCircle(squareVector)
-    circleVectorOption.map(circleVector => {
-      val recoveredSquareVector = fromCircleToSquare(circleVector)
-      norm(recoveredSquareVector - squareVector)
-    })
-  }
-
-  def fromCircleToSquareTest(): Unit = {
-    val dimension = 3
-    val p = 7
-    val cubeFaces = Data.centeredNCube(dimension, p, hollow = true)
-    cubeFaces.foreach(squareVector => {
-      fromCircleToSquareTest(squareVector).foreach(println)
-    })
   }
 
 }

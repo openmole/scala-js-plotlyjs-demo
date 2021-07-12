@@ -196,24 +196,23 @@ object RegularDirectionsDemo {
         Seq(Seq.fill(3)(0.0))
       )),
       onDemand("Restricted space transformation – 2-sphere", title => {
-        val sphereRST = IndexedTransformation.circle(dimension, radius)
+        val sphere = IndexedTransformation.circle(3, 16)
         scatter3dDiv(
           title,
-          sphereRST.map[Vector](IndexedTransformation.fromCircleToIndex).filter(_.head >= 0).toSeq,
-          sphereRST.filter(_.head >= 0).toSeq
+          sphere.map[Vector](IndexedTransformation.fromCircleToIndex).filter(_.head >= 0).toSeq,
+          sphere.filter(_.head >= 0).toSeq
         )
       }),
       onDemand("Restricted space transformation – 3-sphere face", title => {
-        val radius = 12
+        val radius = 8
         val _3_sphere = IndexedTransformation
-          .circle(4, radius)
-          .map[(Vector, Vector)](circleVector => (IndexedTransformation.fromCircleToIndex(circleVector), circleVector))
-          .filter(_._1.head == radius)
-          .map { case (indexVector, circleVector) => (indexVector.tail, circleVector.tail) }
+          .circleWithIndex(4, radius)
+          //.filter(_._2.head == radius)
+          .map[(Vector, Vector)] { case (circleVector, indexVector) => (circleVector.tail, indexVector.tail) }
         scatter3dDiv(
           title,
-          _3_sphere.map(_._1).toSeq,
-          _3_sphere.map(_._2).toSeq
+          _3_sphere.map(_._2).toSeq,
+          _3_sphere.map(_._1).toSeq
         )
       }),
       onDemand("RST with transformation lines", title => scatter3dLinesDiv(

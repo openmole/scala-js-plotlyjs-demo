@@ -1,13 +1,22 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexedTransformation.{circleWithIndex, fromCircleToIndex, fromIndexToCircle, neighbourhood}
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexedTransformation.{circle, circleWithIndex, fromCircleToIndex, fromIndexToCircle, neighbourhood}
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Transformation.fromSquareToCircle
 import plotlyjs.demo.utils.Vectors._
 
 import scala.math.{pow, sqrt}
 
 object Evaluation {
+
+  def lossEvaluation(maxDimension: Int, radius: Int): Unit = {
+    for(dimension <- 3 to maxDimension) {
+      val size = circle(dimension, radius).size.toDouble
+      val cubeSize = (2 * dimension * pow(2 * radius + 1, dimension - 1))
+      val loss = 1 - size/cubeSize
+      println(dimension, size, cubeSize, loss)
+    }
+  }
 
   def evaluationByNeighbourhood(dimension: Int, radius: Int, noTransform: Boolean = false): Iterable[Seq[Double]] = {
     println("Evaluation")

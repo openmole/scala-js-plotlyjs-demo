@@ -5,7 +5,7 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.plotlyConts._
-import plotlyjs.demo.help.PPSE
+import plotlyjs.demo.help.SquareDiagonalTransformation
 import plotlyjs.demo.utils.Utils
 
 import scala.scalajs.js
@@ -32,7 +32,7 @@ object ScatterPPSEDemo {
 
     val plotDiv = div()
 
-    val points = PPSE.vectors(64)
+    val points = SquareDiagonalTransformation.vectors(64)
     val coords = points.transpose
 
     val data = scatter

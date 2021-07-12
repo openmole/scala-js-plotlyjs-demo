@@ -1,5 +1,6 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.Geometry._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Transformation._
 import plotlyjs.demo.utils.Vectors._
@@ -22,7 +23,7 @@ object IndexedTransformation {
   }
 
   def circle(dimension: Int, radius: Int): Iterable[Vector] = {
-    centeredNCubeSurface(dimension, radius).flatMap(fromIndexToCircle)
+    centeredNCubeSurface(dimension, radiusFromSquareToCircle(dimension - 1)(radius).toInt + 1).flatMap(fromIndexToCircle)
   }
 
   def circleWithIndex(dimension: Int, radius: Int): Iterable[(Vector, IndexVector)] = {

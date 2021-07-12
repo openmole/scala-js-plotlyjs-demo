@@ -26,8 +26,8 @@ object RestrictedSpaceTransformationDemo {
           ("projection", g.projection),
           ("adjustmentFactor", g.adjustmentFactor),
           ("adjustmentProportion", g.adjustmentProportion),
+          ("adjustment", r => g.regularization(r) * g.adjustmentProportion(r)),
           //("inverseRegularizationTest", r => g.inverseRegularizationTest(r)),
-          ("adjustment", r => g.regularization(r) * g.adjustmentProportion(r))
         )
         .map { case (name, function) =>
           val n = 100
@@ -96,6 +96,7 @@ object RestrictedSpaceTransformationDemo {
     div(
       lineChartDiv(3),
       lineChartDiv(30),
+      lineChartDiv(300),
       onDemand("Load", () => div(fromSquareToCircle(3, cube).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From square to circle – $i times", points) } ++ fromCircleToSquare(3, sphere).zipWithIndex.map { case(points, i) => scatter3dDiv(s"From circle to square – $i times", points) }))
     )
   }

@@ -1,7 +1,7 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Geometry._
-import plotlyjs.demo.utils.Data
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
@@ -54,8 +54,8 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
     radiusComponent
   }
 
-  def inverseRegularizationTest(squareVectorOnFace: Vector): Double = {
-    norm(inverseRegularization(regularization(squareVectorOnFace)) - squareVectorOnFace)
+  def inverseRegularizationTest(radiusComponent: Vector): Double = {
+    norm(inverseRegularization(regularization(radiusComponent)) - radiusComponent)
   }
 
   def projection(regularizedSquareRadiusOnFace: Double): Double = {
@@ -80,12 +80,10 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
     adjustmentFactor(squareRadiusOnFace) / adjustmentFactorZeroLimit
   }
 
-  def adjustment(squareRadiusOnFace: Double, spaceComponent: Vector, regularizedSquareRadiusOnFace: Double): Option[Vector] = {
+  def adjustment(squareRadiusOnFace: Double, spaceComponent: Vector): Vector = {
     val spaceFactor = adjustmentProportion(squareRadiusOnFace)
     val adjustedSpaceComponent = (1 / spaceFactor) *: spaceComponent
-    if (squareRadius(adjustedSpaceComponent) > regularizedSquareRadiusOnFace) None else {
-      Some(adjustedSpaceComponent)
-    }
+    adjustedSpaceComponent
   }
 
   def inverseAdjustment(squareRadiusOnFace: Double, adjustedSpaceComponent: Vector): Vector = {
@@ -94,14 +92,10 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
     spaceComponent
   }
 
-  /*
-  def inverseAdjustmentTest(regularizedRadiusComponent: Vector): Option[Double] = {
-    val adjustedRegularizedSquareVectorOnFaceOption = adjustment(regularizedRadiusComponent)
-    adjustedRegularizedSquareVectorOnFaceOption.map(adjustedRegularizedSquareVectorOnFace => {
-      norm(inverseAdjustment(adjustedRegularizedSquareVectorOnFace) - regularizedRadiusComponent)
-    })
+  def inverseAdjustmentTest(squareRadiusOnFace: Double, spaceComponent: Vector): Double = {
+    val adjustedSpaceComponent = adjustment(squareRadiusOnFace, spaceComponent)
+    norm(inverseAdjustment(squareRadiusOnFace, adjustedSpaceComponent) - spaceComponent)
   }
-  */
 
   def projection(circleVectorOnFace: Vector): Vector = {
     val circleOnFaceSquareVector = maxMagnitude.reconnect(circleVectorOnFace)
@@ -177,37 +171,37 @@ object Geometry {
   //Tests
   def inverseRegularizationTest(): Unit = {
     val dimension = 3
-    val p = 8
-    val cubeFaces = Data.centeredNCube(dimension, p, hollow = true)
+    val radius = 8
+    val cubeFaces = IndexVectors.centeredNCube(dimension, radius).map(_.vector)
     cubeFaces.foreach(squareVector => {
-      val f = fromSquareVector(squareVector)
+      val g = fromSquareVector(squareVector)
       val squareVectorOnFace = MaxMagnitude(squareVector).remainderSpaceRemainder
-      println(f.inverseRegularizationTest(squareVectorOnFace))
+      val radiusComponent = MaxMagnitude(squareVectorOnFace).fullSpaceComponent
+      println(g.inverseRegularizationTest(radiusComponent))
     })
   }
 
-  /*
   def inverseAdjustmentTest(): Unit = {
     val dimension = 3
-    val p = 8
-    val cubeFaces = Data.centeredNCube(dimension, p, hollow = true)
+    val radius = 8
+    val cubeFaces = IndexVectors.centeredNCube(dimension, radius).map(_.vector)
     cubeFaces.foreach(squareVector => {
-      val f = F.fromSquareVector(squareVector)
+      val g = fromSquareVector(squareVector)
       val squareVectorOnFace = MaxMagnitude(squareVector).remainderSpaceRemainder
-      val regularizedSquareVectorOnFace = f.regularization(squareVectorOnFace)
-      f.inverseAdjustmentTest(regularizedSquareVectorOnFace).foreach(println)
+      val squareRadiusOnFace = squareRadius(squareVectorOnFace)
+      val spaceComponent = MaxMagnitude(squareVectorOnFace).fullSpaceRemainder
+      println(g.inverseAdjustmentTest(squareRadiusOnFace, spaceComponent))
     })
   }
-  */
 
   def inverseProjectionTest(): Unit = {
     val dimension = 3
-    val p = 8
-    val cubeFaces = Data.centeredNCube(dimension, p, hollow = true)
+    val radius = 8
+    val cubeFaces = IndexVectors.centeredNCube(dimension, radius).map(_.vector)
     cubeFaces.foreach(squareVector => {
-      val f = fromSquareVector(squareVector)
+      val g = fromSquareVector(squareVector)
       val squareVectorOnFace = MaxMagnitude(squareVector).remainderSpaceRemainder
-      println(f.inverseProjectionTest(squareVectorOnFace))
+      println(g.inverseProjectionTest(squareVectorOnFace))
     })
   }
   //

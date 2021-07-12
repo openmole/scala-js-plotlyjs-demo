@@ -17,18 +17,18 @@ object Transformation {
       val spaceComponent = squareVectorOnFaceMaxMagnitude.fullSpaceRemainder
 
       val regularizedRadiusComponent = g.regularization(radiusComponent)
-      val regularizedSquareRadiusOnFace = Geometry.squareRadius(regularizedRadiusComponent)
-      val adjustedSpaceComponentOption = g.adjustment(squareRadiusOnFace, spaceComponent, regularizedSquareRadiusOnFace)
+      val adjustedSpaceComponent = g.adjustment(squareRadiusOnFace, spaceComponent)
+      val sameSector = Geometry.squareRadius(regularizedRadiusComponent) >= Geometry.squareRadius(adjustedSpaceComponent)
 
-      adjustedSpaceComponentOption.flatMap(adjustedSpaceComponent => {
+      Option.when(sameSector)({
         val regularizedAndAdjustedSquareVectorOnFace = regularizedRadiusComponent + adjustedSpaceComponent
         fromSquareToCircle(regularizedAndAdjustedSquareVectorOnFace)
-      }).flatMap(circleVectorOnFace => {
+      }).flatten.flatMap(circleVectorOnFace => {
         val sameFace = Geometry.squareRadius(circleVectorOnFace) <= g.maxSquareRadius
-        if (sameFace) {
+        Option.when(sameFace)({
           val circleVector = g.projection(circleVectorOnFace)
-          Some(circleVector)
-        } else None
+          circleVector
+        })
       })
     }
   }

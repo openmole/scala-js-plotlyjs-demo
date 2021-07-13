@@ -30,12 +30,6 @@ object IndexedTransformation {
     circle(dimension, radius).map(circleVector => (circleVector, fromCircleToIndex(circleVector)))
   }
 
-  /*
-  def mainTest(args: Array[String]): Unit = {
-    println(circle(8, 4))
-  }
-  */
-
   def circleTest(dimension: Int, radius: Int): Unit = {
     val result = circle(dimension, radius)
     println(dimension, radius, result.size)

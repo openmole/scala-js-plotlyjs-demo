@@ -118,29 +118,18 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
 object Geometry {
 
   //Geometry
-  def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
-
-  def toSquareRadius(vector: Vector, squareRadius: Double): Vector = {
-    if (norm(vector) == 0) vector else {
-      (squareRadius / Geometry.squareRadius(vector)) *: vector
-    }
+  def toRadius(vector: Vector, oldRadius: Double, newRadius: Double): Vector = {
+    if(oldRadius == 0) vector else (newRadius / oldRadius) *: vector
   }
 
+  def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
   def circleRadius(circleVector: Vector): Double = norm(circleVector)
 
-  def toCircleRadius(vector: Vector, circleRadius: Double): Vector = {
-    if (norm(vector) == 0) vector else {
-      (circleRadius / Geometry.circleRadius(vector)) *: vector
-    }
-  }
+  def toSquareRadius(vector: Vector, newRadius: Double): Vector = toRadius(vector, squareRadius(vector), newRadius)
+  def toCircleRadius(vector: Vector, newRadius: Double): Vector = toRadius(vector, circleRadius(vector), newRadius)
 
-  def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = {
-    squareRadius * sqrt(dimension)
-  }
-
-  def radiusFromCircleToSquare(dimension: Int)(circleRadius: Double): Double = {
-    circleRadius / sqrt(dimension)
-  }
+  def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = squareRadius * sqrt(dimension)
+  def radiusFromCircleToSquare(dimension: Int)(circleRadius: Double): Double = circleRadius / sqrt(dimension)
 
   def vectorFromSquareToCircle(squareVector: Vector): Vector = {
     val squareRadius = Geometry.squareRadius(squareVector)
@@ -161,10 +150,8 @@ object Geometry {
   }
 
   def fromCircleVector(circleVector: Vector): Geometry = {
-    val dimension = circleVector.dimension
     val squareVector = vectorFromCircleToSquare(circleVector)
-    val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
-    new Geometry(dimension, squareVectorMaxMagnitude, squareVectorMaxMagnitude.value)
+    fromSquareVector(squareVector)
   }
   //
 

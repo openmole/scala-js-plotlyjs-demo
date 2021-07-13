@@ -17,8 +17,10 @@ package plotlyjs.demo.utils
 
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import org.openmole.plotlyjs.Color
 import org.scalajs.dom.html
 
+import scala.math.random
 import scala.scalajs.js.JSConverters._
 object Utils {
 
@@ -215,5 +217,7 @@ object Utils {
     content.set(div(button(title, inContext { _ => onClick.mapTo(supplier(title)) --> content.writer })))
     div(child <-- content.signal)
   }
+
+  def randomColor: Color = Color.rgb((random() * 255).toInt, (random() * 255).toInt, (random() * 255).toInt)
 
 }

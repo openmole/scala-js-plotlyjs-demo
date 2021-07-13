@@ -39,6 +39,14 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
     if(norm1 == 0) p else multiply(p, 1/norm1)
   })
 
+  class PointSetSlice(from: Int, until: Int) {
+    lazy val rawOutputs: Seq[Seq[Double]] = PointSet.this.rawOutputs.slice(from, until)
+    val outputDimension: Int = PointSet.this.outputDimension
+    val size: Int = PointSet.this.size
+    lazy val spaceNormalizedOutputs: Seq[Seq[Double]] = PointSet.this.spaceNormalizedOutputs.slice(from, until)
+    lazy val norm1VectorNormalizedOutputs: Seq[Seq[Double]] = PointSet.this.norm1VectorNormalizedOutputs.slice(from, until)
+  }
+
 }
 
 object PointSet {

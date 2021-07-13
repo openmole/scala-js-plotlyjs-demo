@@ -4,6 +4,8 @@ import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexedTransformation
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.PointSet.MIN
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.{Data, PointSet}
@@ -31,20 +33,21 @@ object DirectionsScatterDemo {
 
     val plotDiv = div()
 
-    val dim = 3
-    val p = 8
-    val results = Data.lowSphericalCorner(dim, p)//Data.dim8Sample100.map(_.drop(8 - dim))
+    val dim = 5
+    val results = Data.highSphericalCorner(dim, 16)//Data.simplexRST(dim, 16).toSeq//Data.lowInverseCorner(dim, 16, 2)//Data.lowSphericalCorner(dim, 16)//Data.dim8Sample100.map(_.take(dim))
     val pointSet = new PointSet(results)
       .optimizationProblems(Seq.fill(dim)(MIN))
       .lowerPlotIsBetter
 
-    val referenceDirections = Data.highSphericalCorner(dim, 4)
-    val groupedResults = pointSet.spaceNormalizedOutputs.groupBy[Vector](v =>
+    //val referenceDirections = Data.highSphericalCorner(dim, 4)
+    val groupedResults = pointSet.spaceNormalizedOutputs.groupBy(v =>
       //RST4.fromSquareToCircle(RST4.fromCircleToSquare(normalize(vector)).map(c => Math.rint(4 * c))).getOrElse(Seq.fill(dim)(0.0))
-      referenceDirections.map(rd => (rd, v ^ rd)).minBy(_._2)._1.normalize(1)
+      IndexedTransformation.fromCircleToIndex(v.toNorm(2))
+      //referenceDirections.minBy(_ ^ v).normalize(1)
     )
 
-    val plotDataSeq = groupedResults.map { case (direction, vectors) =>
+    val plotDataSeq = groupedResults.map { case (indexVector, vectors) =>
+      val direction = IndexedTransformation.fromIndexToCircle(indexVector).getOrElse[Vector](indexVector)
       val points = vectors.map(v => Seq(v.parallelComponent(direction).norm, v.orthogonalComponent(direction).norm))
       val xy = points.transpose
       scatter
@@ -59,19 +62,23 @@ object DirectionsScatterDemo {
       .title("Directions scatter")
       .xaxis(
         axis
-          .bounds(Seq(0, sqrtN).toJSArray)
-          .fixedrange(true)
+          .rangemode("tozero")
+          //.bounds(Seq(0, sqrtN).toJSArray)
+          //.fixedrange(true)
+          //.autorange(false)
       )
       .yaxis(
         axis
-          .bounds(Seq(0, sqrtN).toJSArray)
-          .fixedrange(true)
+          .rangemode("tozero")
+          //.bounds(Seq(0, sqrtN).toJSArray)
+          //.fixedrange(true)
+          //.autorange(false)
       )
 
     val config = Config.autosizable(false).staticPlot(true)
 
     //TODO disable automatic zoom on trace focus
-    Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray, layout, config)
+    Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray, layout)//, config)
 
     plotDiv
   }

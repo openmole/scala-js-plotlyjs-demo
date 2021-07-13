@@ -109,7 +109,9 @@ object Vectors {
     def *(s: Double): Vector = scale(s)
     def *:(s: Double): Vector = scale(s)
     def +(ov: Vector): Vector = add(ov)
+    def +(c: Double): Vector = add(c)
     def -(ov: Vector): Vector = sub(ov)
+    def -(c: Double): Vector = sub(c)
     def ^(ov: Vector): Double = angle(ov)
     //
 

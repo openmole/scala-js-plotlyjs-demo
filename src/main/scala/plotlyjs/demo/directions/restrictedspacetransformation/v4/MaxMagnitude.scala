@@ -6,7 +6,7 @@ import scala.math._
 
 case class MaxMagnitude(vector: Vector) {
 
-  lazy val index: Int = vector.map(abs).zipWithIndex.maxBy(_._1)._2
+  lazy val index: Int = vector.indices.maxBy(i => abs(vector(i)))
   lazy val coordinate: Double = vector(index)
   lazy val signum: Double = math.signum(coordinate)
   lazy val value: Double = abs(coordinate)

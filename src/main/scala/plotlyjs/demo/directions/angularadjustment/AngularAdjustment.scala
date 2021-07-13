@@ -92,7 +92,7 @@ object AngularAdjustment {
     val (borderNormalComponent, borderParallelComponent) = geometry.borderNormalSplit(remainderToAdjust)
 
 
-    val adjustedRemainder = ???
+    val adjustedRemainder: Vector = ???
     val adjustedVector = componentToKeep + adjustedRemainder
 
     adjustedVector

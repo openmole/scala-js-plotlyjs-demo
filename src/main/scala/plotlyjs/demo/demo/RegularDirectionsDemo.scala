@@ -11,7 +11,7 @@ import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Geometry
 import plotlyjs.demo.directions.angularadjustment.{AngularAdjustment, CubicAngularAdjustment}
 import plotlyjs.demo.directions.buildingmethod.{BuildingMethod, BuildingMethodWithCache, BuildingMethodWithLines}
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Evaluation._
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.{Evaluation, IndexedTransformation, Transformation}
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.{Evaluation, IndexedTransformation, MaxMagnitude, Transformation}
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
@@ -193,7 +193,7 @@ object RegularDirectionsDemo {
       onDemand("Restricted space transformation – index", title => scatter3dDiv(
         title,
         IndexedTransformation.centeredNCubeSurface(3, 8).map[Vector](iv => iv).toSeq,
-        Seq(Seq.fill(3)(0.0))
+        Data.simplexRST(3, 16).toSeq
       )),
       onDemand("Restricted space transformation – 2-sphere", title => {
         val sphere = IndexedTransformation.circle(3, 16)

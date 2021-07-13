@@ -72,7 +72,7 @@ object Vectors {
   def -(v: Vector): Vector = negate(v)
   //
 
-  //Implicit class
+  //Implicit vector
   implicit class ImplicitVector(v: Vector) {
 
     def dimension: Int = Vectors.dimension(v)
@@ -107,7 +107,7 @@ object Vectors {
 
     //Function aliases
     def *(s: Double): Vector = scale(s)
-    def *:(s: Double): Vector = scale(s)
+    @deprecated def *:(s: Double): Vector = scale(s)
     def +(ov: Vector): Vector = add(ov)
     def +(c: Double): Vector = add(c)
     def -(ov: Vector): Vector = sub(ov)
@@ -116,6 +116,15 @@ object Vectors {
     //
 
     def vectorToString: String = "(" + v.mkString(", ") + ")"
+  }
+  //
+
+  //Implicit scalar
+  implicit class ImplicitScalar(d: Double) {
+    def *(v: Vector): Vector = v * d
+    def +(v: Vector): Vector = add(v, d)
+    def -(v: Vector): Vector = d + (Vectors -v)
+    def at(dimension: Int): Vector = Seq.fill(dimension)(d)
   }
   //
 

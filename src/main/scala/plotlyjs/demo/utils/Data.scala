@@ -286,7 +286,7 @@ object Data {
   }
 
   private def reverse(normalSpacePoints: Seq[Seq[Double]]): Seq[Vector] = {
-    normalSpacePoints.map(negate).map(_ + 1)
+    normalSpacePoints.map(1 - _)
   }
   def lowCorner(n: Int, p: Int): Seq[Seq[Double]] = normalizedNCube(n, p, hollow = true).filter(_.contains(0))
   def highCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(lowCorner(n, p))

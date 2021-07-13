@@ -10,7 +10,7 @@ import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.{Data, PointSet, Utils}
 
-import scala.math.random
+import scala.math.{pow, random, sqrt}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
@@ -40,7 +40,7 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val dimension = 4
+    val dimension = 3
 
     val nbObjectives = dimension
 
@@ -66,16 +66,32 @@ object ParetoBisDemo {
         ._result
     }
 
-    val testShape = Data.highSphericalCorner(dimension, 16)
+    val p = 16
+    val shape = Data.highSphericalCorner(dimension, p).map(toNorm(1, 1))
+    val testShape = shape ++ shape.map(1 - _)
     val results = Data.dim8Sample100.map(_.take(dimension))
 
     val pointSet = new PointSet(testShape/* ++ results*/)
       .optimizationProblems(Seq.fill(testShape.head.size)(MIN))
       .higherPlotIsBetter
 
-    val cartesianBarycenters = pointSet.norm1VectorNormalizedOutputs.map(
+    val simplexStarCenter = 0.5 at dimension
+    val simplexStarNorm1 = simplexStarCenter.norm(1)
+    val scaleFactor = 0.5 / (0.5 * sqrt(dimension * (dimension - 1)))
+    val projectedOutputs = pointSet.spaceNormalizedOutputs.map(point => {
+        if(point.norm(1) < simplexStarNorm1) {
+          point.toNorm(1, simplexStarNorm1)
+        } else {
+          1 - (1 - point).toNorm(1, simplexStarNorm1)
+        }
+      })
+    val positiveProjectedOutputs = projectedOutputs.map(pointOnSimplexStar => simplexStarCenter + scaleFactor * (pointOnSimplexStar - simplexStarCenter))
+    assert(positiveProjectedOutputs.map(_.map(_ > 0).reduce(_ && _)).reduce(_ && _))
+    val normalized1PositiveProjectedOutputs = positiveProjectedOutputs.map(normalize(1))
+
+    val cartesianBarycenters = /*pointSet.norm1VectorNormalizedOutputs*/projectedOutputs.map(
       _.zip(cartesianObjectives) map {
-        case (w, (x, y)) => (w * x, w * y)
+        case (c, (x, y)) => (c * x, c * y)
       } reduce[(Double, Double)] {
         case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2)
       })
@@ -125,17 +141,17 @@ object ParetoBisDemo {
       scatterPolarDataSeq(
         "Geometry",
         pointSetSlice.rawOutputs,
-        pointSetSlice.spaceNormalizedOutputs,
+        projectedOutputs.slice(0, testShape.size),
         barycenters.slice(0, testShape.size)
       )
     }
     val resultsDataSeq = {
-      val pointSetSlice = new pointSet.PointSetSlice(0, pointSet.size)
+      val pointSetSlice = new pointSet.PointSetSlice(testShape.size, pointSet.size)
       scatterPolarDataSeq(
         "Results",
         pointSetSlice.rawOutputs,
-        pointSetSlice.spaceNormalizedOutputs,
-        barycenters.slice(0, pointSet.size)
+        projectedOutputs.slice(testShape.size, pointSet.size),
+        barycenters.slice(testShape.size, pointSet.size)
       )
     }
 

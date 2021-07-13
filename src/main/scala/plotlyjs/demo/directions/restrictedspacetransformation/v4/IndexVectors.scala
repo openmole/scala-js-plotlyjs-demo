@@ -10,6 +10,7 @@ object IndexVectors {
 
   implicit class ImplicitIndexVector(indexVector: IndexVector) {
     def vector: Vector = indexVector.map(_.toDouble)
+    def indexVectorToString: String = "(" + indexVector.mkString(", ") + ")"
   }
 
   implicit def implicitToVector(i: IndexVector): Vector = i.map(_.toDouble)

@@ -6,11 +6,12 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexedTransformation
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.{Data, PointSet, Utils}
 
-import scala.math.{pow, random, sqrt}
+import scala.math.atan2
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
@@ -40,7 +41,7 @@ object ParetoBisDemo {
 
     val plotDiv = div()
 
-    val dimension = 3
+    val dimension = 4
 
     val nbObjectives = dimension
 
@@ -51,9 +52,10 @@ object ParetoBisDemo {
     val radianObjectiveThetas = (0 until nbObjectives).map(_ * TWO_PI/nbObjectives)
     val degreeObjectiveThetas = radianObjectiveThetas.map(_ * TO_DEGREES)
     val colors = degreeObjectiveThetas.map(theta => Color.hsl(theta.toInt, 100, 50))
-    val cartesianObjectives = radianObjectiveThetas.map(theta => (Math.cos(theta), Math.sin(theta)))
+    val cartesianObjectives = radianObjectiveThetas.map(theta => Seq(Math.cos(theta), Math.sin(theta)))
     val dataObjectiveSeq = degreeObjectiveThetas.zipWithIndex.map { case (theta, index) =>
       scatterPolar
+        .name(s"Objective ${index + 1}")
         .r(js.Array(1))
         .theta(js.Array(theta))
         .fillPolar(ScatterPolar.toself)
@@ -65,49 +67,31 @@ object ParetoBisDemo {
           .symbol(circle))
         ._result
     }
-
-    val p = 16
-    val shape = Data.highSphericalCorner(dimension, p).map(toNorm(1, 1))
-    val testShape = shape ++ shape.map(1 - _)
-    val results = Data.dim8Sample100.map(_.take(dimension))
-
-    val pointSet = new PointSet(testShape/* ++ results*/)
-      .optimizationProblems(Seq.fill(testShape.head.size)(MIN))
-      .higherPlotIsBetter
-
-    val simplexStarCenter = 0.5 at dimension
-    val simplexStarNorm1 = simplexStarCenter.norm(1)
-    val scaleFactor = 0.5 / (0.5 * sqrt(dimension * (dimension - 1)))
-    val projectedOutputs = pointSet.spaceNormalizedOutputs.map(point => {
-        if(point.norm(1) < simplexStarNorm1) {
-          point.toNorm(1, simplexStarNorm1)
-        } else {
-          1 - (1 - point).toNorm(1, simplexStarNorm1)
-        }
-      })
-    val positiveProjectedOutputs = projectedOutputs.map(pointOnSimplexStar => simplexStarCenter + scaleFactor * (pointOnSimplexStar - simplexStarCenter))
-    assert(positiveProjectedOutputs.map(_.map(_ > 0).reduce(_ && _)).reduce(_ && _))
-    val normalized1PositiveProjectedOutputs = positiveProjectedOutputs.map(normalize(1))
-
-    val cartesianBarycenters = /*pointSet.norm1VectorNormalizedOutputs*/projectedOutputs.map(
-      _.zip(cartesianObjectives) map {
-        case (c, (x, y)) => (c * x, c * y)
-      } reduce[(Double, Double)] {
-        case ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2)
-      })
-    val polarBarycenters = cartesianBarycenters.map { case (x, y) =>
-      val squaredSum = Math.sqrt(x * x + y * y)
-      val r = squaredSum
-      val theta = {
-        val t = 2 * Math.atan(y / (squaredSum + x))
-        if (t < 0) t + TWO_PI
-        else t
+    def fromNormalizedSpaceToPolar(vector: Vector) = {
+      def fromNormalizedSpaceToCartesian(vector: Vector) = vector
+        .zip(cartesianObjectives)
+        .map { case (c, o) => c * o }
+        .reduce(_ + _)
+      def fromCartesianToPolar(vector: Vector) = {
+        val r = norm(vector)
+        val theta = atan2(vector(1), vector(0))
+        Seq(r, theta)
       }
-      (r, theta)
+      fromCartesianToPolar(fromNormalizedSpaceToCartesian(vector))
     }
 
+    val p = 10
+    lazy val shape = Data.highSphericalCorner(dimension, p).map(toNorm(1))
+    val testShape = /*Seq(0 at dimension)*/shape// ++ shape.map(1 - _)
+    val results = Data.dim8Sample100.map(_.take(dimension))
+
+    val pointSet = new PointSet(testShape)// ++ results)
+      .optimizationProblems(Seq.fill(testShape.head.size)(MIN))
+      .lowerPlotIsBetter
+    val projectedOutputs = pointSet.spaceNormalizedOutputs.map(orthogonalComponent(1 at dimension))
+
     case class Barycenter(r: Double, theta: Double, pointSetIndex: Int)
-    val barycenters = polarBarycenters.zipWithIndex.map { case ((r, theta), pointSetIndex) => Barycenter(r, theta, pointSetIndex) }
+    val barycenters = projectedOutputs.map(fromNormalizedSpaceToPolar).zipWithIndex.map { case (p, pointSetIndex) => Barycenter(p(0), p(1), pointSetIndex) }
 
     def scatterPolarData(name: String, rawOutputs: Seq[Seq[Double]], barycenters: Seq[Barycenter], color: Color): PlotData = {
       scatterPolar
@@ -131,8 +115,8 @@ object ParetoBisDemo {
       def get[A](seq: Seq[A], indices: Seq[Int]): Seq[A] = seq.zipWithIndex.filter(ai => indices.contains(ai._2)).map(_._1)
       spaceNormalizedOutputs.indices
         .groupBy(i => IndexedTransformation.fromCircleToIndex(spaceNormalizedOutputs(i).toNorm(2)))
-        .map { case (_, indices) =>
-          scatterPolarData(name, get(rawOutputs, indices), get(barycenters, indices), Utils.randomColor)
+        .map { case (indexVector, indices) =>
+          scatterPolarData(name + " – " + indexVector.indexVectorToString, get(rawOutputs, indices), get(barycenters, indices), Utils.randomColor)
         }
     }
 
@@ -141,7 +125,7 @@ object ParetoBisDemo {
       scatterPolarDataSeq(
         "Geometry",
         pointSetSlice.rawOutputs,
-        projectedOutputs.slice(0, testShape.size),
+        pointSetSlice.spaceNormalizedOutputs,
         barycenters.slice(0, testShape.size)
       )
     }
@@ -150,7 +134,7 @@ object ParetoBisDemo {
       scatterPolarDataSeq(
         "Results",
         pointSetSlice.rawOutputs,
-        projectedOutputs.slice(testShape.size, pointSet.size),
+        pointSetSlice.spaceNormalizedOutputs,
         barycenters.slice(testShape.size, pointSet.size)
       )
     }
@@ -180,6 +164,8 @@ object ParetoBisDemo {
 
     val allData = dataObjectiveSeq ++ geometryDataSeq ++ resultsDataSeq
     Plotly.newPlot(plotDiv.ref, allData.toJSArray, layout)
+
+
 
     def get[A](plotData: PlotData, key: String, index: Int): Option[A] = entries(plotData).filter(_._1 == key).headOption.map(_._2.asInstanceOf[scala.scalajs.js.Array[A]](index))
     //val hoverTraceIndex = allData.size

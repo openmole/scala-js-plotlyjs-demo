@@ -40,11 +40,14 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
   })
 
   class PointSetSlice(from: Int, until: Int) {
-    lazy val rawOutputs: Seq[Seq[Double]] = PointSet.this.rawOutputs.slice(from, until)
+
+    def slice[A](seq: Seq[A]): Seq[A] = seq.slice(from, until)
+
+    lazy val rawOutputs: Seq[Seq[Double]] = slice(PointSet.this.rawOutputs)
     val outputDimension: Int = PointSet.this.outputDimension
     val size: Int = PointSet.this.size
-    lazy val spaceNormalizedOutputs: Seq[Seq[Double]] = PointSet.this.spaceNormalizedOutputs.slice(from, until)
-    lazy val norm1VectorNormalizedOutputs: Seq[Seq[Double]] = PointSet.this.norm1VectorNormalizedOutputs.slice(from, until)
+    lazy val spaceNormalizedOutputs: Seq[Seq[Double]] = slice(PointSet.this.spaceNormalizedOutputs)
+    lazy val norm1VectorNormalizedOutputs: Seq[Seq[Double]] = slice(PointSet.this.norm1VectorNormalizedOutputs)
   }
 
 }

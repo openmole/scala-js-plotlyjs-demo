@@ -8,10 +8,11 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.utils.{Data, PointSet, Utils}
+import plotlyjs.demo.utils.{Data, PointSet, Utils, Vectors}
 import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 
-import scala.math.{Pi, atan2, cos}
+import scala.:+
+import scala.math.{Pi, atan2, cos, sin}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
@@ -35,6 +36,22 @@ import scala.scalajs.js.Object.entries
 
 object ParetoBisDemo {
 
+  def cartesianToPolar(vector: Vector): Vector = {
+    val r = norm(vector)
+    val x = vector(0)
+    val y = vector(1)
+    val theta = atan2(y, x).toDegrees
+    Seq(r, theta)
+  }
+
+  def polarToCartesian(vector: Vector): Vector = {
+    val r = vector(0)
+    val theta = vector(1).toRadians
+    val x = r * cos(theta)
+    val y = r * sin(theta)
+    Seq(x, y)
+  }
+
   import org.openmole.plotlyjs.ScatterPolarDataBuilder._
 
   lazy private val sc = sourcecode.Text {
@@ -45,7 +62,7 @@ object ParetoBisDemo {
 
     val radianObjectiveThetas = (0 until dimension).map(_.toDouble/dimension * 2*Pi)
     val degreeObjectiveThetas = radianObjectiveThetas.map(_.toDegrees)
-    val colors = degreeObjectiveThetas.map(theta => Seq(theta/360, 1, 0.5).fromHSLtoRGB)//Color.hsl(theta.toInt, 100, 50))
+    val colors = degreeObjectiveThetas.map(theta => Seq(theta/360, 1, 0.5).fromHSLtoRGB.withAlpha(0.8))
     val cartesianObjectives = radianObjectiveThetas.map(theta => Seq(Math.cos(theta), Math.sin(theta)))
     val objectivesDataSeq = degreeObjectiveThetas.zipWithIndex.map { case (theta, index) =>
       scatterPolar
@@ -53,7 +70,9 @@ object ParetoBisDemo {
         .r(js.Array(1, 0))
         .theta(js.Array(theta, 0))
         .setMode(lines)
-        .line(line.set(colors(index)))
+        .line(line
+          .set(colors(index))
+        )
         ._result
     }
     def fromNormalizedSpaceToPolar(vector: Vector) = {
@@ -61,16 +80,12 @@ object ParetoBisDemo {
         .zip(cartesianObjectives)
         .map { case (c, o) => c * o }
         .reduce(_ + _)
-      def fromCartesianToPolar(vector: Vector) = {
-        val r = norm(vector)
-        val theta = atan2(vector(1), vector(0))
-        Seq(r, theta)
-      }
-      fromCartesianToPolar(fromNormalizedSpaceToCartesian(vector))
+      cartesianToPolar(fromNormalizedSpaceToCartesian(vector))
     }
 
-    val p = 3
+    val p = 4
     val cubeCorner = Data.lowCorner(dimension, p)
+    val sphereCorner = Data.lowSphericalCorner(dimension, p)
     val roundSimplex = Data.lowSphericalCorner(dimension, p).map(normalize)
     val doubleRoundSimplex = roundSimplex ++ roundSimplex.map(1 - _)
     val testShape = cubeCorner
@@ -80,7 +95,6 @@ object ParetoBisDemo {
       .optimizationProblems(Seq.fill(testShape.head.size)(MIN))
       .lowerPlotIsBetter
     val projectedOutputs = pointSet.spaceNormalizedOutputs.map(orthogonalComponent(1 at dimension))
-    //val displayOutputs = projectedOutputs.map(scale( 1 / (2 * cos((2 * Pi)/dimension / 2)) ))
 
     case class Barycenter(r: Double, theta: Double, pointSetIndex: Int)
     val barycenters = projectedOutputs.map(fromNormalizedSpaceToPolar).zipWithIndex.map { case (p, pointSetIndex) => Barycenter(p(0), p(1), pointSetIndex) }
@@ -89,9 +103,10 @@ object ParetoBisDemo {
       scatterPolar
         .name(name)
         .r(barycenters.map(_.r).toJSArray)
-        .theta(barycenters.map(_.theta.toDegrees).toJSArray)
+        .theta(barycenters.map(_.theta).toJSArray)
         .setMode(markers)
         .set(marker
+          .size(4)
           .symbol(circle)
           .color(color)
           .opacity(1/*0.5*/))
@@ -140,17 +155,28 @@ object ParetoBisDemo {
       .width(graphWidth)
       //.showlegend(false)
       .polar(polar
-        .bgcolor(Color.rgb(245, 245, 245))
+        .bgcolor(
+          Color.rgb(255, 255, 255)
+          //Color.rgb(245, 245, 245)
+          //Color.rgb(128, 128, 128)
+          //Color.rgb(0, 0, 0)
+        )
         .angularAxis(axis
+          .visible(false)
+          /*
           .showticklabels(false)
           .linewidth(2)
-          .gridcolor(Color.rgba(12, 12, 12, 0.2))
+          ///.gridcolor(Color.rgba(12, 12, 12, 0.2))
           .ticks(TickType.outside)
+          */
         )
         .radialAxis(axis
+          .visible(false)
+          /*
           .showticklabels(false)
           .linewidth(0)
           .ticks(TickType.none)
+          */
         )
       )
 
@@ -173,30 +199,45 @@ object ParetoBisDemo {
         val pointSetIndex = pointSetIndexOption.get.toInt
 
         val plotOutput = pointSet.spaceNormalizedOutputs(pointSetIndex)
+        //val plotOutput = projectedOutputs(pointSetIndex)
 
-        val plotDataSeq = objectivesDataSeq.zipWithIndex map { case (dataObjective, index) =>
+        val plotDataSeq = (objectivesDataSeq.zipWithIndex map { case (dataObjective, index) =>
 
           val objectiveROption = get[Double](dataObjective, "r", 0)
           val objectiveThetaOption = get[Double](dataObjective, "theta", 0)
           if (objectiveROption.isDefined && objectiveThetaOption.isDefined) {
             val objectiveR = objectiveROption.get
             val objectiveTheta = objectiveThetaOption.get
+            val cartesianObjective = polarToCartesian(Seq(objectiveR, objectiveTheta))
 
-            val stroke = scala.math.abs(plotOutput(index)) * 16
+            val component = plotOutput(index)
+            val componentVector = component * cartesianObjective
+            val polarComponentVector = cartesianToPolar(componentVector)
+
             scatterPolar
-              .r(js.Array(r, objectiveR))
-              .theta(js.Array(t, objectiveTheta))
+              .r(js.Array(0, polarComponentVector(0)))
+              .theta(js.Array(0, polarComponentVector(1)))
               .setMode(lines)
               .line(line
-                .width(stroke)
-                .set(colors(index).withAlpha(0.5))
+                .width(8)
+                .set(colors(index))
               )
               .hoverinfo("none")
               ._result
           } else {
             scatterPolar._result
           }
-        }
+        }) :+ scatterPolar
+          .r(js.Array(r))
+          .theta(js.Array(t))
+          .set(marker
+            .size(8)
+            .symbol(circle.open)
+            .color((1.0 at 3) * 0.5)
+          )
+          .hoverinfo("none")
+          ._result
+
         Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + allData.size).map(_.toDouble).toJSArray)
         Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
         tracesDisplayedCount = plotDataSeq.size

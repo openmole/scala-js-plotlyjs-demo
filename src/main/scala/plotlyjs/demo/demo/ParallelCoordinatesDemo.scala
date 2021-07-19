@@ -4,9 +4,12 @@ import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.{Color, Plotly}
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.buildingmethod.BuildingMethod
+import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.PointSet.MIN
-import plotlyjs.demo.utils.{Data, PointSet}
+import plotlyjs.demo.utils.Vectors.ImplicitScalar
 import plotlyjs.demo.utils.Vectors.ImplicitVector
+import plotlyjs.demo.utils.{Data, PointSet, Utils}
 
 import scala.collection.immutable.HashMap
 import scala.math.{abs, random}
@@ -19,45 +22,24 @@ object ParallelCoordinatesDemo {
     val plotDiv = div()
 
     val dim = 3
-    val results = Data.dim8Sample100.map(_.drop(8 - dim))
+    val p = 4
+    val results = Data.lowCorner(dim, p)//Data.dim8Sample100.map(_.take(dim))
     val pointSet = new PointSet(results)
-      .optimizationProblems(Seq.fill(dim)(MIN))
+      .optimizationProblems(MIN at dim)
       .lowerPlotIsBetter
 
-    val directions = BuildingMethod.nSphereCovering(dim, Math.PI/4 / 4)
-    val groupedResults = pointSet.spaceNormalizedOutputs.groupBy(vector =>
-      directions
-        .zip(directions.map(direction => abs(vector.dot(direction))))
-        .maxBy(_._2)._1
-    ).values
-    //println(groupedResults.size)
-    //groupedResults.foreach(group => println(s"  ${group.size}"))
-    //println()
+    val groupedResults = pointSet.spaceNormalizedOutputs.groupBy[IndexVector](_.orthogonalComponent(1 at dim))
+    val keys = groupedResults.keys.toSeq
 
-    val plotDataSeq = groupedResults.map(group => {
-      parallelCoordinates
-        .line(
-          line.set(Color.rgb((random() * 255).toInt, (random() * 255).toInt, (random() * 255).toInt))
-        )
-        .dimensions(group.transpose.map(values => dimension.values(values.toJSArray)._result).toJSArray)
-        ._result
-    })
+    val plotData = parallelCoordinates
+      .line(line
+        .color(keys.zipWithIndex.flatMap { case (k, i) => groupedResults(k).map(_ => i) })
+        .colorscale(keys.indices.map(i => (i, Utils.randomColor)))
+      )
+      .dimensions(keys.flatMap(k => groupedResults(k)).transpose.map(values => dimension.values(values.toJSArray)._result).toJSArray)
+      ._result
 
-    /*
-    val directionColors = HashMap.from(directions.zip(directions.map((_, Color.rgb((random() * 255).toInt, (random() * 255).toInt, (random() * 255).toInt)))))
-    val resultColors = results.map(vector => directionColors(directions.zip(directions.map(direction => abs(vector.dot(direction)))).maxBy(_._2)._1))
-
-    val plotDataSeq = Seq(
-      parallelCoordinates
-        .line(line
-          .
-        )
-        .dimensions(results.transpose.map(values => dimension.values(values.toJSArray)._result).toJSArray)
-        ._result
-    )
-    */
-
-    Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray)
+    Plotly.newPlot(plotDiv.ref, Seq(plotData).toJSArray)
 
     plotDiv
   }

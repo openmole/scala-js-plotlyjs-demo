@@ -8,11 +8,11 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.utils.{Data, PointSet, Utils, Vectors}
+import plotlyjs.demo.utils.{Colors, Data, PointSet, Utils, Vectors}
 import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 
 import scala.:+
-import scala.math.{Pi, atan2, cos, sin}
+import scala.math.{Pi, atan2, cos, random, sin}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
@@ -36,25 +36,64 @@ import scala.scalajs.js.Object.entries
 
 object ParetoBisDemo {
 
-  def cartesianToPolar(vector: Vector): Vector = {
-    val r = norm(vector)
-    val x = vector(0)
-    val y = vector(1)
-    val theta = atan2(y, x).toDegrees
-    Seq(r, theta)
-  }
-
-  def polarToCartesian(vector: Vector): Vector = {
-    val r = vector(0)
-    val theta = vector(1).toRadians
-    val x = r * cos(theta)
-    val y = r * sin(theta)
-    Seq(x, y)
-  }
-
   import org.openmole.plotlyjs.ScatterPolarDataBuilder._
 
   lazy private val sc = sourcecode.Text {
+
+    def cartesianToPolar(vector: Vector): Vector = {
+      val r = norm(vector)
+      val x = vector(0)
+      val y = vector(1)
+      val theta = atan2(y, x).toDegrees
+      Seq(r, theta)
+    }
+
+    def polarToCartesian(vector: Vector): Vector = {
+      val r = vector(0)
+      val theta = vector(1).toRadians
+      val x = r * cos(theta)
+      val y = r * sin(theta)
+      Seq(x, y)
+    }
+
+    def cartesianPlaneComponent(vector: Vector, i: Int): Vector = {
+      vector(i) * polarToCartesian(Seq(1, 360 * i/vector.dimension))
+    }
+
+    def toCartesianPlane(vector: Vector): Vector = {
+      (0 until vector.dimension).map(i => cartesianPlaneComponent(vector, i)).reduce(_ + _)
+    }
+
+    def starDataSeq(radius: Double)(index: Int, vector: Vector): Seq[PlotData] = {
+      val dimension = vector.dimension
+      val center = toCartesianPlane(vector)
+      (0 until dimension).map(i => {
+        val rayEnd = center + radius * cartesianPlaneComponent(vector, i)
+        val cartesianCoordinates = Seq(center, rayEnd).transpose
+        val polarCoordinates = Seq(center, rayEnd).map(cartesianToPolar).transpose//[Double]
+        scatter/*Polar*/
+          //.name("star")
+          /*
+          .r(polarCoordinates(0).toJSArray)
+          .theta(polarCoordinates(1).toJSArray)
+          */
+          .x(cartesianCoordinates(0).toJSArray)
+          .y(cartesianCoordinates(1).toJSArray)
+          .setMode(lines)
+          .line(line
+            .width(2)
+            .set(Seq(i.toDouble/dimension, 1, 0.5).fromHSLtoRGB)
+          )
+          //.setMode(markers)
+          .marker(marker.size(8))
+          .hoverinfo("none")
+          ._result
+      }) :+ scatter
+        .x(Seq(center(0)).toJSArray)
+        .y(Seq(center(1)).toJSArray)
+        .customdata(Seq(index.toString).toJSArray)
+        ._result
+    }
 
     val plotDiv = div()
 
@@ -83,7 +122,7 @@ object ParetoBisDemo {
       cartesianToPolar(fromNormalizedSpaceToCartesian(vector))
     }
 
-    val p = 4
+    val p = 3
     val cubeCorner = Data.lowCorner(dimension, p)
     val sphereCorner = Data.lowSphericalCorner(dimension, p)
     val roundSimplex = Data.lowSphericalCorner(dimension, p).map(normalize)
@@ -94,10 +133,15 @@ object ParetoBisDemo {
     val pointSet = new PointSet(testShape)// ++ results)
       .optimizationProblems(Seq.fill(testShape.head.size)(MIN))
       .lowerPlotIsBetter
-    val projectedOutputs = pointSet.spaceNormalizedOutputs.map(orthogonalComponent(1 at dimension))
+    val projectedOutputs = pointSet.spaceNormalizedOutputs//.map(orthogonalComponent(1 at dimension))
+    lazy val allStars = projectedOutputs.zipWithIndex.flatMap { case (v, i) => starDataSeq(0.05)(i, v) }
 
     case class Barycenter(r: Double, theta: Double, pointSetIndex: Int)
-    val barycenters = projectedOutputs.map(fromNormalizedSpaceToPolar).zipWithIndex.map { case (p, pointSetIndex) => Barycenter(p(0), p(1), pointSetIndex) }
+    val barycenters = projectedOutputs
+      /*.map(fromNormalizedSpaceToPolar)*/
+      .map(toCartesianPlane)
+      .map(cartesianToPolar)
+      .zipWithIndex.map { case (p, pointSetIndex) => Barycenter(p(0), p(1), pointSetIndex) }
 
     def scatterPolarData(name: String, rawOutputs: Seq[Seq[Double]], barycenters: Seq[Barycenter], color: Color): PlotData = {
       scatterPolar
@@ -154,6 +198,9 @@ object ParetoBisDemo {
       .height(graphHeight)
       .width(graphWidth)
       //.showlegend(false)
+      .xaxis(axis.visible(false))
+      .yaxis(axis.visible(false))
+      /*
       .polar(polar
         .bgcolor(
           Color.rgb(255, 255, 255)
@@ -178,9 +225,11 @@ object ParetoBisDemo {
           .ticks(TickType.none)
           */
         )
-      )
 
-    val allData = geometryDataSeq ++ resultsDataSeq ++ objectivesDataSeq
+      )
+      */
+
+    val allData = /*geometryDataSeq ++ resultsDataSeq ++ objectivesDataSeq ++ */allStars
     Plotly.newPlot(plotDiv.ref, allData.toJSArray, layout)
 
     def get[A](plotData: PlotData, key: String, index: Int): Option[A] = entries(plotData).filter(_._1 == key).headOption.map(_._2.asInstanceOf[scala.scalajs.js.Array[A]](index))

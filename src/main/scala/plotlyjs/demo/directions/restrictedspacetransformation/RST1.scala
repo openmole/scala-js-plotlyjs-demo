@@ -79,7 +79,7 @@ object RST1 {
   def inverseProject(vector: Vector): Vector = {
     val radius = norm(vector)
     val maxMagnitude = MaxMagnitude(vector)
-    (radius / maxMagnitude.value) *: vector
+    (radius / maxMagnitude.value) * vector
   }
 
   def inverseProjection(nSphereRadius: Double)(radiusOnCell: Double): Double = {

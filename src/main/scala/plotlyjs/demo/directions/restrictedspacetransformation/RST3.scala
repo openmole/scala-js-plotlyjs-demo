@@ -29,13 +29,13 @@ object RST3 {
     def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
 
     def toSquareRadius(vector: Vector, squareRadius: Double): Vector = {
-      (squareRadius / F.squareRadius(vector)) *: vector
+      (squareRadius / F.squareRadius(vector)) * vector
     }
 
     def circleRadius(circleVector: Vector): Double = norm(circleVector)
 
     def toCircleRadius(vector: Vector, circleRadius: Double): Vector = {
-      (circleRadius / F.circleRadius(vector)) *: vector
+      (circleRadius / F.circleRadius(vector)) * vector
     }
 
     def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = {

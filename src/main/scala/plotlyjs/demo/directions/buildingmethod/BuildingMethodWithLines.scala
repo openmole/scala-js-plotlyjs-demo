@@ -43,7 +43,7 @@ object BuildingMethodWithLines {
               .filter(maxMagnitude(_) <= 1)
             val border = sphere
               .filter(maxMagnitude(_) > 1)
-              .mapGraph(v => (1 / maxMagnitude(v)) *: v)
+              .mapGraph(v => (1 / maxMagnitude(v)) * v)
               .filter(_.norm > tan((i - 1) * alphaStep))
             graph = graph ++ inside ++ border
           }

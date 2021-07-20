@@ -109,7 +109,7 @@ object Vectors {
 
     //Function aliases
     def *(s: Double): Vector = scale(s)
-    @deprecated def *:(s: Double): Vector = scale(s)
+    def /(d: Double): Vector = scale(1/d)
     def +(ov: Vector): Vector = add(ov)
     def +(c: Double): Vector = add(c)
     def -(ov: Vector): Vector = sub(ov)

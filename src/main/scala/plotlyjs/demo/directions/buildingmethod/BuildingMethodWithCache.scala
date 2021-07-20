@@ -41,7 +41,7 @@ object BuildingMethodWithCache {
               .filter(_._2 <= 1).map(_._1)
             val border = (sphere zip maxMagnitudes)
               .filter(_._2 > 1)
-              .map { case (v, m) => (1 / m) *: v }
+              .map { case (v, m) => (1 / m) * v }
               .filter(_.norm > dependency.previousROnCell)
             inside ++ border
           }) ++ Seq(Seq.fill(dim - 1)(0.0))

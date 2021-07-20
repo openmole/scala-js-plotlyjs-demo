@@ -51,7 +51,7 @@ object DiscAngularSpaceAdjustment /*extends App */ {
         val (borderNormalComponent, _) = spaceSegmentation.borderNormalSplit(touchingFillingLimitRemainder)
         norm(borderNormalComponent) / radius
       }
-      val fillingAdjustedRemainder = (1 / fillingLimit_CenterToBorderProportion) *: remainderToAdjust
+      val fillingAdjustedRemainder = (1 / fillingLimit_CenterToBorderProportion) * remainderToAdjust
 
       AngularAdjustment.cellRadialAdjustment(Geometry.cubic, componentToKeep + fillingAdjustedRemainder)
     } else {

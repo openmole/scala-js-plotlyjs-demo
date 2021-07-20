@@ -82,13 +82,13 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
 
   def adjustment(squareRadiusOnFace: Double, spaceComponent: Vector): Vector = {
     val spaceFactor = adjustmentProportion(squareRadiusOnFace)
-    val adjustedSpaceComponent = (1 / spaceFactor) *: spaceComponent
+    val adjustedSpaceComponent = (1 / spaceFactor) * spaceComponent
     adjustedSpaceComponent
   }
 
   def inverseAdjustment(squareRadiusOnFace: Double, adjustedSpaceComponent: Vector): Vector = {
     val reverseSpaceFactor = 1 / adjustmentProportion(squareRadiusOnFace)
-    val spaceComponent = (1 / reverseSpaceFactor) *: adjustedSpaceComponent
+    val spaceComponent = (1 / reverseSpaceFactor) * adjustedSpaceComponent
     spaceComponent
   }
 
@@ -119,7 +119,7 @@ object Geometry {
 
   //Geometry
   def toRadius(vector: Vector, oldRadius: Double, newRadius: Double): Vector = {
-    if(oldRadius == 0) vector else (newRadius / oldRadius) *: vector
+    if(oldRadius == 0) vector else (newRadius / oldRadius) * vector
   }
 
   def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value

@@ -6,13 +6,12 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.utils.{Colors, Data, PointSet, Utils, Vectors}
-import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
+import plotlyjs.demo.utils.{Colors, Data, PointSet, Utils}
 
-import scala.:+
-import scala.math.{Pi, atan2, cos, random, sin}
+import scala.math.{Pi, atan2, cos, sin}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
@@ -64,10 +63,10 @@ object ParetoBisDemo {
       (0 until vector.dimension).map(i => cartesianPlaneComponent(vector, i)).reduce(_ + _)
     }
 
-    def starDataSeq(radius: Double)(index: Int, vector: Vector): Seq[PlotData] = {
+    def starDataSeq(radius: Double, hitBox: Boolean = false)(index: Int, vector: Vector): Seq[PlotData] = {
       val dimension = vector.dimension
       val center = toCartesianPlane(vector)
-      (0 until dimension).map(i => {
+      val rayDataSeq = (0 until dimension).map(i => {
         val rayEnd = center + radius * cartesianPlaneComponent(vector, i)
         val cartesianCoordinates = Seq(center, rayEnd).transpose
         val polarCoordinates = Seq(center, rayEnd).map(cartesianToPolar).transpose//[Double]
@@ -88,16 +87,20 @@ object ParetoBisDemo {
           .marker(marker.size(8))
           .hoverinfo("none")
           ._result
-      }) :+ scatter
-        .x(Seq(center(0)).toJSArray)
-        .y(Seq(center(1)).toJSArray)
-        .customdata(Seq(index.toString).toJSArray)
-        ._result
+      })
+      if(hitBox) {
+        rayDataSeq :+ scatter
+          .x(Seq(center(0)).toJSArray)
+          .y(Seq(center(1)).toJSArray)
+          .marker(marker.set(0.0 at 4))
+          .customdata(Seq(index.toString).toJSArray)
+          ._result
+      } else {
+        rayDataSeq
+      }
     }
 
-    val plotDiv = div()
-
-    val dimension = 5
+    val dimension = 7
 
     val radianObjectiveThetas = (0 until dimension).map(_.toDouble/dimension * 2*Pi)
     val degreeObjectiveThetas = radianObjectiveThetas.map(_.toDegrees)
@@ -114,34 +117,23 @@ object ParetoBisDemo {
         )
         ._result
     }
-    def fromNormalizedSpaceToPolar(vector: Vector) = {
-      def fromNormalizedSpaceToCartesian(vector: Vector) = vector
-        .zip(cartesianObjectives)
-        .map { case (c, o) => c * o }
-        .reduce(_ + _)
-      cartesianToPolar(fromNormalizedSpaceToCartesian(vector))
-    }
 
-    val p = 3
+    val p = 32
     val cubeCorner = Data.lowCorner(dimension, p)
     val sphereCorner = Data.lowSphericalCorner(dimension, p)
     val roundSimplex = Data.lowSphericalCorner(dimension, p).map(normalize)
     val doubleRoundSimplex = roundSimplex ++ roundSimplex.map(1 - _)
-    val testShape = cubeCorner
+    val testShape = Utils.randomParetoFront(dimension, p)
     val results = Data.dim8Sample100.map(_.take(dimension))
 
     val pointSet = new PointSet(testShape)// ++ results)
-      .optimizationProblems(Seq.fill(testShape.head.size)(MIN))
+      .optimizationProblems(MIN at dimension)
       .lowerPlotIsBetter
-    val projectedOutputs = pointSet.spaceNormalizedOutputs//.map(orthogonalComponent(1 at dimension))
-    lazy val allStars = projectedOutputs.zipWithIndex.flatMap { case (v, i) => starDataSeq(0.05)(i, v) }
+      //.higherPlotIsBetter
+    val projectedOutputs = pointSet.spaceNormalizedOutputs.map(orthogonalComponent(1 at dimension))
 
     case class Barycenter(r: Double, theta: Double, pointSetIndex: Int)
-    val barycenters = projectedOutputs
-      /*.map(fromNormalizedSpaceToPolar)*/
-      .map(toCartesianPlane)
-      .map(cartesianToPolar)
-      .zipWithIndex.map { case (p, pointSetIndex) => Barycenter(p(0), p(1), pointSetIndex) }
+    val barycenters = projectedOutputs.map(toCartesianPlane).map(cartesianToPolar).zipWithIndex.map { case (p, pointSetIndex) => Barycenter(p(0), p(1), pointSetIndex) }
 
     def scatterPolarData(name: String, rawOutputs: Seq[Seq[Double]], barycenters: Seq[Barycenter], color: Color): PlotData = {
       scatterPolar
@@ -167,7 +159,7 @@ object ParetoBisDemo {
       outputsForColoring.indices
         .groupBy[IndexVector](i => outputsForColoring(i) * 1)
         .map { case (indexVector, indices) =>
-          scatterPolarData(name + " – " + indexVector.indexVectorToString, get(rawOutputs, indices), get(barycenters, indices), Utils.randomColor)
+          scatterPolarData(name + " – " + indexVector.indexVectorToString, get(rawOutputs, indices), get(barycenters, indices), Colors.randomColor)
         }
     }
 
@@ -190,51 +182,73 @@ object ParetoBisDemo {
       )
     }
 
+    lazy val allStars = projectedOutputs.zipWithIndex.flatMap { case (v, i) => starDataSeq(0.1, hitBox = true)(i, v) }
+
+
+
+    //Display
     val graphWidth = 800
     val graphHeight = 800
 
-    val layout = Layout
-      .title("Pareto overview")
-      .height(graphHeight)
-      .width(graphWidth)
-      //.showlegend(false)
-      .xaxis(axis.visible(false))
-      .yaxis(axis.visible(false))
-      /*
-      .polar(polar
-        .bgcolor(
-          Color.rgb(255, 255, 255)
-          //Color.rgb(245, 245, 245)
-          //Color.rgb(128, 128, 128)
-          //Color.rgb(0, 0, 0)
+    val plotDiv1 = div()
+    val dataSeq1 = geometryDataSeq ++ resultsDataSeq ++ objectivesDataSeq
+    Plotly.newPlot(
+      plotDiv1.ref,
+      dataSeq1.toJSArray,
+      Layout
+        .title("Pareto 1")
+        .height(graphHeight)
+        .width(graphWidth)
+        //.showlegend(false)
+        .polar(polar
+          .bgcolor(
+            Color.rgb(255, 255, 255)
+            //Color.rgb(245, 245, 245)
+            //Color.rgb(128, 128, 128)
+            //Color.rgb(0, 0, 0)
+          )
+          .angularAxis(axis
+            .visible(false)
+            /*
+            .showticklabels(false)
+            .linewidth(2)
+            ///.gridcolor(Color.rgba(12, 12, 12, 0.2))
+            .ticks(TickType.outside)
+            */
+          )
+          .radialAxis(axis
+            .visible(false)
+            /*
+            .showticklabels(false)
+            .linewidth(0)
+            .ticks(TickType.none)
+            */
+          )
         )
-        .angularAxis(axis
-          .visible(false)
-          /*
-          .showticklabels(false)
-          .linewidth(2)
-          ///.gridcolor(Color.rgba(12, 12, 12, 0.2))
-          .ticks(TickType.outside)
-          */
-        )
-        .radialAxis(axis
-          .visible(false)
-          /*
-          .showticklabels(false)
-          .linewidth(0)
-          .ticks(TickType.none)
-          */
-        )
+    )
 
-      )
-      */
+    val plotDiv2 = div()
+    val dataSeq2 = allStars
+    Plotly.newPlot(
+      plotDiv2.ref,
+      dataSeq2.toJSArray,
+      Layout
+        .title("Pareto 2")
+        .height(graphHeight)
+        .width(graphWidth)
+        //.showlegend(false)
+        .xaxis(axis.visible(false))
+        .yaxis(axis.visible(false))
+    )
+    //
 
-    val allData = /*geometryDataSeq ++ resultsDataSeq ++ objectivesDataSeq ++ */allStars
-    Plotly.newPlot(plotDiv.ref, allData.toJSArray, layout)
 
+
+    //Events
     def get[A](plotData: PlotData, key: String, index: Int): Option[A] = entries(plotData).filter(_._1 == key).headOption.map(_._2.asInstanceOf[scala.scalajs.js.Array[A]](index))
-    var tracesDisplayedCount  = 0
-    plotDiv.ref.on("plotly_hover", pointsData => {
+
+    var tracesDisplayedCount1  = 0
+    plotDiv1.ref.on("plotly_hover", pointsData => {
       val pointData = pointsData.points.head
       val data = pointData.data
       val index = pointData.pointNumber
@@ -287,13 +301,41 @@ object ParetoBisDemo {
           .hoverinfo("none")
           ._result
 
-        Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + allData.size).map(_.toDouble).toJSArray)
-        Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
-        tracesDisplayedCount = plotDataSeq.size
+        Plotly.deleteTraces(plotDiv1.ref, (0 until tracesDisplayedCount1).map(_ + dataSeq1.size).map(_.toDouble).toJSArray)
+        Plotly.addTraces(plotDiv1.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
+        tracesDisplayedCount1 = plotDataSeq.size
       }
     })
 
-    plotDiv
+    var tracesDisplayedCount2 = 0
+    plotDiv2.ref.on("plotly_hover", pointsData => Utils.skipOnBusy(() => {
+      println("hover")
+      val pointData = pointsData.points.head
+      val data = pointData.data
+      val pointNumber = pointData.pointNumber
+      println(s"pointNumber = $pointNumber")
+
+      val indexOption = get[String](data, "customdata", pointNumber)
+      if(indexOption.isDefined) {
+        val index = indexOption.get.toInt
+
+        val plotDataSeq = starDataSeq(1)(index, projectedOutputs(index))
+
+        println(s"$tracesDisplayedCount2 traces to delete")
+        Plotly.deleteTraces(plotDiv2.ref, (0 until tracesDisplayedCount2).map(_ + dataSeq2.size).map(_.toDouble).toJSArray)
+        Plotly.addTraces(plotDiv2.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
+        tracesDisplayedCount2 = plotDataSeq.size
+        println(s"$tracesDisplayedCount2 traces added")
+      }
+    }))
+    //
+
+
+
+    div(
+      plotDiv1,
+      plotDiv2,
+    )
   }
 
   val elementDemo: ElementDemo = new ElementDemo {

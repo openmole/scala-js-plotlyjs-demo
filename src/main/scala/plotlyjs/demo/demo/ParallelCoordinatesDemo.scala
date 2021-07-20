@@ -1,18 +1,14 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import org.openmole.plotlyjs.{Color, Plotly}
+import org.openmole.plotlyjs.Plotly
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.buildingmethod.BuildingMethod
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.PointSet.MIN
-import plotlyjs.demo.utils.Vectors.ImplicitScalar
-import plotlyjs.demo.utils.Vectors.ImplicitVector
-import plotlyjs.demo.utils.{Data, PointSet, Utils}
+import plotlyjs.demo.utils.Vectors.{ImplicitScalar, ImplicitVector}
+import plotlyjs.demo.utils.{Data, PointSet}
 
-import scala.collection.immutable.HashMap
-import scala.math.{abs, random}
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 object ParallelCoordinatesDemo {
@@ -34,7 +30,7 @@ object ParallelCoordinatesDemo {
     val plotData = parallelCoordinates
       .line(line
         .color(keys.zipWithIndex.flatMap { case (k, i) => groupedResults(k).map(_ => i) })
-        .colorscale(keys.indices.map(i => (i, Utils.randomColor)))
+        .colorscale(keys.indices.map(i => (i, Seq(1.0, 0.0, 0.0)/*Colors.randomColor*/))) // not taken in account
       )
       .dimensions(keys.flatMap(k => groupedResults(k)).transpose.map(values => dimension.values(values.toJSArray)._result).toJSArray)
       ._result

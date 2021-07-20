@@ -1,11 +1,10 @@
 package plotlyjs.demo.utils
 
 import org.openmole.plotlyjs.{Color => OMColor}
-
 import plotlyjs.demo.utils.Vectors._
 
 import scala.language.implicitConversions
-import scala.math.{abs, rint}
+import scala.math.{abs, random, rint}
 
 object Colors {
 
@@ -37,6 +36,8 @@ object Colors {
     }
 
   }
+
+  def randomColor: Color = (() => random) at 3
 
   implicit def implicitToOMColor(color: Color): OMColor = {
     val intColor = color.take(3).map(c => rint(c * 255).toInt)

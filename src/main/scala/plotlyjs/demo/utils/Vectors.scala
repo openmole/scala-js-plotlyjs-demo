@@ -1,5 +1,7 @@
 package plotlyjs.demo.utils
 
+import plotlyjs.demo.utils.Data.Dimension
+
 import scala.math._
 import plotlyjs.demo.utils.Matrices._
 
@@ -125,6 +127,12 @@ object Vectors {
     def +(v: Vector): Vector = add(v, d)
     def -(v: Vector): Vector = d + (Vectors -v)
     def at(dimension: Int): Vector = Seq.fill(dimension)(d)
+  }
+  //
+
+  //Implicit scalar supplier
+  implicit class ImplicitScalarSupplier(f: () => Double) {
+    def at(dimension: Int): Vector = Seq.fill(dimension)(f())
   }
   //
 

@@ -206,23 +206,6 @@ object Utils {
     6.2,
     5.9).toJSArray
 
-  def randomParetoFront(dimension: Int, number: Int): Seq[Vector] = {
-    var paretoFront = Seq[Vector]()
-    while(paretoFront.size < number) {
-      val vector = (() => random) at dimension
-      val inferiors = paretoFront.filter(_.zip(vector).map({ case (cPF, c) => cPF < c }).reduce(_ && _))
-      val superiors = paretoFront.filter(_.zip(vector).map({ case (cPF, c) => cPF > c }).reduce(_ && _))
-      if(inferiors.isEmpty && superiors.isEmpty) {
-        paretoFront = paretoFront :+ vector
-      } else if(inferiors.nonEmpty) {
-        vector + inferiors.flatMap(_.zip(vector).map { case (cPF, c) => cPF - c }).filter(_ < 0).minBy(abs)
-      } else if(superiors.nonEmpty) {
-        vector + superiors.flatMap(_.zip(vector).map { case (cPF, c) => cPF - c }).filter(_ > 0).minBy(abs)
-      }
-    }
-    paretoFront
-  }
-
   def onDemand(text: String, supplier: () => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {
     val content = Var(div())
     content.set(div(button(text, inContext { _ => onClick.mapTo(supplier()) --> content.writer })))

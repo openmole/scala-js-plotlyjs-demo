@@ -44,6 +44,7 @@ class ParetoFront(_dimension: Int, _size: Int) {
   }
   _front = _front.drop(dimension)
 
+  assert(_front.map(compareToFront(_) == 0).reduce(_ && _))
 }
 
 object ParetoFront {

@@ -1,6 +1,8 @@
 package plotlyjs.demo.utils
 
-class PointSet(val rawOutputs: Seq[Seq[Double]]) {
+import plotlyjs.demo.utils.Vectors._
+
+class PointSet(val rawOutputs: Seq[Vector]) {
 
   //val inputDimension: Int
   val outputDimension: Int = rawOutputs.head.length
@@ -9,16 +11,13 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
   //var rawInputs: Array[Array[Double]]
   //var plotInputs: Array[Array[Double]]
 
-  private def multiply(vector: Seq[Double], scalar: Double): Seq[Double] = vector.map(_ * scalar)
-  private def multiply(vector1: Seq[Double], vector2: Seq[Double]): Seq[Double] = vector1.zip(vector2) map { case (c1, c2) => c1 * c2 }
-  private def multiplyAll(vectors: Seq[Seq[Double]], vector: Seq[Double]): Seq[Seq[Double]] = vectors.map(multiply(_, vector))
-
-  private var _optimizationProblems: Seq[Double] = Array.fill[Double](outputDimension)(0)
+  private var _optimizationProblems: Seq[Double] = 1 at outputDimension
   def optimizationProblems(optimizationProblems: Seq[Double]): PointSet = {
     _optimizationProblems = optimizationProblems
     this
   }
-  private var _orientation = 0
+
+  private var _orientation = 1
   def higherPlotIsBetter: PointSet = {
     _orientation = 1
     this
@@ -27,27 +26,27 @@ class PointSet(val rawOutputs: Seq[Seq[Double]]) {
     _orientation = -1
     this
   }
-  private lazy val _orientedOutputs: Seq[Seq[Double]] = multiplyAll(rawOutputs, multiply(_optimizationProblems, _orientation))
-  lazy val spaceNormalizedOutputs: Seq[Seq[Double]] = {
+
+  private lazy val _orientedOutputs: Seq[Vector] = rawOutputs.map(mul(_orientation * _optimizationProblems))
+
+  lazy val spaceNormalizedOutputs: Seq[Vector] = {
     val min = _orientedOutputs.transpose.map(_.min)
     val max = _orientedOutputs.transpose.map(_.max)
     _orientedOutputs.map(_.zipWithIndex.map { case (c, i) => (c - min(i))/(max(i) - min(i)) })
   }
 
-  lazy val norm1VectorNormalizedOutputs: Seq[Seq[Double]] = spaceNormalizedOutputs.map(p => {
-    val norm1 = p.map(math.abs).sum
-    if(norm1 == 0) p else multiply(p, 1/norm1)
-  })
+  lazy val norm1VectorNormalizedOutputs: Seq[Vector] = spaceNormalizedOutputs.map(normalize(1))
 
   class PointSetSlice(from: Int, until: Int) {
 
     def slice[A](seq: Seq[A]): Seq[A] = seq.slice(from, until)
 
-    lazy val rawOutputs: Seq[Seq[Double]] = slice(PointSet.this.rawOutputs)
+    lazy val rawOutputs: Seq[Vector] = slice(PointSet.this.rawOutputs)
     val outputDimension: Int = PointSet.this.outputDimension
-    val size: Int = PointSet.this.size
-    lazy val spaceNormalizedOutputs: Seq[Seq[Double]] = slice(PointSet.this.spaceNormalizedOutputs)
-    lazy val norm1VectorNormalizedOutputs: Seq[Seq[Double]] = slice(PointSet.this.norm1VectorNormalizedOutputs)
+    val pointSetSize: Int = PointSet.this.size
+    val sliceSize: Int = until - from
+    lazy val spaceNormalizedOutputs: Seq[Vector] = slice(PointSet.this.spaceNormalizedOutputs)
+    lazy val norm1VectorNormalizedOutputs: Seq[Vector] = slice(PointSet.this.norm1VectorNormalizedOutputs)
   }
 
 }

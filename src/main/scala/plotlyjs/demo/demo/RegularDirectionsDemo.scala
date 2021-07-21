@@ -311,7 +311,7 @@ object RegularDirectionsDemo {
     )
   }
 
-  val elementDemo: ElementDemo = new ElementDemo {
+  val elementDemo: Demo = new Demo {
     def title: String = "Regular directions"
     def code: String = sc.source
     def element: HtmlElement = sc.value

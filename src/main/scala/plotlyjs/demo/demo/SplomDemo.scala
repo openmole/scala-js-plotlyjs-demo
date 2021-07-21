@@ -71,7 +71,7 @@ object SplomDemo {
   }
 
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Splom"
 
     def code: String = sc.source

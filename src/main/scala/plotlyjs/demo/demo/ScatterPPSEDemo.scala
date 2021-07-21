@@ -47,7 +47,8 @@ object ScatterPPSEDemo {
     plotDiv
   }
 
-  val elementDemo: ElementDemo = new ElementDemo {
+  val elementDemo: Demo = new Demo {
+    override def isLazy: Boolean = true
     def title: String = "Scatter for PPSE"
     def code: String = sc.source
     def element: HtmlElement = sc.value

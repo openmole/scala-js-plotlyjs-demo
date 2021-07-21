@@ -81,7 +81,7 @@ object PSESVGDemo {
 
   }
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "PSE SVG"
 
     def code: String = sc.source

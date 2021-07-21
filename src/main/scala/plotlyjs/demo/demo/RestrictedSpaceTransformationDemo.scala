@@ -101,7 +101,7 @@ object RestrictedSpaceTransformationDemo {
     )
   }
 
-  val elementDemo: ElementDemo = new ElementDemo {
+  val elementDemo: Demo = new Demo {
     def title: String = "Restricted space transformation"
     def code: String = sc.source
     def element: HtmlElement = sc.value

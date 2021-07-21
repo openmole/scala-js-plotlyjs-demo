@@ -40,7 +40,7 @@ object ParallelCoordinatesDemo {
     plotDiv
   }
 
-  val elementDemo: ElementDemo = new ElementDemo{
+  val elementDemo: Demo = new Demo{
     def title: String = "Parallel Coordinates"
     def code: String = sc.source
     def element: HtmlElement = sc.value

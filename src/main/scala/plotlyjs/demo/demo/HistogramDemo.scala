@@ -58,7 +58,7 @@ object HistogramDemo {
   }
 
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Histogram"
 
     def code: String = sc.source

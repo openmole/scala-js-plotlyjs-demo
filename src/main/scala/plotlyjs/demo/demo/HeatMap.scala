@@ -48,7 +48,7 @@ object HeatMapDemo {
   }
 
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Heat map"
 
     def code: String = sc.source

@@ -66,7 +66,7 @@ object BoxDemo {
   }
 
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Box"
 
     def code: String = sc.source

@@ -62,7 +62,7 @@ object ScatterDemo {
   }
 
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Scatter"
 
     def code: String = sc.source

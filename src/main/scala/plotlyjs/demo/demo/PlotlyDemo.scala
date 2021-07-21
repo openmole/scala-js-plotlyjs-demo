@@ -51,7 +51,7 @@ object PlotlyDemo {
         div(colSM, pre(code(cls("scala"), imports))),
         Tabs.tabs(
           for {
-            demo <- Seq(
+            elementDemo <- Seq(
               LineChartDemo.elementDemo,
               HistogramDemo.elementDemo,
               ScatterDemo.elementDemo,
@@ -75,28 +75,27 @@ object PlotlyDemo {
           } yield {
             lazy val demoDiv = {
               div(
-                h3(demo.title),
+                h3(elementDemo.title),
                 div(containerFluid,
                   div(row, marginLeft := "15", marginTop := "25",
-                    div(colBS(demo.codeWidth), pre(code(cls := "scala", demo.cleanCode))),
-                    div(colBS(12 - demo.codeWidth), demo.element)
+                    div(colBS(elementDemo.codeWidth), pre(code(cls := "scala", elementDemo.cleanCode))),
+                    div(colBS(12 - elementDemo.codeWidth), elementDemo.element)
                   )
                 )
               )
             }
-            val lazyDemo = true
-            if(lazyDemo) {
+            if(elementDemo.isLazy) {
               val demoVar = Var(div("Default value"))
               //demoVar.set()
               //val loadingDiv = div("Loading message test", onMountInsert { _ => demoDiv} /*inContext( { _ => onLoad.mapTo(demoDiv) --> demoVar.writer})*/)
               val tabContainer = div(/*name := "tabContainer", */child <-- demoVar.signal)
-              Tab(demo.title,
+              Tab(elementDemo.title,
                 tabContainer,
                 //() => { render(scalajs.dom.document.body/*.children.namedItem("tabContainer")*/, demoDiv)/*demoVar.set(/*loadingDiv*/demoDiv)*/ }
                 () => { demoVar.set(demoDiv) }
               )
             } else {
-              Tab(demo.title, demoDiv)
+              Tab(elementDemo.title, demoDiv)
             }
           },
           tabStyle = navbar_pills

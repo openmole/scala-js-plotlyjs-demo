@@ -59,7 +59,7 @@ object ErrorBarDemo {
   }
 
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Error bar"
 
     def code: String = sc.source

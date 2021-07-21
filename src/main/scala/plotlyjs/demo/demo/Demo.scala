@@ -19,17 +19,14 @@ import com.raquo.laminar.api.L._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 trait Demo {
-  def elementDemo: ElementDemo
-}
+  def isLazy: Boolean = false
 
-trait ElementDemo {
   def title: String
 
   def code: String
 
-  def cleanCode = {
+  def cleanCode: String = {
     if (code.startsWith("{")) code.tail.dropRight(1)
     else code
   }

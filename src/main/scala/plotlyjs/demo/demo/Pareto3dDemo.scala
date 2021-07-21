@@ -68,7 +68,7 @@ object Pareto3dDemo {
     plotDiv
   }
 
-  val elementDemo: ElementDemo = new ElementDemo{
+  val elementDemo: Demo = new Demo{
     def title: String = "Pareto 3d"
     def code: String = sc.source
     def element: HtmlElement = sc.value

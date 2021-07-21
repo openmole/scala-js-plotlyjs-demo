@@ -86,7 +86,7 @@ object PSEDemo {
 
   }
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "PSE"
 
     def code: String = sc.source

@@ -266,7 +266,7 @@ object ParetoDemo {
 
   }
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Pareto"
 
     def code: String = sc.source

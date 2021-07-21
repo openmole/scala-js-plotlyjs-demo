@@ -66,7 +66,7 @@ object LineChartDemo {
   }
 
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "Line chart"
 
     def code: String = sc.source

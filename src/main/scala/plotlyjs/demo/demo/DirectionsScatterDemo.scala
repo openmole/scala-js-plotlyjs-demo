@@ -84,7 +84,8 @@ object DirectionsScatterDemo {
   }
 
 
-  val elementDemo: ElementDemo = new ElementDemo {
+  val elementDemo: Demo = new Demo {
+    override def isLazy: Boolean = true
     def title: String = "Directions Scatter"
     def code: String = sc.source
     def element: HtmlElement = sc.value

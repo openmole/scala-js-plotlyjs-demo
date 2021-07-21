@@ -116,11 +116,6 @@ object ParetoBisDemo {
         .opacity(0.5))
       .fillPolar(ScatterPolar.none)
       .hoverinfo("none")
-
-      .text(pointSet.rawOutputs.map(p => s"Model output :<br>${
-        (p.zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
-      }").toJSArray)
-
       .customdata(points.map(_.index.toString).toJSArray)
       ._result
 
@@ -151,18 +146,10 @@ object ParetoBisDemo {
     val rawOutputCoordinates = Var(div(""))
     plotDiv.ref.on("plotly_hover", pointsData => {
       val pointData = pointsData.points.head
-      val data = pointData.data
-      val pointNumber = pointData.pointNumber
 
-      val rOption = get[Double](data, "r", pointNumber)
-      val tOption = get[Double](data, "theta", pointNumber)
-      val pointSetIndexOption = get[String](data, "customdata", pointNumber)
-      if (rOption.isDefined && tOption.isDefined && pointSetIndexOption.isDefined) {
-        val r = rOption.get
-        val t = tOption.get
-        val pointSetIndex = pointSetIndexOption.get.toInt
-
-        val plotOutput = pointSet.spaceNormalizedOutputs(pointSetIndex)
+      get[String](pointData.data, "customdata", pointData.pointNumber).map(_.toInt).foreach(index => {
+        val indexedPolarPoint = points(index)
+        val plotOutput = pointSet.spaceNormalizedOutputs(index)
 
         val plotDataSeq = (0 until dimension).map(i => {
           val polarComponentVector = polarFromCartesian(cartesianPlaneComponent(plotOutput, i))
@@ -177,8 +164,8 @@ object ParetoBisDemo {
             .hoverinfo("none")
             ._result
         }) :+ scatterPolar
-          .r(js.Array(r))
-          .theta(js.Array(t))
+          .r(js.Array(indexedPolarPoint.r))
+          .theta(js.Array(indexedPolarPoint.theta))
           .set(marker
             .size(markerSize + 4)
             .symbol(circle.open)
@@ -192,11 +179,9 @@ object ParetoBisDemo {
         tracesDisplayedCount = plotDataSeq.size
 
         val textDiv = div()
-        textDiv.ref.innerHTML = s"Model output :<br>${
-          (pointSet.rawOutputs(pointSetIndex).zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
-        }"
+        textDiv.ref.innerHTML = "Model output :<br>" + (pointSet.rawOutputs(index).zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
         rawOutputCoordinates.set(textDiv)
-      }
+      })
     })
     //
 
@@ -206,7 +191,7 @@ object ParetoBisDemo {
     )
   }
 
-  val elementDemo: ElementDemo = new ElementDemo {
+  val elementDemo: Demo = new Demo {
     def title: String = "Pareto bis"
     def code: String = sc.source
     def element: HtmlElement = sc.value

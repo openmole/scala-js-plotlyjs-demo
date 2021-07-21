@@ -102,7 +102,7 @@ object PSESubPlots {
 
   }
 
-  val elementDemo = new ElementDemo {
+  val elementDemo = new Demo {
     def title: String = "PSE Subplots"
 
     def code: String = sc.source

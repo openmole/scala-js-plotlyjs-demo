@@ -79,7 +79,8 @@ object RegularDirectionsWithCacheDemo {
     )
   }
 
-  val elementDemo: ElementDemo = new ElementDemo {
+  val elementDemo: Demo = new Demo {
+    override def isLazy = true
     def title: String = "Regular directions with cache"
     def code: String = sc.source
     def element: HtmlElement = sc.value

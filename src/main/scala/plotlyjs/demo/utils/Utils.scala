@@ -206,16 +206,19 @@ object Utils {
     6.2,
     5.9).toJSArray
 
-  def onDemand(text: String, supplier: () => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {
-    val content = Var(div())
-    content.set(div(button(text, inContext { _ => onClick.mapTo(supplier()) --> content.writer })))
-    div(child <-- content.signal)
-  }
-
   def onDemand(title: String, supplier: String => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {
     val content = Var(div())
     content.set(div(button(title, inContext { _ => onClick.mapTo(supplier(title)) --> content.writer })))
     div(child <-- content.signal)
+  }
+
+  def reloadOnDemand(title: String, supplier: String => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {
+    val contentVar = Var(div())
+    val buttonDiv = div(button(title, inContext { _ => onClick.mapTo(supplier(title)) --> contentVar.writer }))
+    div(
+      buttonDiv,
+      child <-- contentVar.signal,
+    )
   }
 
   def skipOnBusy(f: () => Unit): () => Unit = {

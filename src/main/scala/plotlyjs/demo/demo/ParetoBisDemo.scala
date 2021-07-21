@@ -5,13 +5,12 @@ import org.openmole.plotlyjs.PlotMode.{lines, markers}
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.utils.{Colors, Data, ParetoFront, PointSet, Utils}
+import plotlyjs.demo.utils.{Data, ParetoFront, PointSet}
 
-import scala.math.{Pi, atan2, cos, sin}
+import scala.math.{atan2, cos, sin}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
@@ -65,15 +64,14 @@ object ParetoBisDemo {
 
     val dimension = 5
 
-    val radianObjectiveThetas = (0 until dimension).map(_.toDouble/dimension * 2*Pi)
-    val degreeObjectiveThetas = radianObjectiveThetas.map(_.toDegrees)
-    val colors = degreeObjectiveThetas.map(theta => Seq(theta/360, 1, 0.5).fromHSLtoRGB.withAlpha(0.8))
-    val cartesianObjectives = radianObjectiveThetas.map(theta => Seq(Math.cos(theta), Math.sin(theta)))
-    val objectivesDataSeq = degreeObjectiveThetas.zipWithIndex.map { case (theta, index) =>
+    val cartesianObjectives = (0 until dimension).map((0 at dimension).replace(_, 1)).map(toCartesianPlane)
+    val polarObjectives = cartesianObjectives.map(cartesianToPolar)
+    val colors = polarObjectives.map(vector => Seq(((vector(1) + 360)%360)/360, 1, 0.5).fromHSLtoRGB.withAlpha(0.5))
+    val objectivesDataSeq = polarObjectives.zipWithIndex.map { case (vector, index) =>
       scatterPolar
         .name(s"Objective ${index + 1}")
-        .r(js.Array(1, 0))
-        .theta(js.Array(theta, 0))
+        .r(js.Array(vector(0), 0))
+        .theta(js.Array(vector(1), 0))
         .setMode(lines)
         .line(line
           .set(colors(index))

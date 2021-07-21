@@ -14,7 +14,7 @@ import plotlyjs.demo.directions.restrictedspacetransformation.v4.Evaluation._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.{Evaluation, IndexedTransformation, MaxMagnitude, Transformation}
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.{Data, ParetoFront}
-import plotlyjs.demo.utils.Utils.onDemand
+import plotlyjs.demo.utils.Utils.{onDemand, reloadOnDemand}
 import plotlyjs.demo.utils.Vectors._
 
 import scala.scalajs.js
@@ -193,8 +193,7 @@ object RegularDirectionsDemo {
       onDemand("Restricted space transformation – index", title => scatter3dDiv(
         title,
         IndexedTransformation.centeredNCubeSurface(3, 8).map[Vector](iv => iv).toSeq,
-        //Data.simplexRST(3, 16).toSeq
-        ParetoFront._3_1024
+        Seq(0.0 at 3)
       )),
       onDemand("Restricted space transformation – 2-sphere", title => {
         val sphere = IndexedTransformation.circle(3, 16)
@@ -304,6 +303,11 @@ object RegularDirectionsDemo {
 
         plotDiv
       }),
+      reloadOnDemand("ParetoFront generation", title => scatter3dDiv(
+        title,
+        new ParetoFront(3, 128).front,//.map(_ :+ 0),
+        Seq(0.0 at 3)
+      )),
     )
   }
 

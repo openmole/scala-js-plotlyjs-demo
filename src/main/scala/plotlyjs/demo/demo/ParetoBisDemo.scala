@@ -10,6 +10,7 @@ import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Vectors._
 import plotlyjs.demo.utils.{Data, ParetoFront, PointSet}
 
+import scala.math.Numeric.BigDecimalAsIfIntegral.abs
 import scala.math.{atan2, ceil, cos, random, sin}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
@@ -62,7 +63,9 @@ object ParetoBisDemo {
       (0 until vector.dimension).map(i => cartesianPlaneComponent(vector, i)).reduce(_ + _)
     }
 
-    val dimension = 5
+    val dimension = 15
+    val paretoFrontPoints = new ParetoFront(dimension, 42).front.map(mul((() => ceil(10 * random)) at dimension))
+    //val dimension = paretoFrontPoints.head.dimension
 
     val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
     val cartesianObjectives = spaceNormalObjectives.map(toCartesianPlane)
@@ -92,8 +95,6 @@ object ParetoBisDemo {
       )
     })
 
-    val paretoFrontPoints = new ParetoFront(dimension, 42).front.map(mul((() => ceil(10 * random)) at dimension))
-
     val pointSet = new PointSet(paretoFrontPoints)
       .optimizationProblems(MIN at dimension) //To configure with metadata.
       .lowerPlotIsBetter //Reverses MAX dimensions.
@@ -119,9 +120,17 @@ object ParetoBisDemo {
       .customdata(points.map(_.index.toString).toJSArray)
       ._result
 
+    val leaveSpaceData = scatterPolar //Leaving space for graphical vector components sum. No enough with many dimensions, TODO compute a theoretical value.
+      .r(js.Array(2))
+      .theta(js.Array(0))
+      .marker(marker
+        .set(0.0 at 4)
+      )
+      ._result
+
     //Display
     val plotDiv = div()
-    val dataSeq = objectivesDataSeq :+ paretoFrontData
+    val dataSeq = objectivesDataSeq :+ paretoFrontData :+ leaveSpaceData
     val size = 800
     Plotly.newPlot(
       plotDiv.ref,
@@ -151,15 +160,34 @@ object ParetoBisDemo {
         val indexedPolarPoint = points(index)
         val plotOutput = pointSet.spaceNormalizedOutputs(index)
 
+        var cartesianEnd = 0.0 at dimension
+
         val plotDataSeq = (0 until dimension).map(i => {
-          val polarComponentVector = polarFromCartesian(cartesianPlaneComponent(plotOutput, i))
+          val cartesianComponentVector = cartesianPlaneComponent(plotOutput, i)
+          val starPolarCoordinates = Seq(0.0 at dimension, cartesianComponentVector).map(polarFromCartesian).transpose
           scatterPolar
-            .r(js.Array(0, polarComponentVector(0)))
-            .theta(js.Array(0, polarComponentVector(1)))
+            .r(starPolarCoordinates(0).toJSArray)
+            .theta(starPolarCoordinates(1).toJSArray)
             .setMode(lines)
             .line(line
               .width(8)
               .set(colors(i))
+            )
+            .hoverinfo("none")
+            ._result
+        }) ++ plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c)}).reverse.map(_._2).map(i => {
+          val cartesianComponentVector = cartesianPlaneComponent(plotOutput, i)
+          val cartesianBegin = cartesianEnd
+          cartesianEnd = cartesianBegin + cartesianComponentVector
+          val sumPolarCoordinates = Seq(cartesianBegin, cartesianEnd).map(polarFromCartesian).transpose
+          scatterPolar
+            .r(sumPolarCoordinates(0).toJSArray)
+            .theta(sumPolarCoordinates(1).toJSArray)
+            .setMode(lines)
+            .line(line
+              //.width(1)
+              .dash("dot")
+              .set(/*(0.5 at 3)*/colors(i).withAlpha(0.5))
             )
             .hoverinfo("none")
             ._result

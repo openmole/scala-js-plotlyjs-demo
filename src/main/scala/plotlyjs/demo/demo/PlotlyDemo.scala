@@ -63,6 +63,7 @@ object PlotlyDemo {
               PSESubPlots.elementDemo,
               PSESVGDemo.elementDemo,
               PSEDemo.elementDemo,
+              PSEMultiScaleDemo.elementDemo,
               ParetoDemo.elementDemo,
               ParetoBisDemo.elementDemo,
               Pareto3dDemo.elementDemo,

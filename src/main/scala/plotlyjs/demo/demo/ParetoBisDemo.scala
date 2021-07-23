@@ -55,16 +55,22 @@ object ParetoBisDemo {
       Seq(x, y)
     }
 
+    def basisVector(dimension: Int, i: Int): Vector = {
+      cartesianFromPolar(Seq(1, 360 * i/dimension))
+    }
+
     def cartesianPlaneComponent(vector: Vector, i: Int): Vector = {
-      vector(i) * cartesianFromPolar(Seq(1, 360 * i/vector.dimension))
+      vector(i) * basisVector(vector.dimension, i)
     }
 
     def toCartesianPlane(vector: Vector): Vector = {
       (0 until vector.dimension).map(i => cartesianPlaneComponent(vector, i)).reduce(_ + _)
     }
 
-    val dimension = 15
-    val paretoFrontPoints = new ParetoFront(dimension, 42).front.map(mul((() => ceil(10 * random)) at dimension))
+    val dimension = 5
+    val halfDimension = ceil(dimension/2.0).toInt
+    val paretoFrontPoints = (new ParetoFront(dimension, 42).front :+ ((1 at halfDimension) ++ (0 at dimension - halfDimension)))
+      .map(mul((() => ceil(10 * random)) at dimension))
     //val dimension = paretoFrontPoints.head.dimension
 
     val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
@@ -80,7 +86,7 @@ object ParetoBisDemo {
           .theta(js.Array(polar(1), 0))
           .setMode(lines)
           .line(line
-            .set(colors(i))
+            .color(colors(i))
           )
           ._result,
         scatterPolar
@@ -120,7 +126,8 @@ object ParetoBisDemo {
       .customdata(points.map(_.index.toString).toJSArray)
       ._result
 
-    val leaveSpaceData = scatterPolar //Leaving space for graphical vector components sum. No enough with many dimensions, TODO compute a theoretical value.
+    val leaveSpaceData = scatterPolar //Leaving space for graphical vector components sum.
+      // No enough with many dimensions, TODO compute a theoretical value or compute the space needed from the given data
       .r(js.Array(2))
       .theta(js.Array(0))
       .marker(marker
@@ -171,7 +178,7 @@ object ParetoBisDemo {
             .setMode(lines)
             .line(line
               .width(8)
-              .set(colors(i))
+              .color(colors(i))
             )
             .hoverinfo("none")
             ._result
@@ -187,7 +194,7 @@ object ParetoBisDemo {
             .line(line
               //.width(1)
               .dash("dot")
-              .set(/*(0.5 at 3)*/colors(i).withAlpha(0.5))
+              .color(/*(0.5 at 3)*/colors(i).withAlpha(0.5))
             )
             .hoverinfo("none")
             ._result

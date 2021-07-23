@@ -233,7 +233,7 @@ object ParetoDemo {
           .opacity(op)
           .size(b.map {
             _.nbRepetitions.toDouble / 4 + 10
-          }.toJSArray).set(colors(sector)).set(line.width(2).set(Color.rgb(65, 65, 65))))._result
+          }.toJSArray).set(colors(sector)).set(line.width(2).color(Color.rgb(65, 65, 65))))._result
     }
 
 

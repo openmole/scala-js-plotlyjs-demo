@@ -52,7 +52,7 @@ object RegularDirectionsWithCacheDemo {
           .setMode(lines)
           .line(line
             .width(1)
-            .set(Color.rgb(0, 0, 0))
+            .color(Color.rgb(0, 0, 0))
           )
           ._result
       })

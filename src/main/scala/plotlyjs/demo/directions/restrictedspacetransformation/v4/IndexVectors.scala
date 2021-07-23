@@ -13,8 +13,8 @@ object IndexVectors {
     def indexVectorToString: String = "(" + indexVector.mkString(", ") + ")"
   }
 
-  implicit def implicitToVector(i: IndexVector): Vector = i.map(_.toDouble)
-  implicit def implicitToIndexVector(v: Vector): IndexVector = v.map(math.rint(_).toInt)
+  implicit def toVector(i: IndexVector): Vector = i.map(_.toDouble)
+  implicit def toIndexVector(v: Vector): IndexVector = v.map(math.rint(_).toInt)
 
 
 

@@ -29,8 +29,8 @@ object ParallelCoordinatesDemo {
 
     val plotData = parallelCoordinates
       .line(line
-        .color(keys.zipWithIndex.flatMap { case (k, i) => groupedResults(k).map(_ => i) })
-        .colorscale(keys.indices.map(i => (i, Seq(1.0, 0.0, 0.0)/*Colors.randomColor*/))) // not taken in account
+        //.color(keys.zipWithIndex.flatMap { case (k, i) => groupedResults(k).map(_ => i) })
+        //.colorscale(keys.indices.map(i => (i, Seq(1.0, 0.0, 0.0)/*Colors.randomColor*/))) // not taken in account //TODO use colorScale
       )
       .dimensions(keys.flatMap(k => groupedResults(k)).transpose.map(values => dimension.values(values.toJSArray)._result).toJSArray)
       ._result

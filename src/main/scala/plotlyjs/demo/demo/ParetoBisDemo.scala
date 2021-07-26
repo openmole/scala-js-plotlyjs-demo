@@ -1,17 +1,19 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
+import org.openmole.plotlyjs.HoverMode.closest
 import org.openmole.plotlyjs.PlotMode.{lines, markers, markersAndText}
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 import plotlyjs.demo.utils.PointSet._
+import plotlyjs.demo.utils.Utils.SkipOnBusy
 import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.utils.{Data, ParetoFront, PointSet}
+import plotlyjs.demo.utils.{Basis, ParetoFront, PointSet}
 
 import scala.math.Numeric.BigDecimalAsIfIntegral.abs
-import scala.math.{atan2, ceil, cos, random, sin}
+import scala.math._
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Object.entries
@@ -35,8 +37,6 @@ import scala.scalajs.js.Object.entries
 
 object ParetoBisDemo {
 
-  import org.openmole.plotlyjs.ScatterPolarDataBuilder._
-
   lazy private val sc = sourcecode.Text {
 
     def polarFromCartesian(vector: Vector): Vector = {
@@ -55,16 +55,8 @@ object ParetoBisDemo {
       Seq(x, y)
     }
 
-    def basisVector(dimension: Int, i: Int): Vector = {
-      cartesianFromPolar(Seq(1, 360 * i/dimension))
-    }
-
-    def cartesianPlaneComponent(vector: Vector, i: Int): Vector = {
-      vector(i) * basisVector(vector.dimension, i)
-    }
-
-    def toCartesianPlane(vector: Vector): Vector = {
-      (0 until vector.dimension).map(i => cartesianPlaneComponent(vector, i)).reduce(_ + _)
+    def basisAt(dimension: Int) = new Basis {
+      override def basisVector(i: Int): Vector = cartesianFromPolar(Seq(1, 360 * i/dimension))
     }
 
     val dimension = 5
@@ -73,25 +65,27 @@ object ParetoBisDemo {
       .map(mul((() => ceil(10 * random)) at dimension))
     //val dimension = paretoFrontPoints.head.dimension
 
+    val basis = basisAt(dimension)
     val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
-    val cartesianObjectives = spaceNormalObjectives.map(toCartesianPlane)
+    val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
     val polarObjectives = cartesianObjectives.map(polarFromCartesian)
     val colors = polarObjectives.map(vector => Seq(((vector(1) + 360)%360)/360, 1, 0.5).fromHSLtoRGB.withAlpha(0.5))
     val objectivesDataSeq = (0 until dimension).flatMap(i => {
-      val polar = polarObjectives(i)
-      val textPosition = polarFromCartesian(1.1 * cartesianObjectives(i))
+      val objective = cartesianObjectives(i)
+      val textPosition = 1.1 * objective
       Seq(
-        scatterPolar
-          .r(js.Array(polar(0), 0))
-          .theta(js.Array(polar(1), 0))
+        scatter
+          .x(js.Array(objective(0), 0))
+          .y(js.Array(objective(1), 0))
           .setMode(lines)
           .line(line
             .color(colors(i))
           )
+          .hoverinfo("none")
           ._result,
-        scatterPolar
-          .r(js.Array(textPosition(0)))
-          .theta(js.Array(textPosition(1)))
+        scatter
+          .x(js.Array(textPosition(0)))
+          .y(js.Array(textPosition(1)))
           .setMode(markersAndText)
           .marker(marker.set(0.0 at 4))
           .text(s"o${i+1}")
@@ -105,31 +99,29 @@ object ParetoBisDemo {
       .optimizationProblems(MIN at dimension) //To configure with metadata.
       .lowerPlotIsBetter //Reverses MAX dimensions.
 
-    case class IndexedPolarPoint(r: Double, theta: Double, index: Int)
+    case class IndexedPoint(x: Double, y: Double, index: Int)
     val points = pointSet
       .spaceNormalizedOutputs
-      .map(toCartesianPlane)
-      .map(polarFromCartesian)
-      .zipWithIndex.map { case (point, index) => IndexedPolarPoint(point(0), point(1), index) }
+      .map(basis.transform)
+      .zipWithIndex.map { case (point, index) => IndexedPoint(point(0), point(1), index) }
 
     val markerSize = 8
-    val paretoFrontData = scatterPolar
-      .r(points.map(_.r).toJSArray)
-      .theta(points.map(_.theta).toJSArray)
+    val paretoFrontData = scatter
+      .x(points.map(_.x).toJSArray)
+      .y(points.map(_.y).toJSArray)
       .setMode(markers)
       .set(marker
         .size(markerSize)
         .symbol(circle)
         .opacity(0.5))
-      .fillPolar(ScatterPolar.none)
       .hoverinfo("none")
       .customdata(points.map(_.index.toString).toJSArray)
       ._result
 
-    val leaveSpaceData = scatterPolar //Leaving space for graphical vector components sum.
+    val leaveSpaceData = scatter //Leaving space for graphical vector components sum.
       // No enough with many dimensions, TODO compute a theoretical value or compute the space needed from the given data
-      .r(js.Array(2))
-      .theta(js.Array(0))
+      .x(js.Array(2))
+      .y(js.Array(0))
       .marker(marker
         .set(0.0 at 4)
       )
@@ -146,12 +138,15 @@ object ParetoBisDemo {
         .title("Pareto")
         .height(size)
         .width(size)
-        .showlegend(false)
-        .polar(polar
-          .bgcolor(1.0 at 3)
-          .angularAxis(axis.visible(false))
-          .radialAxis(axis.visible(false))
+        .xaxis(axis
+          .visible(false)
         )
+        .yaxis(axis
+          .scaleanchor("x")
+          .visible(false)
+        )
+        .showlegend(false)
+        .hovermode(closest)
     )
     //
 
@@ -160,21 +155,21 @@ object ParetoBisDemo {
 
     var tracesDisplayedCount  = 0
     val rawOutputCoordinates = Var(div(""))
-    plotDiv.ref.on("plotly_hover", pointsData => {
+    def eventHandler(pointsData: PointsData): Unit = {
       val pointData = pointsData.points.head
 
       get[String](pointData.data, "customdata", pointData.pointNumber).map(_.toInt).foreach(index => {
         val indexedPolarPoint = points(index)
         val plotOutput = pointSet.spaceNormalizedOutputs(index)
 
-        var cartesianEnd = 0.0 at dimension
+        var cartesianEnd = 0.0 at 2
 
         val plotDataSeq = (0 until dimension).map(i => {
-          val cartesianComponentVector = cartesianPlaneComponent(plotOutput, i)
-          val starPolarCoordinates = Seq(0.0 at dimension, cartesianComponentVector).map(polarFromCartesian).transpose
-          scatterPolar
-            .r(starPolarCoordinates(0).toJSArray)
-            .theta(starPolarCoordinates(1).toJSArray)
+          val cartesianComponentVector = basis.component(plotOutput, i)
+          val starPolarCoordinates = Seq(0.0 at 2, cartesianComponentVector).transpose
+          scatter
+            .x(starPolarCoordinates(0).toJSArray)
+            .y(starPolarCoordinates(1).toJSArray)
             .setMode(lines)
             .line(line
               .width(8)
@@ -183,13 +178,13 @@ object ParetoBisDemo {
             .hoverinfo("none")
             ._result
         }) ++ plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c)}).reverse.map(_._2).map(i => {
-          val cartesianComponentVector = cartesianPlaneComponent(plotOutput, i)
+          val cartesianComponentVector = basis.component(plotOutput, i)
           val cartesianBegin = cartesianEnd
           cartesianEnd = cartesianBegin + cartesianComponentVector
-          val sumPolarCoordinates = Seq(cartesianBegin, cartesianEnd).map(polarFromCartesian).transpose
-          scatterPolar
-            .r(sumPolarCoordinates(0).toJSArray)
-            .theta(sumPolarCoordinates(1).toJSArray)
+          val sumPolarCoordinates = Seq(cartesianBegin, cartesianEnd).transpose
+          scatter
+            .x(sumPolarCoordinates(0).toJSArray)
+            .y(sumPolarCoordinates(1).toJSArray)
             .setMode(lines)
             .line(line
               //.width(1)
@@ -198,9 +193,9 @@ object ParetoBisDemo {
             )
             .hoverinfo("none")
             ._result
-        }) :+ scatterPolar
-          .r(js.Array(indexedPolarPoint.r))
-          .theta(js.Array(indexedPolarPoint.theta))
+        }) :+ scatter
+          .x(js.Array(indexedPolarPoint.x))
+          .y(js.Array(indexedPolarPoint.y))
           .set(marker
             .size(markerSize + 4)
             .symbol(circle.open)
@@ -217,7 +212,9 @@ object ParetoBisDemo {
         textDiv.ref.innerHTML = "Model output :<br>" + (pointSet.rawOutputs(index).zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
         rawOutputCoordinates.set(textDiv)
       })
-    })
+    }
+    val skipOnBusy = new SkipOnBusy
+    plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(() => eventHandler(pointsData)))
     //
 
     div(

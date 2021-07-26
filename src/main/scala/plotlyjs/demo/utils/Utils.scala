@@ -221,9 +221,9 @@ object Utils {
     )
   }
 
-  def skipOnBusy(f: () => Unit): () => Unit = {
+  class SkipOnBusy {
     var busy = false
-    () => {
+    def skipOnBusy(f: () => Unit): Unit = {
       if(!busy) {
         busy = true
         f()

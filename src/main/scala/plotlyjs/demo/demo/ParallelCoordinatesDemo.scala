@@ -7,32 +7,31 @@ import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.PointSet.MIN
 import plotlyjs.demo.utils.Vectors.{ImplicitScalar, ImplicitVector}
-import plotlyjs.demo.utils.{Data, PointSet}
+import plotlyjs.demo.utils.{Data, ParetoFront, PointSet}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 object ParallelCoordinatesDemo {
 
-  lazy private val sc = sourcecode.Text {
+  private lazy val sc = sourcecode.Text {
 
     val plotDiv = div()
 
-    val dim = 3
-    val p = 4
-    val results = Data.lowCorner(dim, p)//Data.dim8Sample100.map(_.take(dim))
+    val dim = 8
+    val results = new ParetoFront(dim, 128).randomizeDimensions.front
     val pointSet = new PointSet(results)
       .optimizationProblems(MIN at dim)
       .lowerPlotIsBetter
 
-    val groupedResults = pointSet.spaceNormalizedOutputs.groupBy[IndexVector](_.orthogonalComponent(1 at dim))
-    val keys = groupedResults.keys.toSeq
-
     val plotData = parallelCoordinates
-      .line(line
-        //.color(keys.zipWithIndex.flatMap { case (k, i) => groupedResults(k).map(_ => i) })
-        //.colorscale(keys.indices.map(i => (i, Seq(1.0, 0.0, 0.0)/*Colors.randomColor*/))) // not taken in account //TODO use colorScale
+      .dimensions(
+        pointSet.rawOutputs.transpose.zipWithIndex.map({ case (values, index) =>
+          dimension
+            .label("o" + (index + 1))
+            .values(values.toJSArray)
+            ._result
+        }).toJSArray
       )
-      .dimensions(keys.flatMap(k => groupedResults(k)).transpose.map(values => dimension.values(values.toJSArray)._result).toJSArray)
       ._result
 
     Plotly.newPlot(plotDiv.ref, Seq(plotData).toJSArray)

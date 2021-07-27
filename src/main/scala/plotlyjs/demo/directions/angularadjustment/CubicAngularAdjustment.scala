@@ -70,8 +70,6 @@ object CubicAngularAdjustment {
     val adjustedVector = spaceIndices.map(i => if (i == maxMagnitudeIndex) vector(i) else signum(vector(i)) * cellAbsoluteCoordinates(cellIndex(i)))
 
     adjustedVector
-
-    //TODO On cell borders, do not consider movement outside the border so that the vector stays on the border
   }
 
 }

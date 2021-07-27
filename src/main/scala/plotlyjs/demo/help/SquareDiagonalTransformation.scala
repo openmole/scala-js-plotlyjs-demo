@@ -61,7 +61,6 @@ object SquareDiagonalTransformation {
     //
 
     //Parameter aliases
-    //TODO @inline ?
     def norm(v: Vector): Double = norm(2)(v)
     def normalize(v: Vector): Vector = normalize(2)(v)
     def toNorm(d: Double)(v: Vector): Vector = toNorm(2, d)(v)
@@ -69,7 +68,6 @@ object SquareDiagonalTransformation {
     //
 
     //Function aliases
-    //TODO @inline ?
     def -(v: Vector): Vector = negate(v)
     //
 
@@ -166,7 +164,7 @@ object SquareDiagonalTransformation {
 
   // 0 is on the diagonal and 1 is on the border
   def t1ff(p: Double): Double = {
-    pow(p, 2)//TODO
+    pow(p, 2)
   }
 
   def t1f(p: Double): Double = {
@@ -181,7 +179,7 @@ object SquareDiagonalTransformation {
 
   // 0 is on the border including (0, 0) and 1 is on the border including (1, 1)
   def t2f(p: Double): Double = {
-    pow(p, 2)//TODO
+    pow(p, 2)
   }
 
   // transformation

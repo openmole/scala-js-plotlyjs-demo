@@ -63,7 +63,6 @@ object AngularAdjustment {
       override def space(dimension: Int): Double = 4 * 2 * dimension //TODO Geometry as a GeometryFactory to set dimension at the beginning ?
     }
 
-    //TODO simplex ?
   }
 
   def cellRadialAdjustment(geometry: Geometry, vector: Vector): Vector = {

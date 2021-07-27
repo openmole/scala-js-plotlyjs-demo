@@ -38,23 +38,7 @@ object PSEMultiScaleDemo {
 
     }
 
-    /*
-    def multiScaleBasis(sourceDimension: Int, subdivision: Int, gap: Double, destinationDimension: Int) = {
-
-      val dimensionExtension = 0//destinationDimension - (sourceDimension % destinationDimension)
-      val extendedDimension = dimensionExtension + sourceDimension
-
-      new MultiScaleBasis(subdivision, gap, extendedDimension) {
-
-        override def component(vector: Vector, i: Int): Vector = {
-          super.component((subdivision / 2.0 at dimensionExtension) ++ vector, i)
-        }
-
-      }
-    }
-    */
-
-    val dimension = 6
+    val dimension = 4
     val subdivision = 5
     val gap = 1.0/4
 

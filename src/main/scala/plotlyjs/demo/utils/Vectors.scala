@@ -1,9 +1,8 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.utils.Data.Dimension
+import plotlyjs.demo.utils.Matrices._
 
 import scala.math._
-import plotlyjs.demo.utils.Matrices._
 
 object Vectors {
 
@@ -64,7 +63,6 @@ object Vectors {
   //
 
   //Parameter aliases
-  //TODO @inline ?
   def norm(v: Vector): Double = norm(2)(v)
   def normalize(v: Vector): Vector = normalize(2)(v)
   def toNorm(d: Double)(v: Vector): Vector = toNorm(2, d)(v)
@@ -73,7 +71,6 @@ object Vectors {
   //
 
   //Function aliases
-  //TODO @inline ?
   def -(v: Vector): Vector = negate(v)
   //
 

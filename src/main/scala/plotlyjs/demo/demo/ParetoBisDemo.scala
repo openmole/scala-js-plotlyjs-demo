@@ -55,17 +55,15 @@ object ParetoBisDemo {
       Seq(x, y)
     }
 
-    def basisAt(dimension: Int) = new Basis {
+    class StarBasis(dimension: Int) extends Basis {
       override def basisVector(i: Int): Vector = cartesianFromPolar(Seq(1, 360 * i/dimension))
     }
 
     val dimension = 5
-    val halfDimension = ceil(dimension/2.0).toInt
-    val paretoFrontPoints = (new ParetoFront(dimension, 42).front :+ ((1 at halfDimension) ++ (0 at dimension - halfDimension)))
-      .map(mul((() => ceil(10 * random)) at dimension))
+    val paretoFrontPoints = new ParetoFront(dimension, 42).randomizeDimensions.front
     //val dimension = paretoFrontPoints.head.dimension
 
-    val basis = basisAt(dimension)
+    val basis = new StarBasis(dimension)
     val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
     val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
     val polarObjectives = cartesianObjectives.map(polarFromCartesian)
@@ -118,23 +116,51 @@ object ParetoBisDemo {
       .customdata(points.map(_.index.toString).toJSArray)
       ._result
 
-    val leaveSpaceData = scatter //Leaving space for graphical vector components sum.
-      // No enough with many dimensions, TODO compute a theoretical value or compute the space needed from the given data
-      .x(js.Array(2))
-      .y(js.Array(0))
-      .marker(marker
-        .set(0.0 at 4)
-      )
-      ._result
+    /*
+    val borderData = {//Leaving space for graphical vector components sum.
+      val halfDimension = ceil(dimension/2.0).toInt
+      val extremes = (0 until dimension).map(i => (1 at i) ++ (0 at dimension - i)) //or compute the space needed from the given data ?
+      val points = (0 until dimension).flatMap(i => {
+        extremes.map(v => {
+          v.drop(i) ++ v.take(i)
+        })
+      }).map(basis.transform)
+      val closedLine = points :+ points.head
+      val coordinates = closedLine.transpose
+      scatter
+        .x(coordinates(0).toJSArray)
+        .y(coordinates(1).toJSArray)
+        .hoverinfo("none")
+        ._result
+    }
+    */
+
+    val borderShape = {//Leaving space for graphical vector components sum.
+      val halfDimension = ceil(dimension/2.0).toInt
+      val radius = basis.transform((1 at halfDimension) ++ (0 at dimension - halfDimension)).norm //or compute the space needed from the given data ?
+      Shape
+        .`type`("circle")
+        .xref("x")
+        .yref("y")
+        .x0(-radius)
+        .y0(-radius)
+        .x1(radius)
+        .y1(radius)
+        .line(line
+          .width(1)
+          .color(0.5 at 4)
+        )
+    }
 
     //Display
     val plotDiv = div()
-    val dataSeq = objectivesDataSeq :+ paretoFrontData :+ leaveSpaceData
+    val dataSeq = objectivesDataSeq :+ paretoFrontData// :+ borderData
     val size = 800
     Plotly.newPlot(
       plotDiv.ref,
       dataSeq.toJSArray,
       Layout
+        .shapes(js.Array(borderShape))
         .title("Pareto")
         .height(size)
         .width(size)
@@ -175,6 +201,11 @@ object ParetoBisDemo {
               .width(8)
               .color(colors(i))
             )
+            /*
+            .marker(marker
+              .size(0)
+            )
+            */
             .hoverinfo("none")
             ._result
         }) ++ plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c)}).reverse.map(_._2).map(i => {

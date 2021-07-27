@@ -1,5 +1,6 @@
 package plotlyjs.demo.utils
 
+import plotlyjs.demo.utils.Graph._
 import plotlyjs.demo.utils.Vectors._
 
 import scala.math._
@@ -43,11 +44,12 @@ class ParetoFront(_dimension: Int, _size: Int) {
     _front = _front :+ v
   }
   _front = _front.drop(dimension)
-
   assert(_front.map(compareToFront(_) == 0).reduce(_ && _))
 
   def randomizeDimensions: ParetoFront = {
-    _front = _front.map(mul((() => ceil(10 * random)) at dimension))
+    _front = _front
+      .map(mul((() => ceil(10 * random)) at dimension))
+      .map(add((() => 10 * random - 5) at dimension))
     this
   }
 
@@ -61,6 +63,28 @@ object ParetoFront {
 
   def compareToFront(front: Seq[Vector], v: Vector): Double = {
     front.map(compare(v, _)).filterNot(_ == 0).headOption.getOrElse(0)
+  }
+
+  def graph(front: Seq[Vector]): Graph[Vector] = {
+    front.map(v => {
+      front
+        .filterNot(_ == v)
+        .map(sub(v))
+        .transpose
+        .flatMap(_.zipWithIndex.filter(_._1 >= 0).minByOption(_._1).map(_._2))
+        .map(i => Graph(front(i) --> v))
+        .reduce(_ ++ _)
+    }).reduce(_ ++ _)
+  }
+
+  def weakness(front: Seq[Vector]): Seq[Vector] = {
+    front.map(v => {
+      front
+        .filterNot(_ == v)
+        .map(sub(v))
+        .transpose
+        .map(_.filter(_ > 0).minOption.getOrElse(1))//TODO default value
+    })
   }
 
 }

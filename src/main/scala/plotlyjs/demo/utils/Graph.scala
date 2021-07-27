@@ -2,12 +2,13 @@ package plotlyjs.demo.utils
 
 import plotlyjs.demo.utils.Graph._
 
+import scala.collection.IterableOnce.iterableOnceExtensionMethods
 import scala.collection.immutable.HashMap
 import scala.language.postfixOps
 
 class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
-  private def hashMap: Map[A, Set[A]] = _hashMap
+  private def hashMap = _hashMap
 
   def vertices: Set[A] = _hashMap.keySet
 
@@ -63,50 +64,38 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
   def arrows: Set[(A, A)] = _hashMap.flatMap { case (vertex, heads) => heads.map(head => ((vertex, head), null)) }.keySet
 
-
-
-  def concat(graph: Graph[A]): Graph[A] = {
-    val grownHashMap = _hashMap map { case (vertex, heads) =>
-      var newHeads = heads
-      if(graph.vertices contains vertex) {
-        newHeads = heads ++ graph.directSuccessorsOf(vertex)
+  override def toString: String = "Graph(\n" + _hashMap.flatMap({ case (vertex, heads) =>
+    if(heads.isEmpty) {
+      if(directPredecessorsOf(vertex).isEmpty) {
+        Some(vertex)
+      } else {
+        None
       }
-      (vertex, newHeads)
+    } else {
+      Some(heads.map(vertex + " --> " + _).mkString(", "))
     }
-    val shrunkHashMap = graph.hashMap filterNot { case (vertex, _) =>
-      grownHashMap contains vertex
-    }
-    new Graph(grownHashMap ++ shrunkHashMap)
-  }
+  }).map("  " + _).mkString(",\n") + "\n)"
+
+
+
+  def concat(graph: Graph[A]): Graph[A] = new Graph(Graph.concat(_hashMap, graph.hashMap))
   def ++(graph: Graph[A]): Graph[A] = concat(graph)
 
-  def added(vertexToAdd: A): Graph[A] = this ++ new Graph(HashMap(vertexToAdd -> Set()))
+  def removeAll(graph: Graph[A]): Graph[A] = new Graph(Graph.removeKeys(_hashMap, graph.hashMap))
+  def --(graph: Graph[A]): Graph[A] = removeAll(graph)
+
+  def removeArrows(graph: Graph[A]): Graph[A] = new Graph(Graph.removeValues(_hashMap, graph.hashMap))
+
+  def added(vertex: Vertex[A]): Graph[A] = concat(vertex.toGraph)
   def +(vertex: A): Graph[A] = added(vertex)
 
-  def removed(vertexToRemove: A): Graph[A] = new Graph((_hashMap - vertexToRemove) map { case (vertex, heads) => (vertex, heads - vertexToRemove) })
+  def removed(vertex: Vertex[A]): Graph[A] = removeAll(vertex.toGraph)
   def -(vertex: A): Graph[A] = removed(vertex)
 
-  //TODO param should be a graph as for ++
-  //or create a new method
-  def removeAll(verticesToRemove: Set[A]): Graph[A] = new Graph((_hashMap -- verticesToRemove) map { case (vertex, heads) => (vertex, heads -- verticesToRemove) })
-  def --(vertices: Set[A]): Graph[A] = removeAll(vertices)
-
-  def added(arrow: Arrow[A]): Graph[A] = {
-    val tail = arrow.tail
-    val head = arrow.head
-    this ++ new Graph(HashMap(tail -> Set(head), head -> Set[A]()))
-  }
+  def added(arrow: Arrow[A]): Graph[A] = concat(arrow.toGraph)
   def +(arrow: Arrow[A]): Graph[A] = added(arrow)
 
-  def removed(arrow: Arrow[A]): Graph[A] = {
-    val tail = arrow.tail
-    val head = arrow.head
-    new Graph(_hashMap map { case (vertex, heads) =>
-      var newHeads = heads
-      if(vertex == tail) newHeads = heads - head
-      (vertex, newHeads)
-    })
-  }
+  def removed(arrow: Arrow[A]): Graph[A] = removeArrows(arrow.toGraph)
   def -(arrow: Arrow[A]): Graph[A] = removed(arrow)
 
 
@@ -146,46 +135,50 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
 object Graph {
 
+  type M[A] = HashMap[A, Set[A]]
+
+  def concat[A](m1: M[A], m2: M[A]): M[A] = {
+    val grown = m1 map { case (key, values) => (key, values ++ m2.getOrElse(key, Set())) }
+    val shrunk = m2 filterNot { case (key, _) => grown contains key }
+    grown ++ shrunk
+  }
+
+  def removeKeys[A](m1: M[A], m2: M[A]): M[A] = {
+    (m1 -- m2.keys).map { case (key, values) => (key, values -- m2.keys) }
+  }
+
+  def removeValues[A](m1: M[A], m2: M[A]): M[A] = {
+    m1.map { case (key, values) => (key, values -- m2.getOrElse(key, Set())) }
+  }
+
+
+
   type ElementType = String
   val VertexType: ElementType = "vertex"
   val ArrowType: ElementType = "arrow"
 
-  class GraphElement[A](_elementType: ElementType) {
+  abstract class GraphElement[A](_elementType: ElementType) {
     def elementType: ElementType = _elementType
+    def toGraph: Graph[A]
   }
 
-  implicit class Vertex[A](_vertex: A) extends GraphElement[A](VertexType) {
-    def vertex: A = _vertex
+  implicit class Vertex[A](vertex: A) extends GraphElement[A](VertexType) {
+    override def toGraph: Graph[A] = new Graph(HashMap(vertex -> Set()))
   }
 
-  class Arrow[A](_tail: A, _head: A) extends GraphElement[A](ArrowType) {
-    def tail: A = _tail
-    def head: A = _head
+  class Arrow[A](tail: A, head: A) extends GraphElement[A](ArrowType) {
+    override def toGraph: Graph[A] = new Graph(HashMap(tail -> Set(head)))
   }
   implicit class ImplicitTail[A](tail: A) {
     def -->(head: A): Arrow[A] = new Arrow(tail, head)
   }
 
   def apply[A](elements: GraphElement[A]*): Graph[A] = {
-    var graph = new Graph[A]
-    elements.foreach(elem => {
-      elem.elementType match {
-        case VertexType => graph = graph + elem.asInstanceOf[Vertex[A]].vertex
-        case ArrowType => graph = graph + elem.asInstanceOf[Arrow[A]]
-      }
-    })
-    graph
+    elements.map(_.toGraph).reduce(_ ++ _)
   }
 
   def from[A](elements: Set[GraphElement[A]]): Graph[A] = {
-    var graph = new Graph[A]
-    elements.foreach(elem => {
-      elem.elementType match {
-        case VertexType => graph = graph + elem.asInstanceOf[Vertex[A]].vertex
-        case ArrowType => graph = graph + elem.asInstanceOf[Arrow[A]]
-      }
-    })
-    graph
+    apply[A](elements.toSeq: _*)
   }
 
   def fromVertices[A](vertices: Set[A]) = new Graph(HashMap.from(vertices.map((_, Set[A]()))))

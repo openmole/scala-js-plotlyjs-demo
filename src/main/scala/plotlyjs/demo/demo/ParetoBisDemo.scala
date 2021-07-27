@@ -116,6 +116,20 @@ object ParetoBisDemo {
       .customdata(points.map(_.index.toString).toJSArray)
       ._result
 
+    val neighbourhood = ParetoFront.graph(pointSet.spaceNormalizedOutputs)
+    val neighbourhoodDataSeq = neighbourhood.arrows.map { case (v1, v2) =>
+      val coordinates = Seq(v1, v2).map(basis.transform).transpose
+      scatter
+        .x(coordinates(0).toJSArray)
+        .y(coordinates(1).toJSArray)
+        .setMode(lines)
+        .line(line
+          .width(1)
+          .color(0.5 at 4)
+        )
+        ._result
+    }
+
     /*
     val borderData = {//Leaving space for graphical vector components sum.
       val halfDimension = ceil(dimension/2.0).toInt
@@ -154,7 +168,7 @@ object ParetoBisDemo {
 
     //Display
     val plotDiv = div()
-    val dataSeq = objectivesDataSeq :+ paretoFrontData// :+ borderData
+    val dataSeq = neighbourhoodDataSeq ++ (objectivesDataSeq :+ paretoFrontData)// :+ borderData
     val size = 800
     Plotly.newPlot(
       plotDiv.ref,

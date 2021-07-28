@@ -67,8 +67,8 @@ object ParetoBisDemo {
     val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
     val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
     val polarObjectives = cartesianObjectives.map(polarFromCartesian)
-    val colors = polarObjectives.map(vector => Seq(((vector(1) + 360)%360)/360, 1, 0.5).fromHSLtoRGB.withAlpha(0.5))
-    val objectivesDataSeq = (0 until dimension).flatMap(i => {
+    val colors = polarObjectives.map(vector => Seq(((vector(1) + 360)%360)/360, 1, 0.5).fromHSLtoRGB.opacity(0.5))
+    val objectivesDataSeq = (0 until dimension).flatMap(i => { //TODO add ticks and values on axes
       val objective = cartesianObjectives(i)
       val textPosition = 1.1 * objective
       Seq(
@@ -116,19 +116,37 @@ object ParetoBisDemo {
       .customdata(points.map(_.index.toString).toJSArray)
       ._result
 
-    val neighbourhood = ParetoFront.graph(pointSet.spaceNormalizedOutputs)
-    val neighbourhoodDataSeq = neighbourhood.arrows.map { case (v1, v2) =>
-      val coordinates = Seq(v1, v2).map(basis.transform).transpose
-      scatter
-        .x(coordinates(0).toJSArray)
-        .y(coordinates(1).toJSArray)
-        .setMode(lines)
-        .line(line
-          .width(1)
-          .color(0.5 at 4)
-        )
-        ._result
+    /*
+    val neighbourhood = ParetoFront.compromiseGraph(pointSet.spaceNormalizedOutputs)
+    val neighbourhoodDataSeq = neighbourhood.arrows.flatMap { arrow =>
+      val points = Seq(arrow.tail, arrow.head).map(basis.transform)
+      val fullLengthCoordinates = points.transpose
+      val alpha = 0.4
+      val alphaLengthCoordinates = Seq(points(0), points(0) + 0.1 * normalize(points(1) - points(0))).transpose
+      Seq(
+        scatter
+          .x(fullLengthCoordinates(0).toJSArray)
+          .y(fullLengthCoordinates(1).toJSArray)
+          .setMode(lines)
+          .line(line
+            .width(1)
+            .color(0.5 at 4)
+          )
+          .hoverinfo("none")
+          ._result,
+        scatter
+          .x(alphaLengthCoordinates(0).toJSArray)
+          .y(alphaLengthCoordinates(1).toJSArray)
+          .setMode(lines)
+          .line(line
+            .width(markerSize/2)
+            .color(colors(arrow.weight).opacity(1.0))
+          )
+          .hoverinfo("none")
+          ._result
+      )
     }
+    */
 
     /*
     val borderData = {//Leaving space for graphical vector components sum.
@@ -168,7 +186,7 @@ object ParetoBisDemo {
 
     //Display
     val plotDiv = div()
-    val dataSeq = neighbourhoodDataSeq ++ (objectivesDataSeq :+ paretoFrontData)// :+ borderData
+    val dataSeq = /*neighbourhoodDataSeq ++*/ (objectivesDataSeq :+ paretoFrontData)// :+ borderData
     val size = 800
     Plotly.newPlot(
       plotDiv.ref,
@@ -204,7 +222,16 @@ object ParetoBisDemo {
 
         var cartesianEnd = 0.0 at 2
 
-        val plotDataSeq = (0 until dimension).map(i => {
+        val plotDataBuilderSeq = Seq(
+          scatter
+            .x(js.Array(indexedPolarPoint.x))
+            .y(js.Array(indexedPolarPoint.y))
+            .set(marker
+              .size(markerSize + 4)
+              .symbol(circle.open)
+              .color(0.5 at 3)
+            )
+        ) ++ (0 until dimension).map(i => {
           val cartesianComponentVector = basis.component(plotOutput, i)
           val starPolarCoordinates = Seq(0.0 at 2, cartesianComponentVector).transpose
           scatter
@@ -220,8 +247,6 @@ object ParetoBisDemo {
               .size(0)
             )
             */
-            .hoverinfo("none")
-            ._result
         }) ++ plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c)}).reverse.map(_._2).map(i => {
           val cartesianComponentVector = basis.component(plotOutput, i)
           val cartesianBegin = cartesianEnd
@@ -234,20 +259,28 @@ object ParetoBisDemo {
             .line(line
               //.width(1)
               .dash("dot")
-              .color(/*(0.5 at 3)*/colors(i).withAlpha(0.5))
+              .color(/*(0.5 at 3)*/colors(i).opacity(0.5))
             )
-            .hoverinfo("none")
-            ._result
-        }) :+ scatter
-          .x(js.Array(indexedPolarPoint.x))
-          .y(js.Array(indexedPolarPoint.y))
-          .set(marker
-            .size(markerSize + 4)
-            .symbol(circle.open)
-            .color(0.5 at 3)
-          )
+        }) ++ {
+          val neighbourhood = ParetoFront.compromiseGraph(pointSet.spaceNormalizedOutputs, plotOutput)
+          neighbourhood.arrows.flatMap { arrow =>
+            val coordinates = Seq(arrow.tail, arrow.head).map(basis.transform).transpose
+            Seq(
+              scatter
+                .x(coordinates(0).toJSArray)
+                .y(coordinates(1).toJSArray)
+                .setMode(lines)
+                .line(line
+                  .width(1)
+                  .color(colors(arrow.weight).opacity(1.0))
+                ),
+            )
+          }
+        }
+        val plotDataSeq = plotDataBuilderSeq.map(_
           .hoverinfo("none")
           ._result
+        ).reverse
 
         Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + dataSeq.size).map(_.toDouble).toJSArray)
         Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)

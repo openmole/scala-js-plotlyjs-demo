@@ -1,8 +1,7 @@
-package plotlyjs.demo.utils
+package plotlyjs.demo.utils.graph.directed
 
-import plotlyjs.demo.utils.Graph._
+import plotlyjs.demo.utils.graph.directed.Graph._
 
-import scala.collection.IterableOnce.iterableOnceExtensionMethods
 import scala.collection.immutable.HashMap
 import scala.language.postfixOps
 
@@ -62,7 +61,8 @@ class Graph[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
     }
   }
 
-  def arrows: Set[(A, A)] = _hashMap.flatMap { case (vertex, heads) => heads.map(head => ((vertex, head), null)) }.keySet
+  //def arrows: Set[(A, A)] = _hashMap.flatMap { case (vertex, heads) => heads.map(head => ((vertex, head), null)) }.keySet
+  def arrows: Iterable[(A, A)] = _hashMap.flatMap[(A, A)] { case (vertex, heads) => heads.map((vertex, _)) }
 
   override def toString: String = "Graph(\n" + _hashMap.flatMap({ case (vertex, heads) =>
     if(heads.isEmpty) {
@@ -153,21 +153,16 @@ object Graph {
 
 
 
-  type ElementType = String
-  val VertexType: ElementType = "vertex"
-  val ArrowType: ElementType = "arrow"
-
-  abstract class GraphElement[A](_elementType: ElementType) {
-    def elementType: ElementType = _elementType
+  abstract class GraphElement[A] {
     def toGraph: Graph[A]
   }
 
-  implicit class Vertex[A](vertex: A) extends GraphElement[A](VertexType) {
+  implicit class Vertex[A](vertex: A) extends GraphElement[A] {
     override def toGraph: Graph[A] = new Graph(HashMap(vertex -> Set()))
   }
 
-  class Arrow[A](tail: A, head: A) extends GraphElement[A](ArrowType) {
-    override def toGraph: Graph[A] = new Graph(HashMap(tail -> Set(head)))
+  class Arrow[A](tail: A, head: A) extends GraphElement[A] {
+    override def toGraph: Graph[A] = new Graph(HashMap(tail -> Set(head), head -> Set()))
   }
   implicit class ImplicitTail[A](tail: A) {
     def -->(head: A): Arrow[A] = new Arrow(tail, head)
@@ -181,7 +176,8 @@ object Graph {
     apply[A](elements.toSeq: _*)
   }
 
-  def fromVertices[A](vertices: Set[A]) = new Graph(HashMap.from(vertices.map((_, Set[A]()))))
+  def fromVertices[A](vertices: Set[A]) = /*from(vertices.map(v => v))*/new Graph(HashMap.from(vertices.map((_, Set[A]()))))
+  //TODO replace by from(vertices.map(v => v)) and test it.
 
 
 

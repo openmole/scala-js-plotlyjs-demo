@@ -1,9 +1,9 @@
 package plotlyjs.demo.directions.buildingmethod
 
 import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Splitter._
-import plotlyjs.demo.utils.Graph
-import plotlyjs.demo.utils.Graph._
+import plotlyjs.demo.utils.graph.directed.Graph._
 import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.graph.directed.Graph
 
 import scala.math._
 

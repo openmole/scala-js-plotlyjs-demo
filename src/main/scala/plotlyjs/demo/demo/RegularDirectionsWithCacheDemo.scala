@@ -6,8 +6,8 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.buildingmethod.BuildingMethodWithCache
 import plotlyjs.demo.directions.buildingmethod.BuildingMethodWithCache.RecursionCall
-import plotlyjs.demo.utils.Graph
-import plotlyjs.demo.utils.Graph.ImplicitTail
+import plotlyjs.demo.utils.graph.directed.Graph._
+import plotlyjs.demo.utils.graph.directed.Graph
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 

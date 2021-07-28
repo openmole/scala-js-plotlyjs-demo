@@ -110,7 +110,7 @@ object PSEMultiScaleDemo {
           .width(1)
           .color(0.5 at 4)
         )
-        .fillcolor(Seq(1.0, 0.0, 0.0).withAlpha(density * 0.6))
+        .fillcolor(Seq(1.0, 0.0, 0.0).opacity(density * 0.6))
         .layer("above")
         ._result
     }
@@ -125,7 +125,7 @@ object PSEMultiScaleDemo {
         .y(coordinates(1).toJSArray)
         .marker(marker
           .size(2)
-          .set(Seq(0.0, 0.0, 1.0).withAlpha(0.5))
+          .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
         )
         ._result
     }

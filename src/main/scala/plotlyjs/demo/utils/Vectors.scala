@@ -133,7 +133,7 @@ object Vectors {
   //
 
   //Implicit scalar supplier
-  implicit class ImplicitScalarSupplier(f: () => Double) {
+  implicit class ImplicitScalarSupplier(f: () => Double) { //TODO try with f: => Double
     def at(dimension: Int): Vector = Seq.fill(dimension)(f())
   }
   //

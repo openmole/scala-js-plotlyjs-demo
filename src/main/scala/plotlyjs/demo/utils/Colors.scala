@@ -14,7 +14,7 @@ object Colors {
 
     val alpha: Double = if(color.size >= 4) color(3) else 1
 
-    def withAlpha(alpha: Double): Color = color.take(3) :+ alpha
+    def opacity(alpha: Double): Color = color.take(3) :+ alpha
 
     def fromHSLtoRGB: Color = {
       val h = color(0)

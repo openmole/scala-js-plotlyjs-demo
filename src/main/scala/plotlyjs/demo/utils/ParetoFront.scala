@@ -1,7 +1,10 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.utils.Graph._
 import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.graph.directed
+//import plotlyjs.demo.utils.graph.directed.weighted
+import plotlyjs.demo.utils.graph.directed.Graph._
+import plotlyjs.demo.utils.graph.directed.weighted.Graph._
 
 import scala.math._
 
@@ -65,16 +68,38 @@ object ParetoFront {
     front.map(compare(v, _)).filterNot(_ == 0).headOption.getOrElse(0)
   }
 
-  def graph(front: Seq[Vector]): Graph[Vector] = {
-    front.map(v => {
-      front
-        .filterNot(_ == v)
-        .map(sub(v))
-        .transpose
-        .flatMap(_.zipWithIndex.filter(_._1 >= 0).minByOption(_._1).map(_._2))
-        .map(i => Graph(front(i) --> v))
-        .reduce(_ ++ _)
-    }).reduce(_ ++ _)
+  def graph(front: Seq[Vector]): directed.Graph[Vector] = {
+    front.flatMap(v0 => {
+      front.zipWithIndex
+        .filterNot(_._1 == v0)
+        .map { case (v, i) => (v - v0, i) }
+        .filter(_._1.count(_ > 0) == 1)
+        .groupBy(_._1.indexWhere(_ > 0))
+        .map { case (index, group) =>
+          group
+            .minBy { case (v, _) => abs(v(index)) }
+            ._2
+        }
+        .map(i => directed.Graph.ImplicitTail(front(i)) --> v0)
+        .map(_.toGraph)
+        .reduceOption(_ ++ _)
+    }).reduceOption(_ ++ _).getOrElse(directed.Graph())
+  }
+
+  def compromiseGraph(front: Seq[Vector], v0: Vector): directed.weighted.Graph[Vector, Int] = {
+    front.zipWithIndex
+      .filterNot(_._1 == v0)
+      .map { case (v, i) => (v - v0, i) }
+      .filter(_._1.count(_ > 0) == 1)
+      .groupBy(_._1.indexWhere(_ > 0))
+      .map { case (index, group) => (index, group.minBy { case (v, _) => abs(v(index)) }._2) }
+      .map { case (dimensionIndex, vectorIndex) => directed.weighted.Graph.ImplicitTail(v0) --dimensionIndex-> front(vectorIndex) }
+      .map(_.toGraph[Vector, Int])
+      .reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
+  }
+
+  def compromiseGraph(front: Seq[Vector]): directed.weighted.Graph[Vector, Int] = {
+    front.map(v0 => compromiseGraph(front, v0)).reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
   }
 
   def weakness(front: Seq[Vector]): Seq[Vector] = {

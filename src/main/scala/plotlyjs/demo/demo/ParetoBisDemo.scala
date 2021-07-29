@@ -56,10 +56,19 @@ object ParetoBisDemo {
     }
 
     class StarBasis(dimension: Int) extends Basis {
-      override def basisVector(i: Int): Vector = cartesianFromPolar(Seq(1, 360 * i/dimension))
+      override def basisVector(i: Int): Vector = {
+        if(dimension == 2) {
+          i match {
+            case 0 => cartesianFromPolar(Seq(1, 0))
+            case 1 => cartesianFromPolar(Seq(1, 90))
+          }
+        } else {
+          cartesianFromPolar(Seq(1, 360 * i/dimension))
+        }
+      }
     }
 
-    val dimension = 5
+    val dimension = 2
     val paretoFrontPoints = new ParetoFront(dimension, 42).randomizeDimensions.front
     //val dimension = paretoFrontPoints.head.dimension
 

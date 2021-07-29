@@ -1,7 +1,6 @@
 package plotlyjs.demo.utils.graph.directed.weighted
 
 import plotlyjs.demo.utils.graph.directed.weighted.Graph._
-import plotlyjs.demo.utils.graph.directed.weighted.GraphMap._
 
 import scala.collection.immutable.HashMap
 import scala.language.postfixOps
@@ -85,7 +84,7 @@ class Graph[V, W] private (_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V
         None
       }
     } else {
-      Some(weightMap.map { case (head, weight) => vertex + " --" + weight + "-> " + head}.mkString(", ")) //TODO use annotations to get methods names ?
+      Some(weightMap.map { case (head, weight) => vertex + " --" + weight + "-> " + head}.mkString(", "))
     }
   }).map("  " + _).mkString(",\n") + "\n)"
 

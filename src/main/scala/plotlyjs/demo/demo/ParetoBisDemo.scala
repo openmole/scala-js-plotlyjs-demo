@@ -68,9 +68,11 @@ object ParetoBisDemo {
       }
     }
 
-    val dimension = 2
+    val dimension = 15
     val paretoFrontPoints = new ParetoFront(dimension, 42).randomizeDimensions.front
     //val dimension = paretoFrontPoints.head.dimension
+    val downHalfDimension = dimension/2
+    val upHalfDimension = ceil(dimension/2.0).toInt
 
     val basis = new StarBasis(dimension)
     val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
@@ -159,7 +161,7 @@ object ParetoBisDemo {
 
     /*
     val borderData = {//Leaving space for graphical vector components sum.
-      val halfDimension = ceil(dimension/2.0).toInt
+      val upHalfDimension = ceil(dimension/2.0).toInt
       val extremes = (0 until dimension).map(i => (1 at i) ++ (0 at dimension - i)) //or compute the space needed from the given data ?
       val points = (0 until dimension).flatMap(i => {
         extremes.map(v => {
@@ -177,8 +179,8 @@ object ParetoBisDemo {
     */
 
     val borderShape = {//Leaving space for graphical vector components sum.
-      val halfDimension = ceil(dimension/2.0).toInt
-      val radius = basis.transform((1 at halfDimension) ++ (0 at dimension - halfDimension)).norm //or compute the space needed from the given data ?
+      //val radius = basis.transform((1 at upHalfDimension) ++ (0 at dimension - upHalfDimension)).norm //or compute the space needed from the given data ?
+      val radius: Double = points.map(p => Seq(p.x, p.y).norm).max
       Shape
         .`type`("circle")
         .xref("x")
@@ -189,7 +191,7 @@ object ParetoBisDemo {
         .y1(radius)
         .line(line
           .width(1)
-          .color(0.5 at 4)
+          .color(0.0 at 4)
         )
     }
 
@@ -221,8 +223,17 @@ object ParetoBisDemo {
     def get[A](plotData: PlotData, key: String, index: Int): Option[A] = entries(plotData).filter(_._1 == key).headOption.map(_._2.asInstanceOf[scala.scalajs.js.Array[A]](index))
 
     var tracesDisplayedCount  = 0
+    def addTraces(plotDataSeq: Seq[PlotData]): Unit = {
+      Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
+      tracesDisplayedCount += plotDataSeq.size
+    }
+    def deleteTraces(): Unit = {
+      Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + dataSeq.size).map(_.toDouble).toJSArray)
+      tracesDisplayedCount = 0
+    }
     val rawOutputCoordinates = Var(div(""))
     def eventHandler(pointsData: PointsData): Unit = {
+      println("eventHandler called")
       val pointData = pointsData.points.head
 
       get[String](pointData.data, "customdata", pointData.pointNumber).map(_.toInt).foreach(index => {
@@ -231,47 +242,53 @@ object ParetoBisDemo {
 
         var cartesianEnd = 0.0 at 2
 
-        val plotDataBuilderSeq = Seq(
-          scatter
-            .x(js.Array(indexedPolarPoint.x))
-            .y(js.Array(indexedPolarPoint.y))
-            .set(marker
-              .size(markerSize + 4)
-              .symbol(circle.open)
-              .color(0.5 at 3)
-            )
-        ) ++ (0 until dimension).map(i => {
-          val cartesianComponentVector = basis.component(plotOutput, i)
-          val starPolarCoordinates = Seq(0.0 at 2, cartesianComponentVector).transpose
-          scatter
-            .x(starPolarCoordinates(0).toJSArray)
-            .y(starPolarCoordinates(1).toJSArray)
-            .setMode(lines)
-            .line(line
-              .width(8)
-              .color(colors(i))
-            )
-            /*
-            .marker(marker
-              .size(0)
-            )
-            */
-        }) ++ plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c)}).reverse.map(_._2).map(i => {
-          val cartesianComponentVector = basis.component(plotOutput, i)
-          val cartesianBegin = cartesianEnd
-          cartesianEnd = cartesianBegin + cartesianComponentVector
-          val sumPolarCoordinates = Seq(cartesianBegin, cartesianEnd).transpose
-          scatter
-            .x(sumPolarCoordinates(0).toJSArray)
-            .y(sumPolarCoordinates(1).toJSArray)
-            .setMode(lines)
-            .line(line
-              //.width(1)
-              .dash("dot")
-              .color(/*(0.5 at 3)*/colors(i).opacity(0.5))
-            )
-        }) ++ {
-          val neighbourhood = ParetoFront.compromiseGraph(pointSet.spaceNormalizedOutputs, plotOutput)
+        val plotDataBuilderSeq = /*{
+          Seq(
+            scatter
+              .x(js.Array(indexedPolarPoint.x))
+              .y(js.Array(indexedPolarPoint.y))
+              .set(marker
+                .size(markerSize + 4)
+                .symbol(circle.open)
+                .color(0.5 at 3)
+              )
+          )
+        } ++ */{
+          (0 until dimension).map(i => {
+            val cartesianComponentVector = basis.component(plotOutput, i)
+            val starPolarCoordinates = Seq(0.0 at 2, cartesianComponentVector).transpose
+            scatter
+              .x(starPolarCoordinates(0).toJSArray)
+              .y(starPolarCoordinates(1).toJSArray)
+              .setMode(lines)
+              .line(line
+                .width(8)
+                .color(colors(i))
+              )
+              /*
+              .marker(marker
+                .size(0)
+              )
+              */
+          })
+        /*} ++ {
+          plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c)}).reverse.map(_._2).map(i => {
+            val cartesianComponentVector = basis.component(plotOutput, i)
+            val cartesianBegin = cartesianEnd
+            cartesianEnd = cartesianBegin + cartesianComponentVector
+            val sumPolarCoordinates = Seq(cartesianBegin, cartesianEnd).transpose
+            scatter
+              .x(sumPolarCoordinates(0).toJSArray)
+              .y(sumPolarCoordinates(1).toJSArray)
+              .setMode(lines)
+              .line(line
+                //.width(1)
+                .dash("dot")
+                .color(/*(0.5 at 3)*/colors(i).opacity(0.5))
+              )
+          })*/
+        /*} ++ {
+          val neighbourhood = ParetoFront.oneObjectiveCompromiseGraph(pointSet.spaceNormalizedOutputs, plotOutput) //TODO useless ? very few in high dimension
           neighbourhood.arrows.flatMap { arrow =>
             val coordinates = Seq(arrow.tail, arrow.head).map(basis.transform).transpose
             Seq(
@@ -284,6 +301,21 @@ object ParetoBisDemo {
                   .color(colors(arrow.weight).opacity(1.0))
                 ),
             )
+          }*/
+        } ++ {
+          val neighbourhood = ParetoFront.compromise(pointSet.spaceNormalizedOutputs, plotOutput)
+          neighbourhood.flatMap { vertexAndWeight =>
+            val coordinates = Seq(vertexAndWeight.vertex).map(basis.transform).transpose
+            Seq(
+              scatter
+                .x(coordinates(0).toJSArray)
+                .y(coordinates(1).toJSArray)
+                .marker(marker
+                  .size(markerSize + vertexAndWeight.weight)
+                  .symbol(circle.open)
+                  .color(0.5 at 3)
+                )
+            )
           }
         }
         val plotDataSeq = plotDataBuilderSeq.map(_
@@ -291,9 +323,8 @@ object ParetoBisDemo {
           ._result
         ).reverse
 
-        Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + dataSeq.size).map(_.toDouble).toJSArray)
-        Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
-        tracesDisplayedCount = plotDataSeq.size
+        deleteTraces()
+        addTraces(plotDataSeq)
 
         val textDiv = div()
         textDiv.ref.innerHTML = "Model output :<br>" + (pointSet.rawOutputs(index).zipWithIndex map { case (c, i) => s"o${i+1} : $c" }).mkString("<br>")
@@ -301,7 +332,8 @@ object ParetoBisDemo {
       })
     }
     val skipOnBusy = new SkipOnBusy
-    plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(() => eventHandler(pointsData)))
+    plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData)))
+    plotDiv.ref.on("plotly_doubleclick", _ => skipOnBusy.skipOnBusy(deleteTraces()))
     //
 
     div(

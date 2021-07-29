@@ -223,10 +223,10 @@ object Utils {
 
   class SkipOnBusy {
     var busy = false
-    def skipOnBusy(f: () => Unit): Unit = {
+    def skipOnBusy(f: => Unit): Unit = {
       if(!busy) {
         busy = true
-        f()
+        f
         busy = false
       }
     }

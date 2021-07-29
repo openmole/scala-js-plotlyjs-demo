@@ -4,7 +4,7 @@ import scala.collection.immutable.HashMap
 
 object GraphMap {
 
-  implicit class ImplicitVertexAndWeight[V, W](vw: (V, W)) {
+  implicit class VertexAndWeight[V, W](vw: (V, W)) {
     val vertex: V = vw._1
     val weight: W = vw._2
   }

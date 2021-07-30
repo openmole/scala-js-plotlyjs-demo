@@ -68,10 +68,10 @@ object PlotlyDemo {
               ParetoBisDemo.elementDemo,
               Pareto3dDemo.elementDemo,
               DirectionsScatterDemo.elementDemo,
-              RegularDirectionsDemo.elementDemo,
-              RegularDirectionsWithCacheDemo.elementDemo,
-              RestrictedSpaceTransformationDemo.elementDemo,
-              ScatterPPSEDemo.elementDemo,
+              //RegularDirectionsDemo.elementDemo,
+              //RegularDirectionsWithCacheDemo.elementDemo,
+              //RestrictedSpaceTransformationDemo.elementDemo,
+              //ScatterPPSEDemo.elementDemo,
             )
           } yield {
             lazy val demoDiv = {

@@ -7,7 +7,7 @@ import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
 import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.PointSet.MIN
 import plotlyjs.demo.utils.Vectors.{ImplicitScalar, ImplicitVector}
-import plotlyjs.demo.utils.{Data, ParetoFront, PointSet}
+import plotlyjs.demo.utils.{Data, ParetoFront, PointSet, Utils}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
@@ -18,7 +18,7 @@ object ParallelCoordinatesDemo {
     val plotDiv = div()
 
     val dim = 8
-    val results = new ParetoFront(dim, 128).randomizeDimensions.front
+    val results = Utils.randomizeDimensions(new ParetoFront(dim, 128).front)
     val pointSet = new PointSet(results)
       .optimizationProblems(MIN at dim)
       .lowerPlotIsBetter

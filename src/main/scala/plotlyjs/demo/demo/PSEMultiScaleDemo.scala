@@ -1,14 +1,14 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import org.openmole.plotlyjs.PlotMode._
+import org.openmole.plotlyjs.PlotMode.text
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ShapeType.rect
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
-import plotlyjs.demo.utils.{Basis, Data, PointSet}
+import plotlyjs.demo.utils.{Basis, PointSet, Utils}
 import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.Vectors._
 
@@ -23,29 +23,53 @@ object PSEMultiScaleDemo {
       sqrt(-2 * log(random)) * cos(2 * Pi * random) * sigma + mu
     }
 
-    class MultiScaleBasis(sourceDimension: Int, subdivision: Int, gap: Double, destinationDimension: Int, stretchable: Boolean = false) extends Basis {
+    case class MultiScaleBasis(sourceDimension: Int, subdivision: Int, destinationDimension: Int, stretchable: Boolean = false, gap: Int = 1) extends Basis {
 
       val remainder: Int = sourceDimension % destinationDimension
       val complement: Int = (destinationDimension - remainder) % destinationDimension
       val stretched: Boolean = stretchable && complement != 0
 
+      private def _i(i: Int) = {
+        if(stretched) complement + i else i
+      }
+
+      def scaleIndex(i: Int): Int = {
+        _i(i) / destinationDimension
+      }
+
+      def scale(i: Int): Double = {
+        pow(subdivision + gap, scaleIndex(i))
+      }
+
+      def axis(i: Int): Int = {
+        _i(i) % destinationDimension
+      }
+
       override def basisVector(i: Int): Vector = {
-        val _i = if(stretched) complement + i else i
-        val scale = pow(subdivision * (1 + gap), _i / destinationDimension)
-        val axis = _i % destinationDimension
-        (0.0 at destinationDimension).replace(axis, 1.0) * scale
+        (0.0 at destinationDimension).replace(axis(i), 1.0) * scale(i)
+      }
+
+      override def transform(vector: Vector): Vector = {
+        if((destinationDimension until sourceDimension).map(vector(_).isWhole).reduce(_ && _)) {
+          super.transform(vector)
+        } else {
+          throw new IllegalArgumentException(s"Coordinates from index $destinationDimension until $sourceDimension must be whole.")
+        }
       }
 
     }
 
     val dimension = 4
     val subdivision = 5
-    val gap = 1.0/4
 
-    val basis = new MultiScaleBasis(dimension, subdivision, gap, 2, true)
+    val basis = MultiScaleBasis(dimension, subdivision, 2, true)
 
     val boxes = IndexVectors.positiveNCube(dimension, subdivision).toSeq.map(toVector)
-    val discovered = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.1) * subdivision) at dimension)
+
+    val pointSet = new PointSet(
+      (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension)
+    )
+    val discovered = pointSet.rawOutputs.map(scale(subdivision)) //TODO use bounds to be specified for each dimension.
     //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
 
     val counts = {
@@ -58,40 +82,6 @@ object PSEMultiScaleDemo {
       val maxCount = counts.max
       counts.map(_.toDouble / maxCount)
     }
-
-    /*
-    val boxesDataSeq = boxes.map(box => {
-      val b00 = box
-      val b10 = b00 + (0.0 at dimension).replace(0, 1.0)
-      val b01 = b00 + (0.0 at dimension).replace(1, 1.0)
-      val b11 = b00 + (0.0 at dimension).replace(0, 1.0).replace(1, 1.0)
-      val points = {
-        val edge0 = (box(0) == subdivision - 1)
-        val edge1 = (box(1) == subdivision - 1)
-        if(edge0 && edge1) {
-          Seq(b10, b00, b01, b11, b10)
-        } else if(edge0) {
-          Seq(b11, b10, b00, b01)
-        } else if(edge1) {
-          Seq(b10, b00, b01, b11)
-        } else {
-          Seq(b10, b00, b01)
-        }
-      }.map(basis.transform)
-      val coordinates = points.transpose
-      scatter
-        .x(coordinates(0).toJSArray)
-        .y(coordinates(1).toJSArray)
-        .setMode(lines)
-        .line(line
-          .color(0.5 at 3)
-        )
-        //.marker(marker.size(4))
-        .hoverinfo("none")
-        ._result
-
-    })
-    */
 
     val boxesShapeSeq = boxes.zip(densities).map { case (box, density) =>
       val b0 = box
@@ -110,11 +100,35 @@ object PSEMultiScaleDemo {
           .width(1)
           .color(0.5 at 4)
         )
-        .fillcolor(Seq(1.0, 0.0, 0.0).opacity(density * 0.6))
+        .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
         .layer("above")
         ._result
     }
 
+    val boundsAnnotationSeq = {
+      (0 until basis.sourceDimension).flatMap(i => {
+        (0 to subdivision).map(s => {
+          val point = basis.transform(
+            (0.0 at basis.sourceDimension).replace(i, s)
+          ).add({
+            val margin = 3 //TODO automatic ?
+            (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
+          })
+          val text = s"o${i + 1} = $s"
+          val textangle = basis.axis(i) match {
+            case 0 => -90
+            case 1 => 0
+          }
+          Annotation
+            .x(point(0))
+            .y(point(1))
+            .text(text)
+            .textangle(textangle)
+            .showarrow(false)
+            ._result
+        })
+      })
+    }
     val data = {
       val coordinates = discovered
         .map(_.zipWithIndex.map { case (c, i) => if(i < 2) c else floor(c) })
@@ -131,13 +145,12 @@ object PSEMultiScaleDemo {
     }
 
     val plotDiv = div()
-    val plotDataSeq = /*boxesDataSeq ++*/ Seq(data)
+    val plotDataSeq = Seq(data)
     val size = 800
     Plotly.newPlot(
       plotDiv.ref,
       plotDataSeq.toJSArray,
       Layout
-        .shapes(boxesShapeSeq.toJSArray)
         .title("PSE" + (if(basis.stretched) " stretched" else ""))
         .width(size)
         .height(size)
@@ -149,6 +162,8 @@ object PSEMultiScaleDemo {
           .scaleanchor("x")
           .visible(false)
         )
+        .shapes(boxesShapeSeq.toJSArray)
+        .annotations(boundsAnnotationSeq.toJSArray)
         ._result
     )
 

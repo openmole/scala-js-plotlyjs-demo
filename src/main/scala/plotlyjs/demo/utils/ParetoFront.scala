@@ -50,13 +50,6 @@ class ParetoFront(_dimension: Int, _size: Int) {
   _front = _front.drop(dimension)
   assert(_front.map(compareToFront(_) == 0).reduce(_ && _))
 
-  def randomizeDimensions: ParetoFront = {
-    _front = _front
-      .map(mul((() => ceil(10 * random)) at dimension))
-      .map(add((() => 10 * random - 5) at dimension))
-    this
-  }
-
 }
 
 object ParetoFront {

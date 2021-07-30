@@ -20,7 +20,7 @@ import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom.html
 import plotlyjs.demo.utils.Vectors._
 
-import scala.math.{abs, random}
+import scala.math.{abs, ceil, random}
 import scala.scalajs.js.JSConverters._
 object Utils {
 
@@ -206,6 +206,26 @@ object Utils {
     6.2,
     5.9).toJSArray
 
+  def randomizeDimensions(seq: Seq[Vector]): Seq[Vector] = {
+    seq.headOption.map(head => {
+      val dimension = head.dimension
+      seq
+        .map(mul((() => ceil(10 * random)) at dimension))
+        .map(add((() => 10 * random - 5) at dimension))
+    }).getOrElse(Seq[Vector]())
+  }
+
+  class SkipOnBusy {
+    var busy = false
+    def skipOnBusy(f: => Unit): Unit = {
+      if(!busy) {
+        busy = true
+        f
+        busy = false
+      }
+    }
+  }
+
   def onDemand(title: String, supplier: String => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {
     val content = Var(div())
     content.set(div(button(title, inContext { _ => onClick.mapTo(supplier(title)) --> content.writer })))
@@ -219,17 +239,6 @@ object Utils {
       buttonDiv,
       child <-- contentVar.signal,
     )
-  }
-
-  class SkipOnBusy {
-    var busy = false
-    def skipOnBusy(f: => Unit): Unit = {
-      if(!busy) {
-        busy = true
-        f
-        busy = false
-      }
-    }
   }
 
 }

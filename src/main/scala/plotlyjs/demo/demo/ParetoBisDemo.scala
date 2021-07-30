@@ -10,7 +10,7 @@ import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Utils.SkipOnBusy
 import plotlyjs.demo.utils.Vectors._
-import plotlyjs.demo.utils.{Basis, ParetoFront, PointSet}
+import plotlyjs.demo.utils.{Basis, ParetoFront, PointSet, Utils}
 
 import scala.math.Numeric.BigDecimalAsIfIntegral.abs
 import scala.math._
@@ -74,6 +74,7 @@ object ParetoBisDemo {
       val upHalfDimension = ceil(dimension / 2.0).toInt
 
       val basis = new StarBasis(dimension)
+
       val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
       val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
       val polarObjectives = cartesianObjectives.map(polarFromCartesian)
@@ -155,7 +156,6 @@ object ParetoBisDemo {
         plotDiv.ref,
         dataSeq.toJSArray,
         Layout
-          .shapes(js.Array(borderShape))
           .title("Pareto")
           .height(size)
           .width(size)
@@ -167,6 +167,7 @@ object ParetoBisDemo {
             .visible(false)
           )
           .showlegend(false)
+          .shapes(js.Array(borderShape))
           .hovermode(closest)
       )
       //
@@ -305,10 +306,10 @@ object ParetoBisDemo {
     }
 
     div(
-      paretoFrontDiv(new ParetoFront(2, 42).randomizeDimensions.front),
-      paretoFrontDiv(new ParetoFront(3, 42).randomizeDimensions.front),
-      paretoFrontDiv(new ParetoFront(4, 42).randomizeDimensions.front),
-      paretoFrontDiv(new ParetoFront(5, 42).randomizeDimensions.front),
+      paretoFrontDiv(Utils.randomizeDimensions(new ParetoFront(2, 42).front)),
+      paretoFrontDiv(Utils.randomizeDimensions(new ParetoFront(3, 42).front)),
+      paretoFrontDiv(Utils.randomizeDimensions(new ParetoFront(4, 42).front)),
+      paretoFrontDiv(Utils.randomizeDimensions(new ParetoFront(5, 42).front)),
     )
   }
 

@@ -59,10 +59,10 @@ object PSEMultiScaleDemo {
 
     }
 
-    val dimension = 4
+    val dimension = 3
     val subdivision = 5
 
-    val basis = MultiScaleBasis(dimension, subdivision, 2, true)
+    val basis = MultiScaleBasis(dimension, subdivision, 2, stretchable = true)
 
     val boxes = IndexVectors.positiveNCube(dimension, subdivision).toSeq.map(toVector)
 
@@ -105,28 +105,43 @@ object PSEMultiScaleDemo {
         ._result
     }
 
-    val boundsAnnotationSeq = {
+    val boundsAnnotationSeq = { //TODO Repeat text for each block ?
       (0 until basis.sourceDimension).flatMap(i => {
-        (0 to subdivision).map(s => {
-          val point = basis.transform(
-            (0.0 at basis.sourceDimension).replace(i, s)
-          ).add({
-            val margin = 3 //TODO automatic ?
-            (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
+
+        //Repeat assuming that the destination dimension is 2.
+        val shiftSeq = if(basis.scaleIndex(i) == 0) {
+          (1 until subdivision).map(s => {
+              (0.0 at basis.sourceDimension).replace(2 + i, s)
           })
-          val text = s"o${i + 1} = $s"
-          val textangle = basis.axis(i) match {
-            case 0 => -90
-            case 1 => 0
-          }
-          Annotation
-            .x(point(0))
-            .y(point(1))
-            .text(text)
-            .textangle(textangle)
-            .showarrow(false)
-            ._result
+        } else Seq()
+        ((0.0 at basis.sourceDimension) +: shiftSeq).flatMap(s2Shift => {
+
+          (0 to subdivision).map(s => {
+            val point = basis.transform(
+              (0.0 at basis.sourceDimension).replace(i, s)
+
+                .add(s2Shift)
+
+            ).add({
+              val margin = 3 //TODO automatic ?
+              (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
+            })
+            val text = s"o${i + 1} = $s"
+            val textangle = basis.axis(i) match {
+              case 0 => -90
+              case 1 => 0
+            }
+            Annotation
+              .x(point(0))
+              .y(point(1))
+              .text(text)
+              .textangle(textangle)
+              .showarrow(false)
+              ._result
+          })
+
         })
+
       })
     }
     val data = {

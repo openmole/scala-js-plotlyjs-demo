@@ -150,7 +150,7 @@ object ParetoBisDemo {
 
       //Display
       val plotDiv = div()
-      val dataSeq = /*neighbourhoodDataSeq ++*/ (objectivesDataSeq :+ paretoFrontData) // :+ borderData
+      val dataSeq = objectivesDataSeq :+ paretoFrontData
       val size = 800
       Plotly.newPlot(
         plotDiv.ref,
@@ -167,7 +167,7 @@ object ParetoBisDemo {
             .visible(false)
           )
           .showlegend(false)
-          .shapes(js.Array(borderShape))
+          .shapes(if(dimension == 2) js.Array() else js.Array(borderShape))
           .hovermode(closest)
       )
       //

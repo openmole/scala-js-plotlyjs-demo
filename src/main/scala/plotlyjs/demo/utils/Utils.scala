@@ -209,9 +209,11 @@ object Utils {
   def randomizeDimensions(seq: Seq[Vector]): Seq[Vector] = {
     seq.headOption.map(head => {
       val dimension = head.dimension
+      val mulVector = (() => ceil(10 * random)) at dimension
+      val addVector = (() => 10 * random - 5) at dimension
       seq
-        .map(_.mul((() => ceil(10 * random)) at dimension))
-        .map(_.add((() => 10 * random - 5) at dimension))
+        .map(_.mul(mulVector))
+        .map(_.add(addVector))
     }).getOrElse(Seq[Vector]())
   }
 

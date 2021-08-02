@@ -303,7 +303,12 @@ object RegularDirectionsDemo {
 
         plotDiv
       }),
-      reloadOnDemand("ParetoFront generation", title => scatter3dDiv(
+      reloadOnDemand("ParetoFront generation 2d", title => scatter3dDiv(
+        title,
+        new ParetoFront(2, 128).front.map(_ :+ 0),
+        Seq(0.0 at 3)
+      )),
+      reloadOnDemand("ParetoFront generation 3d", title => scatter3dDiv(
         title,
         new ParetoFront(3, 128).front,//.map(_ :+ 0),
         Seq(0.0 at 3)

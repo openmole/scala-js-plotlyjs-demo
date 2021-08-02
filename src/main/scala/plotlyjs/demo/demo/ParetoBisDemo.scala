@@ -247,8 +247,8 @@ object ParetoBisDemo {
                 )
             })
           }
-          lazy val oneObjectiveCompromise = {
-            val neighbourhood = ParetoFront.oneObjectiveCompromiseGraph(pointSet.spaceNormalizedOutputs, plotOutput) //TODO useless ? very few in high dimension
+          lazy val oneObjectiveCompromise = { //very few compromises in high dimension
+            val neighbourhood = ParetoFront.oneObjectiveCompromiseGraph(pointSet.spaceNormalizedOutputs, plotOutput)
             neighbourhood.arrows.flatMap(arrow => {
               val coordinates = Seq(arrow.tail, arrow.head).map(basis.transform).transpose
               Seq(

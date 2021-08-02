@@ -92,26 +92,6 @@ object ParetoFront {
       .reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
   }
 
-  def oneObjectiveCompromiseGraph(front: Seq[Vector]): directed.weighted.Graph[Vector, Int] = {
-    front.map(v0 => oneObjectiveCompromiseGraph(front, v0)).reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
-  }
-
-  def compromiseGraph(front: Seq[Vector], v0: Vector): Graph[Vector, Int] = { //TODO front, index ?
-    val dimension = v0.dimension
-    val halfDimension = dimension/2
-    front.zipWithIndex
-      .filterNot(_._1 == v0)
-      //.map { case (v, i) => directed.weighted.Graph.ImplicitTail(v0) --(v - v0).count(_ > 0)-> v}
-      .map { case (v, i) => (v - v0, i) }
-      .map { case (v, i) => (v.count(_ > 0), i)}
-
-      //.filter(_._1 <= halfDimension)
-
-      .map { case (n, i) => directed.weighted.Graph.ImplicitTail(v0) --n-> front(i)}
-      .map(_.toGraph[Vector, Int])
-      .reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
-  }
-
   def compromise(front: Seq[Vector], v0: Vector): Seq[directed.weighted.GraphMap.VertexAndWeight[Vector, Int]] = {
     front.zipWithIndex
       .filterNot(_._1 == v0)

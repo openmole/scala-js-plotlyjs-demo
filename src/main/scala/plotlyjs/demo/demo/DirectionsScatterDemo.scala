@@ -34,7 +34,7 @@ object DirectionsScatterDemo {
     val plotDiv = div()
 
     val dim = 5
-    val results = Data.highSphericalCorner(dim, 16)//Data.simplexRST(dim, 16).toSeq//Data.lowInverseCorner(dim, 16, 2)//Data.lowSphericalCorner(dim, 16)//Data.dim8Sample100.map(_.take(dim))
+    val results = Data.highSphericalCorner(dim, 4)//Data.simplexRST(dim, 16).toSeq//Data.lowInverseCorner(dim, 16, 2)//Data.lowSphericalCorner(dim, 16)//Data.dim8Sample100.map(_.take(dim))
     val pointSet = new PointSet(results)
       .optimizationProblems(Seq.fill(dim)(MIN))
       .lowerPlotIsBetter
@@ -57,32 +57,20 @@ object DirectionsScatterDemo {
         ._result
     }
 
-    val sqrtN = scala.math.sqrt(dim)
     val layout = Layout
       .title("Directions scatter")
-      .xaxis(
-        axis
-          .rangemode("tozero")
-          //.bounds(Seq(0, sqrtN).toJSArray)
-          //.fixedrange(true)
-          //.autorange(false)
+      .xaxis(axis
+        .rangemode("tozero")
       )
-      .yaxis(
-        axis
-          .rangemode("tozero")
-          //.bounds(Seq(0, sqrtN).toJSArray)
-          //.fixedrange(true)
-          //.autorange(false)
+      .yaxis(axis
+        .rangemode("tozero")
+        .scaleanchor("x")
       )
 
-    val config = Config.autosizable(false).staticPlot(true)
-
-    //TODO disable automatic zoom on trace focus
-    Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray, layout)//, config)
+    Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray, layout)
 
     plotDiv
   }
-
 
   val elementDemo: Demo = new Demo {
     override def isLazy: Boolean = true

@@ -176,8 +176,7 @@ object Graph {
     apply[A](elements.toSeq: _*)
   }
 
-  def fromVertices[A](vertices: Set[A]) = /*from(vertices.map(v => v))*/new Graph(HashMap.from(vertices.map((_, Set[A]()))))
-  //TODO replace by from(vertices.map(v => v)) and test it.
+  def fromVertices[A](vertices: Set[A]): Graph[A] = from(vertices.map(v => Vertex(v)))
 
 
 

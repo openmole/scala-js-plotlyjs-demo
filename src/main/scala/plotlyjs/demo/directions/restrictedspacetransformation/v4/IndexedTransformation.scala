@@ -39,7 +39,7 @@ object IndexedTransformation {
     val circleVectorOption = fromIndexToCircle(indexVector)
     circleVectorOption.map(circleVector => {
       val recoveredIndexVector = fromCircleToIndex(circleVector)
-      norm(recoveredIndexVector.vector - indexVector)
+      (recoveredIndexVector.vector - indexVector).norm
     })
   }
 

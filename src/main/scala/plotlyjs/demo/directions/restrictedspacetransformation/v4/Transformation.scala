@@ -5,7 +5,7 @@ import plotlyjs.demo.utils.Vectors._
 object Transformation {
 
   def fromSquareToCircle(squareVector: Vector): Option[Vector] = {
-    if (dimension(squareVector) == 1) Some(squareVector) else {
+    if(squareVector.dimension == 1) Some(squareVector) else {
       val g = Geometry.fromSquareVector(squareVector)
 
       val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
@@ -34,7 +34,7 @@ object Transformation {
   }
 
   def fromCircleToSquare(circleVector: Vector): Vector = {
-    if (dimension(circleVector) == 1) circleVector else {
+    if (circleVector.dimension == 1) circleVector else {
       val g = Geometry.fromCircleVector(circleVector)
 
       val circleVectorOnFace = g.inverseProjection(circleVector)

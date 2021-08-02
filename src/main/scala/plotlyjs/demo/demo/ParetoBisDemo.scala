@@ -40,7 +40,7 @@ object ParetoBisDemo {
   lazy private val sc = sourcecode.Text {
 
     def polarFromCartesian(vector: Vector): Vector = {
-      val r = norm(vector)
+      val r = vector.norm
       val x = vector(0)
       val y = vector(1)
       val theta = atan2(y, x).toDegrees

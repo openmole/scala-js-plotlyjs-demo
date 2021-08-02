@@ -67,7 +67,8 @@ object PlotlyDemo {
               ParetoDemo.elementDemo,
               ParetoBisDemo.elementDemo,
               Pareto3dDemo.elementDemo,
-              DirectionsScatterDemo.elementDemo,
+              //
+              //DirectionsScatterDemo.elementDemo,
               //RegularDirectionsDemo.elementDemo,
               //RegularDirectionsWithCacheDemo.elementDemo,
               //RestrictedSpaceTransformationDemo.elementDemo,

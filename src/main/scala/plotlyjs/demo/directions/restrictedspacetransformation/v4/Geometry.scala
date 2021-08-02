@@ -55,7 +55,7 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
   }
 
   def inverseRegularizationTest(radiusComponent: Vector): Double = {
-    norm(inverseRegularization(regularization(radiusComponent)) - radiusComponent)
+    (inverseRegularization(regularization(radiusComponent)) - radiusComponent).norm
   }
 
   def projection(regularizedSquareRadiusOnFace: Double): Double = {
@@ -94,7 +94,7 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
 
   def inverseAdjustmentTest(squareRadiusOnFace: Double, spaceComponent: Vector): Double = {
     val adjustedSpaceComponent = adjustment(squareRadiusOnFace, spaceComponent)
-    norm(inverseAdjustment(squareRadiusOnFace, adjustedSpaceComponent) - spaceComponent)
+    (inverseAdjustment(squareRadiusOnFace, adjustedSpaceComponent) - spaceComponent).norm
   }
 
   def projection(circleVectorOnFace: Vector): Vector = {
@@ -110,7 +110,7 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
   }
 
   def inverseProjectionTest(circleVectorOnFace: Vector): Double = {
-    norm(inverseProjection(projection(circleVectorOnFace)) - circleVectorOnFace)
+    (inverseProjection(projection(circleVectorOnFace)) - circleVectorOnFace).norm
   }
 
 }
@@ -123,7 +123,7 @@ object Geometry {
   }
 
   def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
-  def circleRadius(circleVector: Vector): Double = norm(circleVector)
+  def circleRadius(circleVector: Vector): Double = circleVector.norm
 
   def toSquareRadius(vector: Vector, newRadius: Double): Vector = toRadius(vector, squareRadius(vector), newRadius)
   def toCircleRadius(vector: Vector, newRadius: Double): Vector = toRadius(vector, circleRadius(vector), newRadius)
@@ -133,20 +133,20 @@ object Geometry {
 
   def vectorFromSquareToCircle(squareVector: Vector): Vector = {
     val squareRadius = Geometry.squareRadius(squareVector)
-    val circleRadius = radiusFromSquareToCircle(dimension(squareVector))(squareRadius)
+    val circleRadius = radiusFromSquareToCircle(squareVector.dimension)(squareRadius)
     toCircleRadius(squareVector, circleRadius)
   }
 
   def vectorFromCircleToSquare(circleVector: Vector): Vector = {
     val circleRadius = Geometry.circleRadius(circleVector)
-    val squareRadius = radiusFromCircleToSquare(dimension(circleVector))(circleRadius)
+    val squareRadius = radiusFromCircleToSquare(circleVector.dimension)(circleRadius)
     toSquareRadius(circleVector, squareRadius)
   }
   //
 
   //Factory
   def fromSquareVector(squareVector: Vector): Geometry = {
-    new Geometry(dimension(squareVector), MaxMagnitude(squareVector), squareRadius(squareVector))
+    new Geometry(squareVector.dimension, MaxMagnitude(squareVector), squareRadius(squareVector))
   }
 
   def fromCircleVector(circleVector: Vector): Geometry = {

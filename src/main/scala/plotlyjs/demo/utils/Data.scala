@@ -282,7 +282,7 @@ object Data {
   }
 
   def centeredNCube(n: Int, p: Int, hollow: Boolean = false): Seq[Seq[Double]] = {
-    normalizedNCube(n, p, hollow).map(sub(Seq.fill(n)(0.5))).map(scale(2))
+    normalizedNCube(n, p, hollow).map(_.sub(Seq.fill(n)(0.5))).map(_.scale(2))
   }
 
   private def reverse(normalSpacePoints: Seq[Seq[Double]]): Seq[Vector] = {
@@ -293,7 +293,7 @@ object Data {
   def highSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = highCorner(n, p).flatMap(Transformation.fromSquareToCircle)
   def lowSphericalCorner(n: Int, p: Int): Seq[Seq[Double]] = reverse(highSphericalCorner(n, p))
 
-  def lowInverseCorner(n: Int, p: Int, radius: Double): Seq[Seq[Double]] = normalizedNCube(n - 1, p).map(scale(2)).flatMap(v => {
+  def lowInverseCorner(n: Int, p: Int, radius: Double): Seq[Seq[Double]] = normalizedNCube(n - 1, p).map(_.scale(2)).flatMap(v => {
     val dimension = v.dimension
     val c = 1 / v.product
     if(c <= 1) {
@@ -308,7 +308,7 @@ object Data {
       .centeredNCubeSurface(dimension, radius)
       .filter(_.map(_ > 0).reduce(_ && _))
       .flatMap(IndexedTransformation.fromIndexToCircle)
-      .map(toNorm(1, 1))
+      .map(_.normalize(pNorm(_, 1)))
   }
 
   /*

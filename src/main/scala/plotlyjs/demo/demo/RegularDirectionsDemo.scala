@@ -138,7 +138,7 @@ object RegularDirectionsDemo {
       val radius = 8
       Data
         .integerNCube(dimension, 2 * radius + 1, hollow = true)
-        .map[IndexVector](sub(radius.toDouble)(_))
+        .map[IndexVector](toVector(_).sub(radius.toDouble))
         .flatMap(IndexedTransformation.fromIndexToCircle)
         .map(IndexedTransformation.fromCircleToIndex)
         .map(indexVector => (indexVector, IndexedTransformation.neighbourhood(indexVector)))
@@ -152,17 +152,17 @@ object RegularDirectionsDemo {
       onDemand("Cube – no adjustment", title => scatter3dDiv(
         title,
         points,
-        points.map(normalize)
+        points.map(_.normalize)
       )),
       onDemand("Radial angular adjustment", title => scatter3dDiv(
         title,
         points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)),
-        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(normalize)
+        points.map(AngularAdjustment.cellRadialAdjustment(Geometry.cubic, _)).map(_.normalize)
       )),
       onDemand("Cartesian angular adjustment", title => scatter3dDiv(
         title,
         points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null),
-        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(normalize)
+        points.map(CubicAngularAdjustment.angularAdjustment).filter(_ != null).map(_.normalize)
       )),
       onDemand("Building method – 2-sphere", title => scatter3dDiv(
         title,
@@ -172,7 +172,7 @@ object RegularDirectionsDemo {
       onDemand("Building method – 3-sphere cell", title => scatter3dDiv(
         title,
         BuildingMethod.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.tail),
-        BuildingMethod.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(normalize).map(_.tail)
+        BuildingMethod.nSphereCovering(dimension + 1, 2 * alphaStep, keepCubicShape = true).filter(_.head == +1.0).map(_.normalize).map(_.tail)
       )),
       onDemand("Building method with lines – 2-sphere", title => scatter3dLinesDiv(
         title,

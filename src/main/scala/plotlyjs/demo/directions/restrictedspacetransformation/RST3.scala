@@ -32,7 +32,7 @@ object RST3 {
       (squareRadius / F.squareRadius(vector)) * vector
     }
 
-    def circleRadius(circleVector: Vector): Double = norm(circleVector)
+    def circleRadius(circleVector: Vector): Double = circleVector.norm
 
     def toCircleRadius(vector: Vector, circleRadius: Double): Vector = {
       (circleRadius / F.circleRadius(vector)) * vector
@@ -47,7 +47,7 @@ object RST3 {
     }
 
     def fromSquareVector(squareVector: Vector): F = {
-      F(dimension(squareVector), squareRadius(squareVector))
+      F(squareVector.dimension, squareRadius(squareVector))
     }
 
     def fromCircleVector(circleVector: Vector): F = {
@@ -174,7 +174,7 @@ object RST3 {
 
         val spaceFactor = f.projectionProportion(squareRadiusOnFace)
         //assertProportion(spaceFactor)
-        val radiusAndSpaceRegularizedSquareVectorOnFace = MaxMagnitude(radiusRegularizedSquareVectorOnFace).applyToRemainder(scale(1 / spaceFactor))
+        val radiusAndSpaceRegularizedSquareVectorOnFace = MaxMagnitude(radiusRegularizedSquareVectorOnFace).applyToRemainder(_.scale(1 / spaceFactor))
 
         fromSquareToCircle(radiusAndSpaceRegularizedSquareVectorOnFace, tab + 1).flatMap(circleVectorOnFace => {
           val cut = true
@@ -224,7 +224,7 @@ object RST3 {
       val radiusAndSpaceRegularizedSquareVectorOnFace = fromCircleToSquare(circleVectorOnFace)
 
       val spaceFactor = f.inverseProjectionProportion(projectedRadius)
-      val radiusRegularizedSquareVectorOnFace = MaxMagnitude(radiusAndSpaceRegularizedSquareVectorOnFace).applyToRemainder(scale(1 / spaceFactor))
+      val radiusRegularizedSquareVectorOnFace = MaxMagnitude(radiusAndSpaceRegularizedSquareVectorOnFace).applyToRemainder(_.scale(1 / spaceFactor))
 
       val regularizedSquareRadiusOnFace = F.squareRadius(radiusRegularizedSquareVectorOnFace)
       val squareRadiusOnFace = f.inverseRegularization(regularizedSquareRadiusOnFace)
@@ -244,7 +244,7 @@ object RST3 {
       val outputs = fromSquareToCircle(inputs)
       (inputs zip outputs) foreach { case (squareVector, circleVector) =>
         val recoveredInput = fromCircleToSquare(circleVector)
-        println(norm(squareVector - recoveredInput))
+        println((squareVector - recoveredInput).norm)
       }
     }
   }

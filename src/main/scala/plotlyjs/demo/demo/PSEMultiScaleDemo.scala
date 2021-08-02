@@ -59,7 +59,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
 
     }
 
-    val dimension = 3
+    val dimension = 4
     val subdivision = 5
 
     val basis = MultiScaleBasis(dimension, subdivision, 2, stretchable = true)
@@ -69,7 +69,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
     val pointSet = new PointSet(
       Utils.randomizeDimensions((1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension))
     )
-    val discovered = pointSet.spaceNormalizedOutputs.map(scale(subdivision)) //TODO use bounds to be specified for each dimension.
+    val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(subdivision)) //TODO use bounds to be specified for each dimension.
     //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
 
     val counts = {

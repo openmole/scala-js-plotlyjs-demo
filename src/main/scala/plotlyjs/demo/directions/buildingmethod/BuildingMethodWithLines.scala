@@ -22,7 +22,7 @@ object BuildingMethodWithLines {
         (1 to (alphaMax / alphaStep).toInt).foreach(i => {
           val rOnCell = tan(i * alphaStep)
           val rOnSphere = Seq(rOnCell, 1).normalize.head
-          val sphere = nSphereCovering(nSphereDim, alphaStep / rOnSphere).mapGraph(scale(rOnCell))
+          val sphere = nSphereCovering(nSphereDim, alphaStep / rOnSphere).mapGraph(_.scale(rOnCell))
           if (nSphereDim == 1) {
             graph = graph ++ sphere
             sphere.vertices.foreach(vertex => {
@@ -63,7 +63,7 @@ object BuildingMethodWithLines {
       if (keepCubicShape) {
         cubicNSphere
       } else {
-        cubicNSphere.mapGraph(normalize)
+        cubicNSphere.mapGraph(_.normalize)
       }
     }
   }

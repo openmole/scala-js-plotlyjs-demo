@@ -41,15 +41,15 @@ object DiscAngularSpaceAdjustment /*extends App */ {
     val dimension = vector.length
 
     val (componentToKeep, remainderToAdjust) = spaceSegmentation.radialSplit(vector)
-    val radius = norm(componentToKeep)
-    val radialDirection = normalize(componentToKeep)
+    val radius = componentToKeep.norm
+    val radialDirection = componentToKeep.normalize
 
-    val fillingProportion = norm(remainderToAdjust) / (radius * spaceAdjustmentRadiusScaleFactor(dimension))
+    val fillingProportion = remainderToAdjust.norm / (radius * spaceAdjustmentRadiusScaleFactor(dimension))
     if (fillingProportion <= 1) {
       val fillingLimit_CenterToBorderProportion = {
-        val touchingFillingLimitRemainder = scale(remainderToAdjust, 1 / fillingProportion)
+        val touchingFillingLimitRemainder = remainderToAdjust.scale( 1 / fillingProportion)
         val (borderNormalComponent, _) = spaceSegmentation.borderNormalSplit(touchingFillingLimitRemainder)
-        norm(borderNormalComponent) / radius
+        borderNormalComponent.norm / radius
       }
       val fillingAdjustedRemainder = (1 / fillingLimit_CenterToBorderProportion) * remainderToAdjust
 

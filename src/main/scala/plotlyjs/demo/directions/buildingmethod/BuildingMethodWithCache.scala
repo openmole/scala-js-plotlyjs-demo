@@ -13,7 +13,7 @@ object BuildingMethodWithCache {
 
     def resultHolder: RecursionCall = RecursionCall(dim, angleStep, rOnCell, previousROnCell, Seq())
 
-    private def withUnitNSphere(unitNSphere: Seq[Vector]) = RecursionCall(dim, angleStep, rOnCell, previousROnCell, unitNSphere.map(scale(rOnCell)))
+    private def withUnitNSphere(unitNSphere: Seq[Vector]) = RecursionCall(dim, angleStep, rOnCell, previousROnCell, unitNSphere.map(_.scale(rOnCell)))
 
     def resolve(dependencies: Graph[RecursionCall], cache: Graph[RecursionCall], results: Graph[RecursionCall]): (Graph[RecursionCall], Graph[RecursionCall]) = {
       if (cache.uniqueDirectSuccessorOf(this).nSphere.nonEmpty) {
@@ -55,7 +55,7 @@ object BuildingMethodWithCache {
             })
           }) ++ (0 until pow(2, dim).toInt).map(_.toBinaryString.toInt).map(s"%0${dim}d".format(_).map(c => if (c == '0') -1.0 else +1.0))
 
-          val sphericalNSphere = cubicNSphere.map(normalize).toSeq
+          val sphericalNSphere = cubicNSphere.map(_.normalize).toSeq
 
           (updatedCache.replaced(updatedCache.uniqueDirectSuccessorOf(this), updatedCache.uniqueDirectSuccessorOf(this).withUnitNSphere(sphericalNSphere)), updatedResults + (this --> withUnitNSphere(sphericalNSphere)))
         }

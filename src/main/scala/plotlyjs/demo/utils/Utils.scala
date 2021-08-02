@@ -210,8 +210,8 @@ object Utils {
     seq.headOption.map(head => {
       val dimension = head.dimension
       seq
-        .map(mul((() => ceil(10 * random)) at dimension))
-        .map(add((() => 10 * random - 5) at dimension))
+        .map(_.mul((() => ceil(10 * random)) at dimension))
+        .map(_.add((() => 10 * random - 5) at dimension))
     }).getOrElse(Seq[Vector]())
   }
 

@@ -27,7 +27,7 @@ class PointSet(val rawOutputs: Seq[Vector]) {
     this
   }
 
-  private lazy val _orientedOutputs: Seq[Vector] = rawOutputs.map(mul(_orientation * _optimizationProblems))
+  private lazy val _orientedOutputs: Seq[Vector] = rawOutputs.map(_.mul(_orientation * _optimizationProblems))
 
   lazy val spaceNormalizedOutputs: Seq[Vector] = {
     val min = _orientedOutputs.transpose.map(_.min)
@@ -35,7 +35,7 @@ class PointSet(val rawOutputs: Seq[Vector]) {
     _orientedOutputs.map(_.zipWithIndex.map { case (c, i) => (c - min(i))/(max(i) - min(i)) })
   }
 
-  lazy val norm1VectorNormalizedOutputs: Seq[Vector] = spaceNormalizedOutputs.map(normalize(1))
+  lazy val norm1VectorNormalizedOutputs: Seq[Vector] = spaceNormalizedOutputs.map(_.normalize(pNorm(_, 1)))
 
   class PointSetSlice(from: Int, until: Int) {
 

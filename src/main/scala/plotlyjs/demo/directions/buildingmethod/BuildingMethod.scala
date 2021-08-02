@@ -17,7 +17,7 @@ object BuildingMethod {
       val cell = (1 to (alphaMax / alphaStep).toInt).flatMap(i => {
         val rOnCell = tan(i * alphaStep)
         val rOnSphere = Seq(rOnCell, 1).normalize.head
-        val sphere = nSphereCovering(nSphereDim, alphaStep / rOnSphere).map(scale(rOnCell))
+        val sphere = nSphereCovering(nSphereDim, alphaStep / rOnSphere).map(_.scale(rOnCell))
         val maxMagnitudes = sphere.map(MaxMagnitudeComponent(_).norm)
         val inside = (sphere zip maxMagnitudes)
           .filter(_._2 <= 1).map(_._1)
@@ -40,7 +40,7 @@ object BuildingMethod {
       if (keepCubicShape) {
         cubicNSphere
       } else {
-        cubicNSphere.map(normalize)
+        cubicNSphere.map(_.normalize)
       }
     }
   }

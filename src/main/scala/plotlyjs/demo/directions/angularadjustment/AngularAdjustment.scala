@@ -67,11 +67,11 @@ object AngularAdjustment {
 
   def cellRadialAdjustment(geometry: Geometry, vector: Vector): Vector = {
     val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
-    val sphericalRadius = norm(componentToKeep)
-    val sphericalRadialDirection = normalize(componentToKeep)
+    val sphericalRadius = componentToKeep.norm
+    val sphericalRadialDirection = componentToKeep.normalize
 
     val (borderNormalComponent, _) = geometry.borderNormalSplit(remainderToAdjust)
-    val centerToBorderProportion = norm(borderNormalComponent) / sphericalRadius
+    val centerToBorderProportion = borderNormalComponent.norm / sphericalRadius
 
     val touchingBorderRemainder = (1 / centerToBorderProportion) * remainderToAdjust
     val touchingBorder = componentToKeep + touchingBorderRemainder
@@ -114,7 +114,7 @@ object AngularAdjustment {
     val dimension = vector.length
     val radius = {
       val (radialComponent, _) = geometry.radialSplit(vector)
-      norm(radialComponent)
+      radialComponent.norm
     }
     vector toNorm radius * spacialAdjustment(geometry, dimension)
   }

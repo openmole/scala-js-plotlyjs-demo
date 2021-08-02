@@ -122,7 +122,7 @@ object ParetoFront {
     front.map(v => {
       front
         .filterNot(_ == v)
-        .map(sub(v))
+        .map(_.sub(v))
         .transpose
         .map(_.filter(_ > 0).minOption.getOrElse(1))//TODO default value
     })

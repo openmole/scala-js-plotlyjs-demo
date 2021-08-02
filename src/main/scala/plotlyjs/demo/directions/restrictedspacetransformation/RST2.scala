@@ -151,7 +151,7 @@ object RST2 {
   def vectorFromSquareToCircle(squareVector: Vector): Vector = {
     val squareVectorMaxMagnitude = MaxMagnitude(squareVector)
     val squareRadius = squareVectorMaxMagnitude.value
-    val circleRadius = radiusFromSquareToCircle(dimension(squareVector), squareRadius)
+    val circleRadius = radiusFromSquareToCircle(squareVector.dimension, squareRadius)
     squareVector.toNorm(circleRadius)
   }
 
@@ -173,7 +173,7 @@ object RST2 {
       val squareRadiusOnFace = squareVectorOnFaceMaxMagnitude.value
 
       if (squareRadiusOnFace == 0) Some(squareVectorOnFace) else {
-        val circleRadiusOnFace = radiusFromSquareToCircle(dimension(squareVectorOnFace), squareRadiusOnFace)
+        val circleRadiusOnFace = radiusFromSquareToCircle(squareVectorOnFace.dimension, squareRadiusOnFace)
 
         val spaceRegularizationRadius = spaceRegularizationNoLoss(maxAngle, maxCircleRadiusOnFace, nCubeRadius, nSphereRadius)(circleRadiusOnFace)
         val spaceContractionFactor = /*min(*/ spaceRegularizationRadius / circleRadiusOnFace /*, 1)*/

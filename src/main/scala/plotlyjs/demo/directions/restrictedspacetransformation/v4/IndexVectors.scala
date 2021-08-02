@@ -38,7 +38,7 @@ object IndexVectors {
   }
 
   def centeredNCube(dimension: Int, radius: Int): Iterable[IndexVector] = {
-    positiveNCube(dimension, 2 * radius + 1).map(sub(radius.toDouble)(_))
+    positiveNCube(dimension, 2 * radius + 1).map(toVector).map(_.sub(radius.toDouble))
   }
 
 }

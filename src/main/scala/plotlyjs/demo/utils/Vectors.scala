@@ -69,7 +69,7 @@ object Vectors {
     def at(dimension: Int): Vector = Seq.fill(dimension)(d)
   }
 
-  implicit class ImplicitScalarSupplier(f: () => Double) { //TODO try with f: => Double
+  implicit class ImplicitScalarSupplier(f: () => Double) {
     def at(dimension: Int): Vector = Seq.fill(dimension)(f())
   }
 

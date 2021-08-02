@@ -154,7 +154,6 @@ object RST3 {
   }
 
   def fromSquareToCircle(squareVector: Vector, tab: Int = 0): Option[Vector] = {
-    //TODO squareVector -> cubeVector ?
 
     def tabPrintln(text: String = ""): Unit = println(" ".repeat(tab) + text)
 

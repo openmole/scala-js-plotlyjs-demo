@@ -98,13 +98,13 @@ object ParetoFront {
       .map { case (v, _) => (v, (v - v0).count(_ > 0))}
   }
 
-  def weakness(front: Seq[Vector]): Seq[Vector] = {
+  def strength(front: Seq[Vector]): Seq[Vector] = {
     front.map(v => {
       front
         .filterNot(_ == v)
         .map(_.sub(v))
         .transpose
-        .map(_.filter(_ > 0).minOption.getOrElse(1))//TODO default value
+        .map(_.filter(_ > 0).minOption.getOrElse(Double.PositiveInfinity))
     })
   }
 

@@ -136,7 +136,6 @@ object RST1 {
       val result = RST1.fromSquareToCircle(Data.centeredNCube(dimension, p, hollow = true))
       println(dimension, result.size)
     }
-    //TODO Fix that with a space adjustment ? From cube to sphere with a constant area ?
 
   }
 

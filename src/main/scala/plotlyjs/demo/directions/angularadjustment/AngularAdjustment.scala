@@ -86,17 +86,6 @@ object AngularAdjustment {
     if (adjustedVector.count(_.isNaN) == 0) adjustedVector else vector
   }
 
-  def cellBorderParallelAdjustment(geometry: Geometry, vector: Vector): Vector = {
-    val (componentToKeep, remainderToAdjust) = geometry.radialSplit(vector)
-    val (borderNormalComponent, borderParallelComponent) = geometry.borderNormalSplit(remainderToAdjust)
-
-
-    val adjustedRemainder: Vector = ???
-    val adjustedVector = componentToKeep + adjustedRemainder
-
-    adjustedVector
-  }
-
   def nSphereSurface(n: Int, r: Double): Double = {
     import scala.math.{Pi, pow}
     if (n % 2 == 0) {

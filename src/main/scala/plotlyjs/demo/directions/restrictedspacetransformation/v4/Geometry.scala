@@ -105,7 +105,7 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
 
   def inverseProjection(circleVector: Vector): Vector = {
     val circleOnFaceSquareVector = toSquareRadius(circleVector, nCubeRadius)
-    val circleVectorOnFace = circleOnFaceSquareVector.remove(maxMagnitude.index) //TODO change to remainder ?
+    val circleVectorOnFace = circleOnFaceSquareVector.remove(maxMagnitude.index)
     circleVectorOnFace
   }
 
@@ -118,15 +118,11 @@ class Geometry(_dimension: Int, _maxMagnitude: MaxMagnitude, _nCubeRadius: Doubl
 object Geometry {
 
   //Geometry
-  def toRadius(vector: Vector, oldRadius: Double, newRadius: Double): Vector = {
-    if(oldRadius == 0) vector else (newRadius / oldRadius) * vector
-  }
-
   def squareRadius(squareVector: Vector): Double = MaxMagnitude(squareVector).value
   def circleRadius(circleVector: Vector): Double = circleVector.norm
 
-  def toSquareRadius(vector: Vector, newRadius: Double): Vector = toRadius(vector, squareRadius(vector), newRadius)
-  def toCircleRadius(vector: Vector, newRadius: Double): Vector = toRadius(vector, circleRadius(vector), newRadius)
+  def toSquareRadius(vector: Vector, newRadius: Double): Vector = vector.toNorm(squareRadius, newRadius)
+  def toCircleRadius(vector: Vector, newRadius: Double): Vector = vector.toNorm(circleRadius, newRadius)
 
   def radiusFromSquareToCircle(dimension: Int)(squareRadius: Double): Double = squareRadius * sqrt(dimension)
   def radiusFromCircleToSquare(dimension: Int)(circleRadius: Double): Double = circleRadius / sqrt(dimension)

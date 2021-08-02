@@ -15,7 +15,7 @@ import plotlyjs.demo.utils.Vectors._
 import scala.math._
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
-object PSEMultiScaleDemo {
+object PSEMultiScaleDemo { //TODO with subplots ?
 
   private lazy val sc = sourcecode.Text {
 
@@ -50,7 +50,7 @@ object PSEMultiScaleDemo {
       }
 
       override def transform(vector: Vector): Vector = {
-        if((destinationDimension until sourceDimension).map(vector(_).isWhole).reduce(_ && _)) {
+        if((destinationDimension until sourceDimension).map(vector(_).isWhole).reduceOption(_ && _).getOrElse(true)) {
           super.transform(vector)
         } else {
           throw new IllegalArgumentException(s"Coordinates from index $destinationDimension until $sourceDimension must be whole.")
@@ -67,9 +67,9 @@ object PSEMultiScaleDemo {
     val boxes = IndexVectors.positiveNCube(dimension, subdivision).toSeq.map(toVector)
 
     val pointSet = new PointSet(
-      (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension)
+      Utils.randomizeDimensions((1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension))
     )
-    val discovered = pointSet.rawOutputs.map(scale(subdivision)) //TODO use bounds to be specified for each dimension.
+    val discovered = pointSet.spaceNormalizedOutputs.map(scale(subdivision)) //TODO use bounds to be specified for each dimension.
     //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
 
     val counts = {
@@ -105,28 +105,39 @@ object PSEMultiScaleDemo {
         ._result
     }
 
-    val boundsAnnotationSeq = { //TODO Repeat text for each block ?
+    val boundsAnnotationSeq = {
       (0 until basis.sourceDimension).flatMap(i => {
 
-        //Repeat assuming that the destination dimension is 2.
-        val shiftSeq = if(basis.scaleIndex(i) == 0) {
+        //Repeating 0-scaleIndex legend in 1-scaleIndex space.
+        val shiftSeq = if(basis.scaleIndex(i) == 0 && basis.destinationDimension + i < basis.sourceDimension) {
           (1 until subdivision).map(s => {
-              (0.0 at basis.sourceDimension).replace(2 + i, s)
+            (0.0 at basis.sourceDimension).replace(basis.destinationDimension + i, s)
           })
         } else Seq()
-        ((0.0 at basis.sourceDimension) +: shiftSeq).flatMap(s2Shift => {
+        ((0.0 at basis.sourceDimension) +: shiftSeq).flatMap(shift => {
 
           (0 to subdivision).map(s => {
             val point = basis.transform(
-              (0.0 at basis.sourceDimension).replace(i, s)
-
-                .add(s2Shift)
-
+              (0.0 at basis.sourceDimension)
+                .replace(i, s)
+                .add(shift)
             ).add({
-              val margin = 3 //TODO automatic ?
+              val margin = (basis.sourceDimension match {
+                case 2 => 0.25
+                case _ => basis.scaleIndex(i) match {
+                  case 0 => 1.5
+                  case 1 => 2
+                }
+              }) * 1.5
               (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
             })
-            val text = s"o${i + 1} = $s"
+            val text = {
+              val values = pointSet.rawOutputs.map(_(i))
+              val minValue = values.min
+              val maxValue = values.max
+              val bound = minValue + (maxValue - minValue) * s/subdivision
+              s"o${i + 1} = ${bound.toString.take(3)}"
+            }
             val textangle = basis.axis(i) match {
               case 0 => -90
               case 1 => 0

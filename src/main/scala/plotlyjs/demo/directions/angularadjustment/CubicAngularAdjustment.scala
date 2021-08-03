@@ -47,7 +47,7 @@ object CubicAngularAdjustment {
     val proportions = cellIndices.map(spaceIndex).map(i => abs(vector(i)) / radius)
 
     val startVectors = cellIndices.map(spaceIndex).map(i => vector.replace(i, 0))
-    val stopVectors = cellIndices.map(spaceIndex).map(i => vector.replace(i, signum(vector(i)) * radius))
+    val stopVectors = cellIndices.map(spaceIndex).map(i => vector.replace(i, signum(_) * radius))
     val totalAngles = cellIndices.map(i => startVectors(i) ^ stopVectors(i))
 
     val targetedAngles = proportions zip totalAngles map { case (p, tA) => p * tA }

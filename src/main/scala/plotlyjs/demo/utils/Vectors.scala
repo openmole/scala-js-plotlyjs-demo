@@ -10,6 +10,8 @@ object Vectors {
 
   def pNorm(v: Vector, p: Int): Double = pow(v.map(abs).map(pow(_, p)).sum, 1.0/p)
 
+  def basis(dimension: Int): Seq[Vector] = (0 until dimension).map((0 at dimension).replace(_, 1))
+
   implicit class ImplicitVector(v: Vector) {
 
     def dimension: Int = v.length
@@ -17,6 +19,7 @@ object Vectors {
     def toColumnMatrix: Matrix = v.toRowMatrix.transpose
 
     def replace(i: Int, c: Double): Vector = v.zipWithIndex map { case (cv, iv) => if (iv == i) c else cv }
+    def replace(i: Int, f: Double => Double): Vector = replace(i, f(v(i)))
     def insert(i: Int, c: Double): Vector = v.take(i) ++ Seq(c) ++ v.drop(i)
     def remove(i: Int): Vector = v.zipWithIndex.filterNot(_._2 == i).map(_._1)
 

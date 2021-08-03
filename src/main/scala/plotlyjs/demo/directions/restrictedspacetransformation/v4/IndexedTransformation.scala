@@ -64,7 +64,7 @@ object IndexedTransformation {
     val sectorIndex = sectorMaxMagnitude.index
     (0 until dimension).filterNot(_ == faceIndex).flatMap(i => {
       Seq(-1.0, +1.0).flatMap(u => {
-        val neighbour = vector.replace(i, vector(i) + u)
+        val neighbour = vector.replace(i, _ + u)
         fromSquareToCircle(neighbour).map(_ => neighbour).orElse({
           if(i != sectorIndex) {
             Some(swapMagnitudes(vector, sectorIndex, i))

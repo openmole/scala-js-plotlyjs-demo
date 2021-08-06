@@ -12,10 +12,10 @@ import plotlyjs.demo.directions.angularadjustment.{AngularAdjustment, CubicAngul
 import plotlyjs.demo.directions.buildingmethod.{BuildingMethod, BuildingMethodWithCache, BuildingMethodWithLines}
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Evaluation._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.{Evaluation, IndexedTransformation, MaxMagnitude, Transformation}
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.{Data, ParetoFront}
 import plotlyjs.demo.utils.Utils.{onDemand, reloadOnDemand}
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -138,7 +138,7 @@ object RegularDirectionsDemo {
       val radius = 8
       Data
         .integerNCube(dimension, 2 * radius + 1, hollow = true)
-        .map[IndexVector](toVector(_).sub(radius.toDouble))
+        .map[IntVector](toVector(_).sub(radius.toDouble))
         .flatMap(IndexedTransformation.fromIndexToCircle)
         .map(IndexedTransformation.fromCircleToIndex)
         .map(indexVector => (indexVector, IndexedTransformation.neighbourhood(indexVector)))

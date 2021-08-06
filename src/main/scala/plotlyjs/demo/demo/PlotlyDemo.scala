@@ -73,7 +73,7 @@ object PlotlyDemo {
               //RegularDirectionsWithCacheDemo.elementDemo,
               //RestrictedSpaceTransformationDemo.elementDemo,
               //ScatterPPSEDemo.elementDemo,
-              HyperPlaneSubdivisionDemo.elementDemo,
+              HyperplaneSubdivisionDemo.elementDemo,
             )
           } yield {
             lazy val demoDiv = {

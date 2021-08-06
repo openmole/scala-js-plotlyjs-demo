@@ -1,9 +1,9 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexedTransformation.{circle, circleWithIndex, fromCircleToIndex, fromIndexToCircle, neighbourhood}
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Transformation.fromSquareToCircle
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math.{pow, sqrt}
 

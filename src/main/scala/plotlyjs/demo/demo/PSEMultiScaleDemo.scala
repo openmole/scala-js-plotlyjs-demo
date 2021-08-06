@@ -6,11 +6,11 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ShapeType.rect
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.{Basis, PointSet, Utils}
 import plotlyjs.demo.utils.Colors._
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.IntVectors
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math._
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -45,6 +45,8 @@ object PSEMultiScaleDemo { //TODO with subplots ?
         _i(i) % destinationDimension
       }
 
+      override val size: Int = sourceDimension
+
       override def basisVector(i: Int): Vector = {
         (0.0 at destinationDimension).replace(axis(i), 1.0) * scale(i)
       }
@@ -64,7 +66,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
 
     val basis = MultiScaleBasis(dimension, subdivision, 2, stretchable = true)
 
-    val boxes = IndexVectors.positiveNCube(dimension, subdivision).toSeq.map(toVector)
+    val boxes = IntVectors.positiveNCube(dimension, subdivision).toSeq.map(toVector)
 
     val pointSet = new PointSet(
       Utils.randomizeDimensions((1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension))

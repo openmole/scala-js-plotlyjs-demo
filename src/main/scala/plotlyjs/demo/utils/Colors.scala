@@ -1,7 +1,7 @@
 package plotlyjs.demo.utils
 
 import org.openmole.plotlyjs.{Color => OMColor}
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.language.implicitConversions
 import scala.math.{abs, random, rint}

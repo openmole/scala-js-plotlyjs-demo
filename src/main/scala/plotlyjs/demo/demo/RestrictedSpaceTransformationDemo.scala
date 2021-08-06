@@ -8,7 +8,7 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4._
 import plotlyjs.demo.utils.Data
 import plotlyjs.demo.utils.Utils.onDemand
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 

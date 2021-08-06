@@ -1,6 +1,6 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math._
 

@@ -1,8 +1,10 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 trait Basis {
+
+  val size: Int
 
   def basisVector(i: Int): Vector
 
@@ -11,7 +13,7 @@ trait Basis {
   }
 
   def transform(vector: Vector): Vector = {
-    (0 until vector.dimension).map(component(vector, _)).reduce(_ + _)
+    (0 until size).map(component(vector, _)).reduce(_ + _)
   }
 
 }

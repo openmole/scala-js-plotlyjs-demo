@@ -1,6 +1,6 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 class PointSet(val rawOutputs: Seq[Vector]) {
 

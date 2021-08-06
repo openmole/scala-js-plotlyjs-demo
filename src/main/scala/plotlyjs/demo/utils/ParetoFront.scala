@@ -1,6 +1,6 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils.graph.directed
 import plotlyjs.demo.utils.graph.directed.weighted.Graph
 //import plotlyjs.demo.utils.graph.directed.weighted

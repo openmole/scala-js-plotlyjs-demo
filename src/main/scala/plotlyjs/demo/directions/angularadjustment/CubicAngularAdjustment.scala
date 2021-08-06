@@ -1,6 +1,6 @@
 package plotlyjs.demo.directions.angularadjustment
 
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils.Matrices._
 
 import scala.math._

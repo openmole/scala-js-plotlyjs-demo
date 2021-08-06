@@ -1,8 +1,9 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Geometry._
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.IntVectors
+import plotlyjs.demo.utils.vector.IntVectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math._
 
@@ -155,7 +156,7 @@ object Geometry {
   def inverseRegularizationTest(): Unit = {
     val dimension = 3
     val radius = 8
-    val cubeFaces = IndexVectors.centeredNCube(dimension, radius).map(_.vector)
+    val cubeFaces = IntVectors.centeredNCube(dimension, radius).map(_.vector)
     cubeFaces.foreach(squareVector => {
       val g = fromSquareVector(squareVector)
       val squareVectorOnFace = MaxMagnitude(squareVector).remainderSpaceRemainder
@@ -167,7 +168,7 @@ object Geometry {
   def inverseAdjustmentTest(): Unit = {
     val dimension = 3
     val radius = 8
-    val cubeFaces = IndexVectors.centeredNCube(dimension, radius).map(_.vector)
+    val cubeFaces = IntVectors.centeredNCube(dimension, radius).map(_.vector)
     cubeFaces.foreach(squareVector => {
       val g = fromSquareVector(squareVector)
       val squareVectorOnFace = MaxMagnitude(squareVector).remainderSpaceRemainder
@@ -180,7 +181,7 @@ object Geometry {
   def inverseProjectionTest(): Unit = {
     val dimension = 3
     val radius = 8
-    val cubeFaces = IndexVectors.centeredNCube(dimension, radius).map(_.vector)
+    val cubeFaces = IntVectors.centeredNCube(dimension, radius).map(_.vector)
     cubeFaces.foreach(squareVector => {
       val g = fromSquareVector(squareVector)
       val squareVectorOnFace = MaxMagnitude(squareVector).remainderSpaceRemainder

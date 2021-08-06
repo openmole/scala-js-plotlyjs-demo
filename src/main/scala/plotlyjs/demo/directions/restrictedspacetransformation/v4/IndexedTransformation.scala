@@ -1,18 +1,18 @@
 package plotlyjs.demo.directions.restrictedspacetransformation.v4
 
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Geometry._
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.Transformation._
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math._
 
 object IndexedTransformation {
 
-  def fromIndexToCircle(indexVector: IndexVector): Option[Vector] = fromSquareToCircle(indexVector)
-  def fromCircleToIndex(circleVector: Vector): IndexVector = fromCircleToSquare(circleVector)
+  def fromIndexToCircle(indexVector: IntVector): Option[Vector] = fromSquareToCircle(indexVector)
+  def fromCircleToIndex(circleVector: Vector): IntVector = fromCircleToSquare(circleVector)
 
-  def centeredNCubeSurface(dimension: Int, radius: Int): Iterable[IndexVector] = {
+  def centeredNCubeSurface(dimension: Int, radius: Int): Iterable[IntVector] = {
     centeredNCube(dimension - 1, radius - 1).flatMap(indexVector => {
       (0 until dimension).flatMap(i => {
         Seq(-1.0, +1.0).map(_ * radius).map(u => {
@@ -26,7 +26,7 @@ object IndexedTransformation {
     centeredNCubeSurface(dimension, radiusFromSquareToCircle(dimension - 1)(radius).toInt + 1).flatMap(fromIndexToCircle)
   }
 
-  def circleWithIndex(dimension: Int, radius: Int): Iterable[(Vector, IndexVector)] = {
+  def circleWithIndex(dimension: Int, radius: Int): Iterable[(Vector, IntVector)] = {
     circle(dimension, radius).map(circleVector => (circleVector, fromCircleToIndex(circleVector)))
   }
 
@@ -35,7 +35,7 @@ object IndexedTransformation {
     println(dimension, radius, result.size)
   }
 
-  def inverseCircleTest(indexVector: IndexVector): Option[Double] = {
+  def inverseCircleTest(indexVector: IntVector): Option[Double] = {
     val circleVectorOption = fromIndexToCircle(indexVector)
     circleVectorOption.map(circleVector => {
       val recoveredIndexVector = fromCircleToIndex(circleVector)
@@ -55,7 +55,7 @@ object IndexedTransformation {
     v.replace(i1, signum(v(i1)) * abs(v(i2))).replace(i2, signum(v(i2)) * abs(v(i1)))
   }
 
-  def neighbourhood(indexVector: IndexVector): Seq[IndexVector] = {
+  def neighbourhood(indexVector: IntVector): Seq[IntVector] = {
     val vector = indexVector.vector
     val dimension = vector.dimension
     val faceMaxMagnitude = MaxMagnitude(vector)
@@ -75,7 +75,7 @@ object IndexedTransformation {
           }
         })
       })
-    }).map[IndexVector](iv => iv)
+    }).map[IntVector](iv => iv)
   }
 
 }

@@ -18,7 +18,7 @@ package plotlyjs.demo.utils
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom.html
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math.{abs, ceil, random}
 import scala.scalajs.js.JSConverters._

@@ -3,10 +3,10 @@ package plotlyjs.demo.demo
 import com.raquo.laminar.api.L._
 import org.openmole.plotlyjs.Plotly
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.PointSet.MIN
-import plotlyjs.demo.utils.Vectors.{ImplicitScalar, ImplicitVector}
+import plotlyjs.demo.utils.vector.Vectors.{ImplicitScalar, ImplicitVector}
 import plotlyjs.demo.utils.{Data, ParetoFront, PointSet, Utils}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce

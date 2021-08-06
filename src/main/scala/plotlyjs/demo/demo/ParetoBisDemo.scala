@@ -9,7 +9,7 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 import plotlyjs.demo.utils.PointSet._
 import plotlyjs.demo.utils.Utils.SkipOnBusy
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils.{Basis, ParetoFront, PointSet, Utils}
 
 import scala.math.Numeric.BigDecimalAsIfIntegral.abs
@@ -37,7 +37,7 @@ import scala.scalajs.js.Object.entries
 
 object ParetoBisDemo {
 
-  lazy private val sc = sourcecode.Text {
+  private lazy val sc = sourcecode.Text {
 
     def polarFromCartesian(vector: Vector): Vector = {
       val r = vector.norm
@@ -56,6 +56,9 @@ object ParetoBisDemo {
     }
 
     class StarBasis(dimension: Int) extends Basis {
+
+      override val size: Int = dimension
+
       override def basisVector(i: Int): Vector = {
         if(dimension == 2) {
           i match {
@@ -66,6 +69,7 @@ object ParetoBisDemo {
           cartesianFromPolar(Seq(1, 360 * i/dimension))
         }
       }
+
     }
 
     def paretoFrontDiv(paretoFrontPoints: Seq[Vector]) = {

@@ -5,9 +5,9 @@ import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexedTransformation
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.IndexVectors._
+import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.PointSet.MIN
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils.{Data, PointSet}
 
 import scala.scalajs.js.JSConverters.JSRichIterableOnce

@@ -1,7 +1,7 @@
 package plotlyjs.demo.directions.angularadjustment
 
 import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.Geometry
-import plotlyjs.demo.utils.Vectors._
+import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math._
 

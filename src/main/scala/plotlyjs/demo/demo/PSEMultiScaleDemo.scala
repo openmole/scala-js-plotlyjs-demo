@@ -138,7 +138,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
               val minValue = values.min
               val maxValue = values.max
               val bound = minValue + (maxValue - minValue) * s/subdivision
-              s"o${i + 1} = ${bound.toString.take(3)}"
+              s"o${i + 1} = %.2f".format(bound)
             }
             val textangle = basis.axis(i) match {
               case 0 => -90

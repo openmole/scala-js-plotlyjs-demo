@@ -35,7 +35,7 @@ object RegularDirectionsWithCacheDemo {
     val graph = BuildingMethodWithCache.recursionGraph(RecursionCall(10, Math.PI/4 / 4, 1))
 
     def lineSeqFrom(graph: Graph[RecursionCall]) = {
-      graph.arrows.map(arrow => Seq(arrow._1, arrow._2).map(recursionCall => Seq(recursionCall.dim.toDouble, recursionCall.angleStep.toDegrees)))
+      graph.arrows.map(arrow => Seq(arrow.tail, arrow.head).map(recursionCall => Seq(recursionCall.dim.toDouble, recursionCall.angleStep.toDegrees)))
     }
 
     def graphDiv(graph: Graph[RecursionCall]) = {

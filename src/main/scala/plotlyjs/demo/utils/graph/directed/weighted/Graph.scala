@@ -1,5 +1,6 @@
 package plotlyjs.demo.utils.graph.directed.weighted
 
+import plotlyjs.demo.utils.Utils.printCode
 import plotlyjs.demo.utils.graph.directed.weighted.Graph._
 
 import scala.collection.immutable.HashMap
@@ -10,7 +11,7 @@ class Graph[V, W](_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V, W]]()) 
   type Vertex = Graph.Vertex[V]
   type Arrow = Graph.Arrow[V, W]
 
-  val gm: HashMap[V, HashMap[V, W]] = _gm
+  private val gm = _gm
 
   def vertices: Set[V] = gm.keySet
 
@@ -145,11 +146,11 @@ class Graph[V, W](_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V, W]]()) 
 
 object Graph {
 
-  trait ToGraph {
+  trait Element {
     def toGraph[V, W]: Graph[V, W]
   }
 
-  implicit class Vertex[V](vertex: V) extends ToGraph {
+  implicit class Vertex[V](vertex: V) extends Element {
     override def toGraph[V, W]: Graph[V, W] = {
       val vertex = this.vertex.asInstanceOf[V]
       new Graph(HashMap(vertex -> HashMap()))
@@ -162,7 +163,7 @@ object Graph {
   class TailAndWeight[V, W](tail: V, weight: W) {
     def ->(head: V): Arrow[V, W] = Arrow(tail, weight, head)
   }
-  case class Arrow[V, W](tail: V, weight: W, head: V) extends ToGraph {
+  case class Arrow[V, W](tail: V, weight: W, head: V) extends Element {
     override def toGraph[V, W]: Graph[V, W] = {
       val tail = this.tail.asInstanceOf[V]
       val weight = this.weight.asInstanceOf[W]
@@ -171,11 +172,11 @@ object Graph {
     }
   }
 
-  def apply[V, W](elements: ToGraph*): Graph[V, W] = {
+  def apply[V, W](elements: Element*): Graph[V, W] = {
     elements.map(_.toGraph[V, W]).reduceOption(_ ++ _).getOrElse(new Graph(HashMap()))
   }
 
-  def from[V, W](elements: Set[ToGraph]): Graph[V, W] = {
+  def from[V, W](elements: Set[Element]): Graph[V, W] = {
     apply(elements.toSeq: _*)
   }
 
@@ -188,7 +189,8 @@ object Graph {
   def test(): Unit = {
     var graph: Graph[String, Int] = Graph("a", "b", "a" --1-> "b") ++ Graph("c" --2-> "d", "a" --3-> "c")
     println(graph)
-    println(graph.directSuccessorsOf("a"))
+    printCode(graph.directSuccessorsOf("a"))
+    printCode(graph.directPredecessorsOf("a"))
     graph = graph.filterVertices(_ != "c")
     println(graph)
     graph = graph.replaced("a", "aa")

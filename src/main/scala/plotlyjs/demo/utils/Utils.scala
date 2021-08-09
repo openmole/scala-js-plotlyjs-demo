@@ -243,4 +243,8 @@ object Utils {
     )
   }
 
+  def printCode[T](sc: sourcecode.Text[T]): Unit = {
+    println(sc.source + " = " + sc.value)
+  }
+
 }

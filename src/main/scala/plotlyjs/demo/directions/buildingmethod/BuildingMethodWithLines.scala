@@ -40,11 +40,11 @@ object BuildingMethodWithLines {
           } else {
             val maxMagnitude = sphere.verticesMapping(MaxMagnitudeComponent(_).norm)
             val inside = sphere
-              .filter(maxMagnitude(_) <= 1)
+              .filterVertices(maxMagnitude(_) <= 1)
             val border = sphere
-              .filter(maxMagnitude(_) > 1)
+              .filterVertices(maxMagnitude(_) > 1)
               .mapVertices(v => (1 / maxMagnitude(v)) * v)
-              .filter(_.norm > tan((i - 1) * alphaStep))
+              .filterVertices(_.norm > tan((i - 1) * alphaStep))
             graph = graph ++ inside ++ border
           }
         })

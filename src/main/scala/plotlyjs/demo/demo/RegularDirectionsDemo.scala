@@ -176,13 +176,13 @@ object RegularDirectionsDemo {
       )),
       onDemand("Building method with lines – 2-sphere", title => scatter3dLinesDiv(
         title,
-        BuildingMethodWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter { case (v1, v2) => v1.head >= 0 && v2.head >= 0 }.toSeq,
+        BuildingMethodWithLines.nSphereCovering(dimension, linesAlphaStep).arrows.filter(arrow => arrow.tail.head >= 0 && arrow.head.head >= 0).map(arrow => (arrow.tail, arrow.head)).toSeq,
         Color.rgb(0, 0, 0)
       )),
       onDemand("Building method with lines – 3-sphere face", title => scatter3dLinesDiv(
         title,
-        (BuildingMethodWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
-          .filter { case (v1, v2) => v1.head == +1.0 && v2.head == +1.0 } map { case (v1, v2) => (v1.normalize.tail, v2.normalize.tail) }).toSeq,
+        BuildingMethodWithLines.nSphereCovering(dimension + 1, linesAlphaStep, keepCubicShape = true).arrows
+          .filter(arrow => arrow.tail.head == +1.0 && arrow.head.head == +1.0).map(arrow => (arrow.tail.normalize.tail, arrow.head.normalize.tail) ).toSeq,
         Color.rgb(0, 0, 0)
       )),
       onDemand("Cached building method", title => scatter3dDiv(

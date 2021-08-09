@@ -3,14 +3,14 @@ package plotlyjs.demo.utils.graph.directed.weighted
 import plotlyjs.demo.utils.graph.directed.weighted.Graph._
 
 import scala.collection.immutable.HashMap
-import scala.language.postfixOps
+import scala.language.{implicitConversions, postfixOps}
 
-class Graph[V, W] private (_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V, W]]()) {
+class Graph[V, W](_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V, W]]()) {
 
   type Vertex = Graph.Vertex[V]
   type Arrow = Graph.Arrow[V, W]
 
-  private def gm = _gm
+  val gm: HashMap[V, HashMap[V, W]] = _gm
 
   def vertices: Set[V] = gm.keySet
 
@@ -41,6 +41,7 @@ class Graph[V, W] private (_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V
   def successorsOf(vertex: V): Set[V] = {
     val directSuccessors = directSuccessorsOf(vertex).keySet
     directSuccessors ++ directSuccessors.flatMap(successorsOf)
+    //successorsOf((_, _) => null)(vertex).keySet
   }
 
   def successorsOf(op: (W, W) => W)(vertex: V): HashMap[V, W] = {
@@ -65,7 +66,7 @@ class Graph[V, W] private (_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V
     } else {
       directSuccessors.flatMap(terminalSuccessorsOf)
     }
-  }
+  } //TODO also with weight op, and with unique ? or create a tree class ?
 
   def terminalPredecessorsOf(vertex: V): Set[V] = {
     val directPredecessors = directPredecessorsOf(vertex).keySet
@@ -76,7 +77,7 @@ class Graph[V, W] private (_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V
     }
   }
 
-  override def toString: String = "Graph(\n" + gm.flatMap({ case (vertex, weightMap) =>
+  override def toString: String = "Graph(\n" + gm.flatMap { case (vertex, weightMap) =>
     if(weightMap.isEmpty) {
       if(directPredecessorsOf(vertex).isEmpty) {
         Some(vertex)
@@ -86,7 +87,7 @@ class Graph[V, W] private (_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V
     } else {
       Some(weightMap.map { case (head, weight) => vertex + " --" + weight + "-> " + head}.mkString(", "))
     }
-  }).map("  " + _).mkString(",\n") + "\n)"
+  }.map("  " + _).mkString(",\n") + "\n)"
 
 
 
@@ -112,25 +113,33 @@ class Graph[V, W] private (_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V
 
 
 
-  /*
-  def filter(pred: V => Boolean): Graph[V, W] = {
-    removeAll(from(vertices.filter(pred).map(v => v)))
+  def filterVertices(pred: V => Boolean): Graph[V, W] = {
+    val filtering = vertices.filter(pred)
+    new Graph(gm
+      .filter { case (vertex, _) => filtering contains vertex }
+      .map { case (vertex, heads) => (
+        vertex,
+        heads.filter { case (head, _) => filtering contains head }
+      )}
+    )
   }
 
-  def mapVertices[B](f: A => B): HashMap[A, B] = HashMap.from(vertices.map(vertex => (vertex, f(vertex))))
+  def verticesMapping[FV](f: V => FV): HashMap[V, FV] = HashMap.from(vertices.map(vertex => (vertex, f(vertex))))
 
-  def mapGraph[B](f: A => B): Graph[B] = {
-    val mapping = mapVertices(f)
-    new Graph(gm map { case (vertex, heads) => (mapping(vertex), heads.map(mapping)) })
+  def mapVertices[FV](f: V => FV): Graph[FV, W] = {
+    val mapping = verticesMapping(f)
+    new Graph(gm map { case (vertex, heads) => (
+      mapping(vertex),
+      heads.map { case (head, weight) => (mapping(head), weight) }
+    ) })
   }
 
 
 
-  def replaced(Replaced: A, by: A): Graph[V, W] = mapGraph {
+  def replaced(Replaced: V, by: V): Graph[V, W] = mapVertices {
     case Replaced => by
     case vertex => vertex
   }
-  */
 
 }
 
@@ -170,32 +179,20 @@ object Graph {
     apply(elements.toSeq: _*)
   }
 
-
-
-  /*
-  def group[A](set: Set[A], pred: (A, A) => Boolean, weight: (A, A) => W): Iterable[Set[A]] = {
-    var graph = Graph.fromVertices(set)
-    val seq = set.toSeq
-    for(i1 <- 0 until seq.size - 1) {
-      val v1 = seq(i1)
-      for(i2 <- i1 + 1 until seq.size) {
-        val v2 = seq(i2)
-        if(pred(v1, v2)) {
-          graph = graph + (graph.terminalSuccessorsOf(v1).head --> graph.terminalSuccessorsOf(v2).head)
-        }
-      }
-    }
-    graph.vertices.groupBy(graph.terminalSuccessorsOf).values
+  def fromVertices[V, W](vertices: Set[V]): Graph[V, W] = {
+    from(vertices.map(v => Vertex(v)))
   }
-  */
+
+
 
   def test(): Unit = {
     var graph: Graph[String, Int] = Graph("a", "b", "a" --1-> "b") ++ Graph("c" --2-> "d", "a" --3-> "c")
-    println(graph.vertices)
-    println(graph.arrows)
+    println(graph)
     println(graph.directSuccessorsOf("a"))
-    //graph = graph.replaced(1, 0)
-    println(graph.arrows)
+    graph = graph.filterVertices(_ != "c")
+    println(graph)
+    graph = graph.replaced("a", "aa")
+    println(graph)
   }
 
 }

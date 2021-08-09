@@ -5,7 +5,7 @@ import plotlyjs.demo.utils.graph.directed.Graph._
 import scala.collection.immutable.HashMap
 import scala.language.postfixOps
 
-class Graph[A] private(_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
+class GraphBackup[A] private (_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
   private def hashMap = _hashMap
 
@@ -78,50 +78,50 @@ class Graph[A] private(_hashMap: HashMap[A, Set[A]] = HashMap[A, Set[A]]()) {
 
 
 
-  def concat(graph: Graph[A]): Graph[A] = new Graph(Graph.concat(_hashMap, graph.hashMap))
-  def ++(graph: Graph[A]): Graph[A] = concat(graph)
+  def concat(graph: GraphBackup[A]): GraphBackup[A] = new GraphBackup(GraphBackup.concat(_hashMap, graph.hashMap))
+  def ++(graph: GraphBackup[A]): GraphBackup[A] = concat(graph)
 
-  def removeAll(graph: Graph[A]): Graph[A] = new Graph(Graph.removeKeys(_hashMap, graph.hashMap))
-  def --(graph: Graph[A]): Graph[A] = removeAll(graph)
+  def removeAll(graph: GraphBackup[A]): GraphBackup[A] = new GraphBackup(GraphBackup.removeKeys(_hashMap, graph.hashMap))
+  def --(graph: GraphBackup[A]): GraphBackup[A] = removeAll(graph)
 
-  def removeArrows(graph: Graph[A]): Graph[A] = new Graph(Graph.removeValues(_hashMap, graph.hashMap))
+  def removeArrows(graph: GraphBackup[A]): GraphBackup[A] = new GraphBackup(GraphBackup.removeValues(_hashMap, graph.hashMap))
 
-  def added(vertex: Vertex[A]): Graph[A] = concat(vertex.toGraph)
-  def +(vertex: A): Graph[A] = added(vertex)
+  def added(vertex: Vertex[A]): GraphBackup[A] = concat(vertex.toGraph)
+  def +(vertex: A): GraphBackup[A] = added(vertex)
 
-  def removed(vertex: Vertex[A]): Graph[A] = removeAll(vertex.toGraph)
-  def -(vertex: A): Graph[A] = removed(vertex)
+  def removed(vertex: Vertex[A]): GraphBackup[A] = removeAll(vertex.toGraph)
+  def -(vertex: A): GraphBackup[A] = removed(vertex)
 
-  def added(arrow: Arrow[A]): Graph[A] = concat(arrow.toGraph)
-  def +(arrow: Arrow[A]): Graph[A] = added(arrow)
+  def added(arrow: Arrow[A]): GraphBackup[A] = concat(arrow.toGraph)
+  def +(arrow: Arrow[A]): GraphBackup[A] = added(arrow)
 
-  def removed(arrow: Arrow[A]): Graph[A] = removeArrows(arrow.toGraph)
-  def -(arrow: Arrow[A]): Graph[A] = removed(arrow)
+  def removed(arrow: Arrow[A]): GraphBackup[A] = removeArrows(arrow.toGraph)
+  def -(arrow: Arrow[A]): GraphBackup[A] = removed(arrow)
 
 
 
-  def filter(pred: A => Boolean): Graph[A] = {
+  def filter(pred: A => Boolean): GraphBackup[A] = {
     val filtering = vertices.filter(pred)
-    new Graph(_hashMap filter { case (vertex, _) => filtering contains vertex } map { case (vertex, heads) => (vertex, heads intersect filtering)})
+    new GraphBackup(_hashMap filter { case (vertex, _) => filtering contains vertex } map { case (vertex, heads) => (vertex, heads intersect filtering)})
   }
 
   def verticesMapping[B](f: A => B): HashMap[A, B] = HashMap.from(vertices.map(vertex => (vertex, f(vertex))))
 
-  def mapVertices[B](f: A => B): Graph[B] = {
+  def mapVertices[B](f: A => B): GraphBackup[B] = {
     val mapping = verticesMapping(f)
-    new Graph(_hashMap map { case (vertex, heads) => (mapping(vertex), heads.map(mapping)) })
+    new GraphBackup(_hashMap map { case (vertex, heads) => (mapping(vertex), heads.map(mapping)) })
   }
 
 
 
-  def replaced(Replaced: A, by: A): Graph[A] = mapVertices {
+  def replaced(Replaced: A, by: A): GraphBackup[A] = mapVertices {
     case Replaced => by
     case vertex => vertex
   }
 
 }
 
-object Graph {
+object GraphBackup {
 
   type M[A] = HashMap[A, Set[A]]
 
@@ -142,29 +142,29 @@ object Graph {
 
 
   abstract class GraphElement[A] {
-    def toGraph: Graph[A]
+    def toGraph: GraphBackup[A]
   }
 
   implicit class Vertex[A](vertex: A) extends GraphElement[A] {
-    override def toGraph: Graph[A] = new Graph(HashMap(vertex -> Set()))
+    override def toGraph: GraphBackup[A] = new GraphBackup(HashMap(vertex -> Set()))
   }
 
   class Arrow[A](tail: A, head: A) extends GraphElement[A] {
-    override def toGraph: Graph[A] = new Graph(HashMap(tail -> Set(head), head -> Set()))
+    override def toGraph: GraphBackup[A] = new GraphBackup(HashMap(tail -> Set(head), head -> Set()))
   }
   implicit class ImplicitTail[A](tail: A) {
     def -->(head: A): Arrow[A] = new Arrow(tail, head)
   }
 
-  def apply[A](elements: GraphElement[A]*): Graph[A] = {
+  def apply[A](elements: GraphElement[A]*): GraphBackup[A] = {
     elements.map(_.toGraph).reduce(_ ++ _)
   }
 
-  def from[A](elements: Set[GraphElement[A]]): Graph[A] = {
+  def from[A](elements: Set[GraphElement[A]]): GraphBackup[A] = {
     apply[A](elements.toSeq: _*)
   }
 
-  def fromVertices[A](vertices: Set[A]): Graph[A] = {
+  def fromVertices[A](vertices: Set[A]): GraphBackup[A] = {
     from(vertices.map(v => Vertex(v)))
   }
 
@@ -188,7 +188,7 @@ object Graph {
 
 
   def mainTest(args: Array[String]): Unit = {
-    var graph = Graph(1, 2, 1 --> 2) ++ Graph(3 --> 4, 1 --> 3)
+    var graph = GraphBackup(1, 2, 1 --> 2) ++ GraphBackup(3 --> 4, 1 --> 3)
     println(graph.vertices)
     println(graph.arrows)
     println(graph.directSuccessorsOf(1))

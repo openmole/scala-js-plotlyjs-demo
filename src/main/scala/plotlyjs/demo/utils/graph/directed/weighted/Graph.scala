@@ -129,7 +129,7 @@ class Graph[V, W](_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V, W]]()) 
 
   def mapVertices[FV](f: V => FV): Graph[FV, W] = {
     val mapping = verticesMapping(f)
-    new Graph(gm map { case (vertex, heads) => (
+    new Graph(gm map { case (vertex, heads) => ( //TODO move to GraphMap ?
       mapping(vertex),
       heads.map { case (head, weight) => (mapping(head), weight) }
     ) })

@@ -69,8 +69,8 @@ object PlotlyDemo {
               Pareto3dDemo.elementDemo,
               //
               //DirectionsScatterDemo.elementDemo,
-              //RegularDirectionsDemo.elementDemo,
-              //RegularDirectionsWithCacheDemo.elementDemo,
+              RegularDirectionsDemo.elementDemo,
+              RegularDirectionsWithCacheDemo.elementDemo,
               //RestrictedSpaceTransformationDemo.elementDemo,
               //ScatterPPSEDemo.elementDemo,
               HyperplaneSubdivisionDemo.elementDemo,

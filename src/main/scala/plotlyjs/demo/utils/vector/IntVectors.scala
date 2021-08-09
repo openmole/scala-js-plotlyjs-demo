@@ -1,5 +1,7 @@
 package plotlyjs.demo.utils.vector
 
+import plotlyjs.demo.utils.graph.directed.Graph
+import plotlyjs.demo.utils.graph.directed.Graph.ImplicitTail
 import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.language.implicitConversions
@@ -15,7 +17,7 @@ object IntVectors {
     def intVectorToString: String = "(" + intVector.mkString(", ") + ")"
   }
 
-  implicit def toVector(i: IntVector): Vector = i.map(_.toDouble)
+  implicit def implicitToVector(i: IntVector): Vector = i.map(_.toDouble)
 
   implicit def toIntVector(v: Vector): IntVector = v.map(rint(_).toInt)
 
@@ -45,7 +47,20 @@ object IntVectors {
   }
 
   def centeredNCube(dimension: Int, radius: Int): Iterable[IntVector] = {
-    positiveNCube(dimension, 2 * radius + 1).map(toVector).map(_.sub(radius.toDouble))
+    positiveNCube(dimension, 2 * radius + 1).map(_.vector.sub(radius.toDouble))
+  }
+
+  def nGrid(dimension: Int, p: Int): Graph[IntVector] = {
+    if(dimension == 0) Graph(Seq()) else {
+      val graph = nGrid(dimension - 1, p)
+      val duplicates = (0 until p).map(i => graph.mapVertices(_ ++ Seq(i))).reduce(_ ++ _)
+      duplicates ++ Graph.from(graph.vertices.flatMap(v => {
+        (1 until p).map(i => {
+          (v ++ Seq(i - 1)) --> (v ++ Seq(i))
+        })
+      }))
+
+    }
   }
 
 }

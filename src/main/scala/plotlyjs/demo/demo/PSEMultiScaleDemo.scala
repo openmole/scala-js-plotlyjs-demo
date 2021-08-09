@@ -66,7 +66,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
 
     val basis = MultiScaleBasis(dimension, subdivision, 2, stretchable = true)
 
-    val boxes = IntVectors.positiveNCube(dimension, subdivision).toSeq.map(toVector)
+    val boxes = IntVectors.positiveNCube(dimension, subdivision).toSeq.map(_.vector)
 
     val pointSet = new PointSet(
       Utils.randomizeDimensions((1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension))

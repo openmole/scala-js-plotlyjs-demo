@@ -135,21 +135,29 @@ object HyperplaneSubdivisionDemo {
       }
 
       val subdivision = 2
+      val grid = IntVectors.nGrid(dimension, subdivision).mapVertices(subdivisionReference(_) / dimension)
       val groups = pointSet.spaceNormalizedOutputs
         .map(_ * subdivision)
         .groupBy(subdivisionReference)
         //.filter { case (reference, _) => reference.norm < subdivision * dimension * 0.5 }
 
       val sizes = groups.map { case (reference, group) => (reference, group.size) }
-      //sizes.foreach { case (reference, size) => println(reference.vectorToString + " " + size) }
-      lazy val sizeCount = sizes.values
-        .groupBy(size => size)
-        .map { case (size, sizeGroup) => (size, sizeGroup.size)}
-        .map[(Int, Int)](t => t)
-        .toSeq
-        .sortBy(_._1)
 
-      val plotDataSeq = groups.map { case (_, groupPoints) =>
+      val gridDataSeq = grid.arrows.map(arrow => {
+        val points = Seq(arrow.tail, arrow.head).map(starBasis.transform)
+        val coordinates = points.transpose
+        scatter
+          .x(coordinates(0).toJSArray)
+          .y(coordinates(1).toJSArray)
+          .setMode(lines)
+          .line(line
+            .color(0.5 at 4)
+          )
+          .hoverinfo("none")
+          ._result
+      })
+
+      val groupsDataSeq = groups.map { case (_, groupPoints) =>
         val groupColor = Colors.randomColor
 
         val points = groupPoints.map(starBasis.transform)
@@ -189,7 +197,7 @@ object HyperplaneSubdivisionDemo {
       }
 
       val starDiv = div()
-      val dataSeq = objectivesDataSeq ++ plotDataSeq
+      val dataSeq = /*objectivesDataSeq ++ */groupsDataSeq ++ gridDataSeq
       val size = 800
       Plotly.newPlot(
         starDiv.ref,
@@ -206,7 +214,7 @@ object HyperplaneSubdivisionDemo {
             .visible(false)
           )
           //.showlegend(false)
-          .shapes(if(dimension == 2) js.Array() else js.Array(borderShape))
+          //.shapes(if(dimension == 2) js.Array() else js.Array(borderShape))
           .hovermode(closest)
       )
 
@@ -229,9 +237,12 @@ object HyperplaneSubdivisionDemo {
       lowCorner.map(_ + 0)
     }
     div(
-      starPlotDiv(points(3, 64)),
-      //starPlotDiv(points(4, 12)),
-      //starPlotDiv(points(5, 12)),
+      starPlotDiv(points(3, 32)),
+      starPlotDiv(points(4, 4)),
+      starPlotDiv(points(5, 4)),
+      starPlotDiv(points(6, 2)),
+      starPlotDiv(points(7, 2)),
+      starPlotDiv(points(8, 2)),
     )
   }
 

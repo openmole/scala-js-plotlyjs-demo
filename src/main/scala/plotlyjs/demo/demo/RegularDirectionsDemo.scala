@@ -138,7 +138,7 @@ object RegularDirectionsDemo {
       val radius = 8
       Data
         .integerNCube(dimension, 2 * radius + 1, hollow = true)
-        .map[IntVector](toVector(_).sub(radius.toDouble))
+        .map[IntVector](_.vector.sub(radius.toDouble))
         .flatMap(IndexedTransformation.fromIndexToCircle)
         .map(IndexedTransformation.fromCircleToIndex)
         .map(indexVector => (indexVector, IndexedTransformation.neighbourhood(indexVector)))
@@ -192,7 +192,7 @@ object RegularDirectionsDemo {
       )),
       onDemand("Restricted space transformation – index", title => scatter3dDiv(
         title,
-        IndexedTransformation.centeredNCubeSurface(3, 8).map[Vector](iv => iv).toSeq,
+        IndexedTransformation.centeredNCubeSurface(3, 8).map(_.vector).toSeq,
         Seq(0.0 at 3)
       )),
       onDemand("Restricted space transformation – 2-sphere", title => {

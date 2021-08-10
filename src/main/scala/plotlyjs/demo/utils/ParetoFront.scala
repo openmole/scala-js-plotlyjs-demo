@@ -59,7 +59,7 @@ object ParetoFront {
   }
 
   def graph(front: Seq[Vector]): directed.Graph[Vector] = {
-    front.flatMap(v0 => {
+    directed.Graph.from(front.flatMap(v0 => {
       front.zipWithIndex
         .filterNot(_._1 == v0)
         .map { case (v, i) => (v - v0, i) }
@@ -71,21 +71,21 @@ object ParetoFront {
             ._2
         }
         .map(i => directed.Graph.ImplicitTail(front(i)) --> v0)
-        .map(_.toGraph)
-        .reduceOption(_ ++ _)
-    }).reduceOption(_ ++ _).getOrElse(directed.Graph())
+    }).toSet)
   }
 
   def oneObjectiveCompromiseGraph(front: Seq[Vector], v0: Vector): directed.weighted.Graph[Vector, Int] = {
-    front.zipWithIndex
+    directed.weighted.Graph.from(front.zipWithIndex
       .filterNot(_._1 == v0)
       .map { case (v, i) => (v - v0, i) }
       .filter(_._1.count(_ > 0) == 1)
       .groupBy(_._1.indexWhere(_ > 0))
       .map { case (index, group) => (index, group.minBy { case (v, _) => abs(v(index)) }._2) }
       .map { case (dimensionIndex, vectorIndex) => directed.weighted.Graph.ImplicitTail(v0) --dimensionIndex-> front(vectorIndex) }
-      .map(_.toGraph[Vector, Int])
-      .reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
+      //.map(_.toGraph[Vector, Int])
+      //.reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
+      .toSet
+    )
   }
 
   def compromise(front: Seq[Vector], v0: Vector): Seq[directed.weighted.GraphMap.VertexAndWeight[Vector, Int]] = {

@@ -10,6 +10,7 @@ import org.openmole.plotlyjs.all._
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 import plotlyjs.demo.utils.PointSet._
+import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils._
 import plotlyjs.demo.utils.vector.{IntVectors, Vectors}
@@ -72,7 +73,7 @@ object HyperplaneSubdivisionDemo {
 
     }
 
-    def starPlotDiv(dataPoints: Seq[Vector]) = {
+    def starPlotDiv(dataPoints: Seq[Vector], subdivision: Int) = {
       val dimension = dataPoints.head.dimension
       val downHalfDimension = dimension / 2
       val upHalfDimension = ceil(dimension / 2.0).toInt
@@ -134,8 +135,7 @@ object HyperplaneSubdivisionDemo {
         })
       }
 
-      val subdivision = 2
-      val grid = IntVectors.nGrid(dimension, subdivision).mapVertices(subdivisionReference(_) / dimension)
+      val grid = IntVectors.nGrid(dimension, subdivision).mapVertices(_.vector)//.mapVertices(subdivisionReference(_) / dimension)
       val groups = pointSet.spaceNormalizedOutputs
         .map(_ * subdivision)
         .groupBy(subdivisionReference)
@@ -143,19 +143,41 @@ object HyperplaneSubdivisionDemo {
 
       val sizes = groups.map { case (reference, group) => (reference, group.size) }
 
-      val gridDataSeq = grid.arrows.map(arrow => {
-        val points = Seq(arrow.tail, arrow.head).map(starBasis.transform)
+      val gridDataSeq = {
+        val points = grid.vertices.toSeq.map(starBasis.transform)
         val coordinates = points.transpose
-        scatter
+        Seq(scatter
           .x(coordinates(0).toJSArray)
           .y(coordinates(1).toJSArray)
-          .setMode(lines)
-          .line(line
-            .color(0.5 at 4)
+          .marker(marker
+            .size(8)
+            .symbol(circle.open)
+            .color(0.5 at 3)
           )
-          .hoverinfo("none")
-          ._result
-      })
+        ) ++ grid.arrows.flatMap(arrow => {
+          val points = Seq(arrow.tail, arrow.head).map(starBasis.transform)
+          val coordinates = points.transpose
+          Seq(
+            scatter
+              .line(line
+                .width(1)
+                .color(0.5 at 3)
+              ),
+            scatter
+              .line(line
+                .width(4)
+                .color((0.5 at 3).opacity(0.1))
+              ),
+          ).map(_
+            .x(coordinates(0).toJSArray)
+            .y(coordinates(1).toJSArray)
+            .setMode(lines)
+          )
+        })
+      }.map(_
+        .hoverinfo("none")
+        ._result
+      )
 
       val groupsDataSeq = groups.map { case (_, groupPoints) =>
         val groupColor = Colors.randomColor
@@ -170,7 +192,8 @@ object HyperplaneSubdivisionDemo {
             .size(4)
             .symbol(circle)
             .color(groupColor)
-            .opacity(0.5))
+            .opacity(0.5)
+          )
           .hoverinfo("none")
         ._result
       }
@@ -237,17 +260,17 @@ object HyperplaneSubdivisionDemo {
       lowCorner.map(_ + 0)
     }
     div(
-      starPlotDiv(points(3, 32)),
-      starPlotDiv(points(4, 4)),
-      starPlotDiv(points(5, 4)),
-      starPlotDiv(points(6, 2)),
-      starPlotDiv(points(7, 2)),
-      starPlotDiv(points(8, 2)),
+      onDemand("3rd dimension", _ => starPlotDiv(points(3, 32), 3)),
+      onDemand("4th dimension", _ => starPlotDiv(points(4, 2), 3)),
+      onDemand("5th dimension", _ => starPlotDiv(points(5, 2), 3)),
+      onDemand("6th dimension", _ => starPlotDiv(points(6, 2), 2)),
+      onDemand("7th dimension", _ => starPlotDiv(points(7, 2), 2)),
+      onDemand("8th dimension", _ => starPlotDiv(points(8, 2), 2)),
     )
   }
 
   val elementDemo: Demo = new Demo {
-    override def isLazy: Boolean = true
+    override def isLazy: Boolean = false
     def title: String = "Hyperplane subdivision"
     def code: String = sc.source
     def element: HtmlElement = sc.value

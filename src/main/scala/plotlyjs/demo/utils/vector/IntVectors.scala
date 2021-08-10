@@ -59,7 +59,6 @@ object IntVectors {
           (v ++ Seq(i - 1)) --> (v ++ Seq(i))
         })
       }))
-
     }
   }
 

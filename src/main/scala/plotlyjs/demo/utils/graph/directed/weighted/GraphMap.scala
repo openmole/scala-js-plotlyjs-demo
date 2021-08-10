@@ -26,4 +26,28 @@ object GraphMap {
     gm1.map { case (key, values) => (key, values -- gm2.get(key).map(_.keys).getOrElse(Set())) }
   }
 
+  def filterKeys[V, W](gm: GraphMap[V, W], pred: V => Boolean): GraphMap[V, W] = {
+    val filtering = gm.keySet.filter(pred)
+    gm
+      .filter { case (vertex, _) => filtering contains vertex }
+      .map {
+        case (vertex, weightMap) => (
+          vertex,
+          weightMap.filter { case (head, _) => filtering contains head }
+        )
+      }
+  }
+
+  def keysMapping[V, W, FV](gm: GraphMap[V, W], f: V => FV): HashMap[V, FV] = HashMap.from(gm.keys.map(key => (key, f(key))))
+
+  def mapKeys[V, W, FV](gm: GraphMap[V, W], f: V => FV): GraphMap[FV, W] = {
+    val mapping = keysMapping(gm, f)
+    HashMap.from(gm map {
+      case (vertex, weightMap) => (
+        mapping(vertex),
+        weightMap.map { case (head, weight) => (mapping(head), weight) }
+      )
+    })
+  }
+
 }

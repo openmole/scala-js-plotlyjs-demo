@@ -1,7 +1,6 @@
 package plotlyjs.demo.utils.graph.directed.weighted
 
 import plotlyjs.demo.utils.Utils.printCode
-import plotlyjs.demo.utils.graph.directed.weighted.Graph._
 
 import scala.collection.immutable.HashMap
 import scala.language.{implicitConversions, postfixOps}
@@ -15,7 +14,7 @@ class Graph[V, W](_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V, W]]()) 
 
   def vertices: Set[V] = gm.keySet
 
-  def arrows: Iterable[Arrow] = gm.flatMap { case (vertex, weightMap) => weightMap.map { case (head, weight) => Arrow(vertex, weight, head) } }
+  def arrows: Iterable[Arrow] = gm.flatMap { case (vertex, weightMap) => weightMap.map { case (head, weight) => Graph.Arrow(vertex, weight, head) } }
 
   def directSuccessorsOf(vertex: V): HashMap[V, W] = gm(vertex)
 
@@ -114,26 +113,11 @@ class Graph[V, W](_gm: HashMap[V, HashMap[V, W]] = HashMap[V, HashMap[V, W]]()) 
 
 
 
-  def filterVertices(pred: V => Boolean): Graph[V, W] = {
-    val filtering = vertices.filter(pred)
-    new Graph(gm
-      .filter { case (vertex, _) => filtering contains vertex }
-      .map { case (vertex, heads) => (
-        vertex,
-        heads.filter { case (head, _) => filtering contains head }
-      )}
-    )
-  }
+  def filterVertices(pred: V => Boolean): Graph[V, W] = new Graph(GraphMap.filterKeys(gm, pred))
 
-  def verticesMapping[FV](f: V => FV): HashMap[V, FV] = HashMap.from(vertices.map(vertex => (vertex, f(vertex))))
+  def verticesMapping[FV](f: V => FV): HashMap[V, FV] = GraphMap.keysMapping(gm, f)
 
-  def mapVertices[FV](f: V => FV): Graph[FV, W] = {
-    val mapping = verticesMapping(f)
-    new Graph(gm map { case (vertex, heads) => ( //TODO move to GraphMap ?
-      mapping(vertex),
-      heads.map { case (head, weight) => (mapping(head), weight) }
-    ) })
-  }
+  def mapVertices[FV](f: V => FV): Graph[FV, W] = new Graph(GraphMap.mapKeys(gm, f))
 
 
 

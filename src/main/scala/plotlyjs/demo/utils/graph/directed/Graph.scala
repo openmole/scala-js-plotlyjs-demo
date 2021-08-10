@@ -1,8 +1,6 @@
 package plotlyjs.demo.utils.graph.directed
 
 import plotlyjs.demo.utils.Utils.printCode
-import plotlyjs.demo.utils.graph.directed.Graph.Arrow
-import plotlyjs.demo.utils.graph.directed.weighted.Graph
 import plotlyjs.demo.utils.graph.directed.weighted.GraphMap.VertexAndWeight
 
 import scala.collection.immutable.HashMap
@@ -16,7 +14,7 @@ class Graph[V](_wg: weighted.Graph[V, Null]) {
 
   def vertices: Set[V] = wg.vertices
 
-  def arrows: Iterable[Arrow] = wg.arrows.map(arrow => Arrow(arrow.tail, arrow.head))
+  def arrows: Iterable[Arrow] = wg.arrows.map(arrow => Graph.Arrow(arrow.tail, arrow.head))
 
   def directSuccessorsOf(vertex: V): Set[V] = wg.directSuccessorsOf(vertex).keySet
 
@@ -86,14 +84,13 @@ class Graph[V](_wg: weighted.Graph[V, Null]) {
 object Graph {
 
   trait Element[V] {
-    def toWeightedGraphElement: weighted.Graph.Element
-    def toGraph: Graph[V] = new Graph(toWeightedGraphElement.toGraph[V, Null])
+    def toWeightedElement: weighted.Graph.Element
   }
 
   implicit class Vertex[V](vertex: V) extends Element[V] {
     def toWeightedVertex: weighted.Graph.Vertex[V] = weighted.Graph.Vertex(vertex)
 
-    override def toWeightedGraphElement: weighted.Graph.Element = toWeightedVertex
+    override def toWeightedElement: weighted.Graph.Element = toWeightedVertex
   }
 
   implicit class ImplicitTail[V](tail: V) {
@@ -102,12 +99,12 @@ object Graph {
   case class Arrow[V](tail: V, head: V) extends Element[V] {
     def toWeightedArrow: weighted.Graph.Arrow[V, Null] = weighted.Graph.Arrow(tail, null, head)
 
-    override def toWeightedGraphElement: weighted.Graph.Element = toWeightedArrow
+    override def toWeightedElement: weighted.Graph.Element = toWeightedArrow
   }
 
-  def apply[V](elements: Element[V]*): Graph[V] = new Graph(weighted.Graph.apply(elements.map(_.toWeightedGraphElement): _*))
+  def apply[V](elements: Element[V]*): Graph[V] = new Graph(weighted.Graph.apply(elements.map(_.toWeightedElement): _*))
 
-  def from[V](elements: Set[Element[V]]): Graph[V] = new Graph(weighted.Graph.from(elements.map(_.toWeightedGraphElement)))
+  def from[V](elements: Set[Element[V]]): Graph[V] = new Graph(weighted.Graph.from(elements.map(_.toWeightedElement)))
 
   def fromVertices[V](vertices: Set[V]): Graph[V] = new Graph(weighted.Graph.fromVertices(vertices))
 

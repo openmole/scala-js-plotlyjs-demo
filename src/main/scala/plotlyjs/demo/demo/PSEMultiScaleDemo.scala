@@ -6,11 +6,13 @@ import org.openmole.plotlyjs.ShapeType.rect
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.utils.Colors._
+import plotlyjs.demo.utils.Utils.printCode
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils.{Basis, PointSet, Utils}
 
+import scala.collection.immutable.HashMap
 import scala.math._
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
@@ -22,26 +24,44 @@ object PSEMultiScaleDemo { //TODO with subplots ?
       sqrt(-2 * log(random)) * cos(2 * Pi * random) * sigma + mu
     }
 
-    case class MultiScaleBasis(sourceDimension: Int, subdivision: Int, destinationDimension: Int, stretchable: Boolean = false, gap: Int = 1) extends Basis {
+    case class MultiScaleBasis(sourceDimension: Int, subdivision: Int, destinationDimension: Int, allowStretch: Boolean = false, gap: Int = 1) extends Basis {
 
       val remainder: Int = sourceDimension % destinationDimension
-      val complement: Int = (destinationDimension - remainder) % destinationDimension
-      val stretched: Boolean = stretchable && complement != 0
+      val stretchable: Boolean = remainder != 0
+      val stretched: Boolean = allowStretch && stretchable
 
-      private def _i(i: Int) = {
-        if(stretched) complement + i else i
+      def axisIndex(i: Int): Int = {
+        i % destinationDimension
       }
 
       def scaleIndex(i: Int): Int = {
-        _i(i) / destinationDimension
+        i / destinationDimension
+      }
+
+      //Stretching
+      def stretchedAxisIndex(i: Int): Int = {
+        if(stretched && i >= destinationDimension) {
+            axisIndex(i + remainder)
+        } else {
+          axisIndex(i)
+        }
+      }
+
+      def stretchedScaleIndex(i: Int): Int = {
+        if(stretched && stretchedAxisIndex(i) < remainder) {
+          scaleIndex(i) + 1
+        } else {
+          scaleIndex(i)
+        }
+      }
+      //
+
+      def axis(i: Int): Int = {
+        stretchedAxisIndex(i)
       }
 
       def scale(i: Int): Double = {
-        pow(subdivision + gap, scaleIndex(i))
-      }
-
-      def axis(i: Int): Int = {
-        _i(i) % destinationDimension
+        pow(subdivision + gap, stretchedScaleIndex(i))
       }
 
       override val size: Int = sourceDimension
@@ -64,49 +84,94 @@ object PSEMultiScaleDemo { //TODO with subplots ?
       toIntVector(vector.map(_.floor))
     }
 
-    def subplot(basis: MultiScaleBasis, discovered: Seq[Vector]): Seq[PlotData] = {
-      val subplotDimension = basis.sourceDimension - basis.destinationDimension;
-      (toIntVector(0 at subplotDimension) +: IntVectors.positiveNCube(subplotDimension, basis.subdivision).toSeq).distinct.flatMap(subplotIndexVector => {
-        println("A")
-        val subplotIndexString = {
-          subplotDimension match {
-            case 0 => ""
-            case 1 => (subplotIndexVector(0) + 1).toString
-            case 2 => (subplotIndexVector(0) + basis.subdivision * (basis.subdivision - subplotIndexVector(1)) + 1).toString //invert y axis
+    def subplot(msb: MultiScaleBasis, discovered: Seq[Vector], boxDensities: HashMap[Vector, Double]): (Seq[PlotData], Seq[Shape]) = {
+      val subplotDimension = msb.sourceDimension - msb.destinationDimension
+      val basis = new MultiScaleBasis(msb.sourceDimension, msb.subdivision, msb.destinationDimension, msb.allowStretch, msb.gap) {
+
+        override def transform(vector: Vector): Vector = {
+          val v = super.transform(vector.take(destinationDimension) ++ (0 at subplotDimension))
+          if(stretched) {
+            v.replace(0, _/(subdivision + gap)) // no longer stretched
+          } else {
+            v
           }
         }
-        Utils.printCode(subplotIndexString)
-        val coordinates = discovered
-          .filter(subdivisionIndexOf(_).drop(basis.destinationDimension) == subplotIndexVector)
-          .map(_.take(basis.destinationDimension) ++ (0 at subplotDimension))
-          .map(basis.transform)
-          .transpose
-        Option.when(coordinates.nonEmpty)({
-          println("C")
-          scatter
-            .x(coordinates(0).toJSArray)
-            .y(coordinates(1).toJSArray)
-            .xaxis("x" + subplotIndexString)
-            .yaxis("y" + subplotIndexString)
-            .marker(marker
-              .size(2)
-              .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
-            )
-            ._result
-        })
+
+      }
+
+      val zipped = (toIntVector(0 at subplotDimension) +: IntVectors.positiveNCube(subplotDimension, basis.subdivision).toSeq).distinct.map(subplotIndexVector => {
+        val subplotIndex = (subplotDimension match {
+          case 0 => 1
+          case 1 => basis.subdivision - 1 - subplotIndexVector(0)
+          case 2 => subplotIndexVector(0) + basis.subdivision * (basis.subdivision - 1 - subplotIndexVector(1))
+        }) + 1
+
+        def predicate(vector: Vector) = {
+          subdivisionIndexOf(vector).drop(basis.destinationDimension) == subplotIndexVector
+        }
+
+        def filter(seq: Seq[Vector]) = {
+          seq.filter(predicate)
+        }
+
+        val data = {
+          val coordinates = filter(discovered).map(basis.transform).transpose
+          Option.when(coordinates.nonEmpty)({
+            scatter
+              .x(coordinates(0).toJSArray)
+              .y(coordinates(1).toJSArray)
+              .xaxis("x" + subplotIndex)
+              .yaxis("y" + subplotIndex)
+              .marker(marker
+                .size(2)
+                .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
+              )
+              ._result
+          }).getOrElse(scatter._result)
+        }
+
+        val shapeSeq = boxDensities
+          .filter(bd => predicate(bd._1))
+          .map { case (box, density) =>
+            val b0 = box
+            val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
+            val points = Seq(b0, b1).map(basis.transform)
+            val coordinates = points.transpose
+            Shape
+              .`type`(rect)
+              .xref("x" + subplotIndex)
+              .yref("y" + subplotIndex)
+              .x0(coordinates(0)(0))
+              .x1(coordinates(0)(1))
+              .y0(coordinates(1)(0))
+              .y1(coordinates(1)(1))
+              .line(line
+                .width(1)
+                .color(0.5 at 4)
+              )
+              .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
+              .layer("above")
+              ._result
+          }.toSeq
+
+        (data, shapeSeq)
+
       })
+
+      val (plotDatSeq, shapeSeqSeq) = zipped.unzip
+      (plotDatSeq, shapeSeqSeq.flatten)
     }
 
     val dimension = 4
-    val subdivision = 2
+    val subdivision = 5
 
-    val basis = MultiScaleBasis(dimension, subdivision, 2, stretchable = true)
+    val basis = MultiScaleBasis(dimension, subdivision, 2, allowStretch = true)
 
     val boxes = IntVectors.positiveNCube(dimension, subdivision).toSeq.map(_.vector)
 
-    val pointSet = new PointSet(
-      Utils.randomizeDimensions((1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension))
-    )
+    val pointSet = new PointSet(/*Utils.randomizeDimensions*/(
+        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension) :+ (0 at dimension).replace(3, 10)
+    ))
     val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(subdivision)) //TODO use bounds to be specified for each dimension.
     //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
 
@@ -120,8 +185,10 @@ object PSEMultiScaleDemo { //TODO with subplots ?
       val maxCount = counts.max
       counts.map(_.toDouble / maxCount)
     }
+    val boxCounts = HashMap.from(boxes.zip(counts));
+    val boxDensities = HashMap.from(boxes.zip(densities))
 
-    val boxesShapeSeq = boxes.zip(densities).map { case (box, density) =>
+    val boxesShapeSeq = boxDensities.map { case (box, density) =>
       val b0 = box
       val b1 = b0 + (0.0 at dimension).replace(0, 1.0).replace(1, 1.0)
       val points = Seq(b0, b1).map(basis.transform)
@@ -167,7 +234,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
                   case 1 => 2
                 }
               }) * 1.5
-              (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
+              (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axisIndex(i), 0)
             })
             val text = {
               val values = pointSet.rawOutputs.map(_(i))
@@ -176,7 +243,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
               val bound = minValue + (maxValue - minValue) * s/subdivision
               s"o${i + 1} = %.2f".format(bound)
             }
-            val textangle = basis.axis(i) match {
+            val textangle = basis.axisIndex(i) match {
               case 0 => -90
               case 1 => 0
             }
@@ -227,41 +294,43 @@ object PSEMultiScaleDemo { //TODO with subplots ?
           .visible(false)
         )
         .shapes(boxesShapeSeq.toJSArray)
-        .annotations(boundsAnnotationSeq.toJSArray)
+        //.annotations(boundsAnnotationSeq.toJSArray)
         ._result
     )
 
     val subplotDiv = div()
-    val subplotDataSeq = subplot(basis, discovered)
-    Plotly.newPlot(
-      subplotDiv.ref,
-      subplotDataSeq.toJSArray,
-      Layout
-        .title("PSE" + (if(basis.stretched) " stretched" else ""))
+    val (subplotDataSeq, subplotShapeSeq) = subplot(basis, discovered, boxDensities)
+    val subplotLayout = {
+      var layout = Layout
+        .title("PSE subplots" + (if(basis.stretched) " stretched" else ""))
         .width(size)
         .height(size)
         .showlegend(false)
-
-        /*
-        .xaxis(axis
-          .visible(false)
-        )
-        .yaxis(axis
-          .scaleanchor("x")
-          .visible(false)
-        )
-        */
-
-        //.shapes(boxesShapeSeq.toJSArray)
-        //.annotations(boundsAnnotationSeq.toJSArray)
-
         .grid(grid
-          .rows(2)
-          .columns(2)
+          .rows(subdivision)
+          .columns(if(basis.stretchable) 1 else subdivision)
           .pattern(Pattern.independent)
         )
-
-        ._result
+        .shapes(subplotShapeSeq.toJSArray)
+      for(i <- 1 to subplotDataSeq.size) {
+        layout = layout
+          .asJsOpt("xaxis" + i, axis
+            .range(0, subdivision)
+            //.scaleanchor("x1") TODO
+            .dtick(1)
+          )
+          .asJsOpt("yaxis" + i, axis
+            .range(0, subdivision)
+            .dtick(1)
+            //.scaleanchor("x1") TODO
+          )
+      }
+      layout._result
+    }
+    Plotly.newPlot(
+      subplotDiv.ref,
+      subplotDataSeq.toJSArray,
+      subplotLayout
     )
 
     div(

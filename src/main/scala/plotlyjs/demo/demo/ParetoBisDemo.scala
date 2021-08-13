@@ -283,7 +283,7 @@ object ParetoBisDemo {
               )
             })
           }
-          val plotDataBuilderSeq = coordinateStar ++ componentSum ++ multiObjectiveCompromise
+          val plotDataBuilderSeq = coordinateStar ++ componentSum ++ multiObjectiveCompromise ++ oneObjectiveCompromise
           val plotDataSeq = plotDataBuilderSeq.map(_
             .hoverinfo("none")
             ._result

@@ -1,16 +1,15 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import org.openmole.plotlyjs.PlotMode.text
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ShapeType.rect
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
-import plotlyjs.demo.utils.vector.IntVectors._
-import plotlyjs.demo.utils.{Basis, PointSet, Utils}
 import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.vector.IntVectors
+import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
+import plotlyjs.demo.utils.{Basis, PointSet, Utils}
 
 import scala.math._
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -61,8 +60,45 @@ object PSEMultiScaleDemo { //TODO with subplots ?
 
     }
 
+    def subdivisionIndexOf(vector: Vector): IntVector = {
+      toIntVector(vector.map(_.floor))
+    }
+
+    def subplot(basis: MultiScaleBasis, discovered: Seq[Vector]): Seq[PlotData] = {
+      val subplotDimension = basis.sourceDimension - basis.destinationDimension;
+      (toIntVector(0 at subplotDimension) +: IntVectors.positiveNCube(subplotDimension, basis.subdivision).toSeq).distinct.flatMap(subplotIndexVector => {
+        println("A")
+        val subplotIndexString = {
+          subplotDimension match {
+            case 0 => ""
+            case 1 => (subplotIndexVector(0) + 1).toString
+            case 2 => (subplotIndexVector(0) + basis.subdivision * (basis.subdivision - subplotIndexVector(1)) + 1).toString //invert y axis
+          }
+        }
+        Utils.printCode(subplotIndexString)
+        val coordinates = discovered
+          .filter(subdivisionIndexOf(_).drop(basis.destinationDimension) == subplotIndexVector)
+          .map(_.take(basis.destinationDimension) ++ (0 at subplotDimension))
+          .map(basis.transform)
+          .transpose
+        Option.when(coordinates.nonEmpty)({
+          println("C")
+          scatter
+            .x(coordinates(0).toJSArray)
+            .y(coordinates(1).toJSArray)
+            .xaxis("x" + subplotIndexString)
+            .yaxis("y" + subplotIndexString)
+            .marker(marker
+              .size(2)
+              .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
+            )
+            ._result
+        })
+      })
+    }
+
     val dimension = 4
-    val subdivision = 5
+    val subdivision = 2
 
     val basis = MultiScaleBasis(dimension, subdivision, 2, stretchable = true)
 
@@ -76,7 +112,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
 
     val counts = {
       val countMap = discovered
-        .groupBy(_.map(_.floor))
+        .groupBy(subdivisionIndexOf)
         .map { case (box, members) => (box, members.size) }
       boxes.map(countMap.getOrElse(_, 0))
     }
@@ -195,7 +231,43 @@ object PSEMultiScaleDemo { //TODO with subplots ?
         ._result
     )
 
-    plotDiv
+    val subplotDiv = div()
+    val subplotDataSeq = subplot(basis, discovered)
+    Plotly.newPlot(
+      subplotDiv.ref,
+      subplotDataSeq.toJSArray,
+      Layout
+        .title("PSE" + (if(basis.stretched) " stretched" else ""))
+        .width(size)
+        .height(size)
+        .showlegend(false)
+
+        /*
+        .xaxis(axis
+          .visible(false)
+        )
+        .yaxis(axis
+          .scaleanchor("x")
+          .visible(false)
+        )
+        */
+
+        //.shapes(boxesShapeSeq.toJSArray)
+        //.annotations(boundsAnnotationSeq.toJSArray)
+
+        .grid(grid
+          .rows(2)
+          .columns(2)
+          .pattern(Pattern.independent)
+        )
+
+        ._result
+    )
+
+    div(
+      plotDiv,
+      subplotDiv
+    )
   }
 
   val elementDemo: Demo = new Demo {

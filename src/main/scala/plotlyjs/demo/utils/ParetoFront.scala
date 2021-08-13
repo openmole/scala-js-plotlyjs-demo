@@ -82,8 +82,6 @@ object ParetoFront {
       .groupBy(_._1.indexWhere(_ > 0))
       .map { case (index, group) => (index, group.minBy { case (v, _) => abs(v(index)) }._2) }
       .map { case (dimensionIndex, vectorIndex) => directed.weighted.Graph.ImplicitTail(v0) --dimensionIndex-> front(vectorIndex) }
-      //.map(_.toGraph[Vector, Int])
-      //.reduceOption(_ ++ _).getOrElse(directed.weighted.Graph())
       .toSet
     )
   }

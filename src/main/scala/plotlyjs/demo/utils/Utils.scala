@@ -243,8 +243,8 @@ object Utils {
     )
   }
 
-  def printCode[T](sc: sourcecode.Text[T]): T = {
-    println(sc.source + " = " + sc.value)
+  def printCode[T](sc: sourcecode.Text[T])(implicit line: sourcecode.Line, file: sourcecode.File): T = {
+    println(file.value + ":" + line.value + " " + sc.source + " = " + sc.value)
     sc.value
   }
 

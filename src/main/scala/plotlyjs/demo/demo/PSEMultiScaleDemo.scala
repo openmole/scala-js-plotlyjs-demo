@@ -1,22 +1,24 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
+import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ShapeType.rect
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
+import org.scalajs.dom.html
 import plotlyjs.demo.utils.Colors._
 import plotlyjs.demo.utils.Utils.printCode
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
-import plotlyjs.demo.utils.{Basis, PointSet, Utils}
+import plotlyjs.demo.utils.{Basis, PointSet}
 
 import scala.collection.immutable.HashMap
 import scala.math._
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
-object PSEMultiScaleDemo { //TODO with subplots ?
+object PSEMultiScaleDemo {
 
   private lazy val sc = sourcecode.Text {
 
@@ -84,7 +86,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
       toIntVector(vector.map(_.floor))
     }
 
-    def subplot(msb: MultiScaleBasis, discovered: Seq[Vector], boxDensities: HashMap[Vector, Double]): (Seq[PlotData], Seq[Shape]) = {
+    def subplotDiv(msb: MultiScaleBasis, size: Int): ReactiveHtmlElement[html.Div] = {
       val subplotDimension = msb.sourceDimension - msb.destinationDimension
       val basis = new MultiScaleBasis(msb.sourceDimension, msb.subdivision, msb.destinationDimension, msb.allowStretch, msb.gap) {
 
@@ -98,6 +100,29 @@ object PSEMultiScaleDemo { //TODO with subplots ?
         }
 
       }
+
+      //Data generation and analysis
+      val boxes = IntVectors.positiveNCube(basis.sourceDimension, basis.subdivision).toSeq.map(_.vector)
+
+      val pointSet = new PointSet(/*Utils.randomizeDimensions*/(
+        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension)/* :+ (0 at dimension).replace(3, 10)*/
+        ))
+      val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(basis.subdivision)) //TODO use bounds to be specified for each dimension.
+      //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
+
+      val counts = {
+        val countMap = discovered
+          .groupBy(subdivisionIndexOf)
+          .map { case (box, members) => (box, members.size) }
+        boxes.map(countMap.getOrElse(_, 0))
+      }
+      val densities = {
+        val maxCount = counts.max
+        counts.map(_.toDouble / maxCount)
+      }
+      val boxCounts = HashMap.from(boxes.zip(counts));
+      val boxDensities = HashMap.from(boxes.zip(densities))
+      //
 
       val zipped = (toIntVector(0 at subplotDimension) +: IntVectors.positiveNCube(subplotDimension, basis.subdivision).toSeq).distinct.map(subplotIndexVector => {
         val subplotIndex = (subplotDimension match {
@@ -155,14 +180,113 @@ object PSEMultiScaleDemo { //TODO with subplots ?
           }.toSeq
 
         (data, shapeSeq)
-
       })
+      val (plotDataSeq, shapeSeqSeq) = zipped.unzip
+      val shapeSeq = shapeSeqSeq.flatten
 
-      val (plotDatSeq, shapeSeqSeq) = zipped.unzip
-      (plotDatSeq, shapeSeqSeq.flatten)
+      val boundsAnnotationSeq = {
+        (basis.destinationDimension until basis.sourceDimension).flatMap(i => {
+
+          (0 to basis.subdivision).map(s => {
+            val point = (0.0 at basis.destinationDimension).replace(basis.axis(i), s)
+              .add({
+                val margin = 0.35
+                (-margin at basis.destinationDimension).replace(basis.axis(i), 0)
+              })
+            val text = {
+              /*
+              val values = pointSet.rawOutputs.map(_(i))
+              val minValue = values.min
+              val maxValue = values.max
+              val bound = minValue + (maxValue - minValue) * s/basis.subdivision
+              s"o${i + 1} = %.2f".format(bound)
+              */
+              s.toString
+            }
+            val textangle = basis.axis(i) match {
+              case 0 => 0
+              case 1 => -90
+            }
+            Annotation
+              .x(point(0) / basis.subdivision).xref("paper")
+              .y(point(1) / basis.subdivision).yref("paper")
+              .xanchor("center")
+              .yanchor("center")
+              .text(text)
+              .textangle(textangle)
+              .showarrow(false)
+              ._result
+          })
+
+        })
+      }
+      val layout = {
+
+        var layout = Layout
+          .title("PSE subplots" + (if(basis.stretched) " stretched" else ""))
+          .width(size)
+          .height({
+            if(basis.sourceDimension == 3 && !basis.stretched) {
+              size//printCode(size/basis.subdivision.toDouble)
+            } else {
+              size
+            }
+          })
+          .showlegend(false)
+          .shapes(shapeSeq.toJSArray)
+          .annotations(boundsAnnotationSeq.toJSArray)
+
+        if(subplotDimension != 0)  {
+          layout = layout
+            .grid(grid
+              .rows({
+                basis.sourceDimension match {
+                  case 3 => if(basis.stretched) basis.subdivision else 1
+                  case 4 => basis.subdivision
+                }
+              })
+              .columns({
+                basis.sourceDimension match {
+                  case 3 => if(basis.stretched) 1 else basis.subdivision
+                  case 4 => basis.subdivision
+                }
+              })
+              .pattern(Pattern.independent)
+            )
+        }
+
+        (1 to plotDataSeq.size).map(_.toString).foreach(indexString => {
+          layout = layout
+            .asJsOpt("xaxis" + indexString, axis
+              .range(0, basis.subdivision)
+              .dtick(1)
+            )
+            .asJsOpt("yaxis" + indexString, {
+              var yaxis = axis
+                .range(0, basis.subdivision)
+                .dtick(1)
+              if(!basis.stretched) {
+                yaxis = yaxis
+                  .scaleanchor("x" + (if(indexString == "1") "" else indexString))
+              }
+              yaxis
+            })
+        })
+
+        layout._result
+      }
+
+      val plotDiv = div()
+      Plotly.newPlot(
+        plotDiv.ref,
+        plotDataSeq.toJSArray,
+        layout
+      )
+
+      plotDiv
     }
 
-    val dimension = 4
+    val dimension = 3
     val subdivision = 5
 
     val basis = MultiScaleBasis(dimension, subdivision, 2, allowStretch = true)
@@ -170,7 +294,7 @@ object PSEMultiScaleDemo { //TODO with subplots ?
     val boxes = IntVectors.positiveNCube(dimension, subdivision).toSeq.map(_.vector)
 
     val pointSet = new PointSet(/*Utils.randomizeDimensions*/(
-        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension) :+ (0 at dimension).replace(3, 10)
+        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension)/* :+ (0 at dimension).replace(3, 10)*/
     ))
     val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(subdivision)) //TODO use bounds to be specified for each dimension.
     //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
@@ -298,44 +422,12 @@ object PSEMultiScaleDemo { //TODO with subplots ?
         ._result
     )
 
-    val subplotDiv = div()
-    val (subplotDataSeq, subplotShapeSeq) = subplot(basis, discovered, boxDensities)
-    val subplotLayout = {
-      var layout = Layout
-        .title("PSE subplots" + (if(basis.stretched) " stretched" else ""))
-        .width(size)
-        .height(size)
-        .showlegend(false)
-        .grid(grid
-          .rows(subdivision)
-          .columns(if(basis.stretchable) 1 else subdivision)
-          .pattern(Pattern.independent)
-        )
-        .shapes(subplotShapeSeq.toJSArray)
-      for(i <- 1 to subplotDataSeq.size) {
-        layout = layout
-          .asJsOpt("xaxis" + i, axis
-            .range(0, subdivision)
-            //.scaleanchor("x1") TODO
-            .dtick(1)
-          )
-          .asJsOpt("yaxis" + i, axis
-            .range(0, subdivision)
-            .dtick(1)
-            //.scaleanchor("x1") TODO
-          )
-      }
-      layout._result
-    }
-    Plotly.newPlot(
-      subplotDiv.ref,
-      subplotDataSeq.toJSArray,
-      subplotLayout
-    )
-
     div(
       plotDiv,
-      subplotDiv
+      subplotDiv(MultiScaleBasis(2, 5, 2), size),
+      subplotDiv(MultiScaleBasis(3, 5, 2), size),
+      subplotDiv(MultiScaleBasis(3, 5, 2, allowStretch = true), size),
+      subplotDiv(MultiScaleBasis(4, 5, 2), size),
     )
   }
 

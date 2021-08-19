@@ -60,6 +60,8 @@ object Vectors {
 
     def mul(ov: Vector): Vector = v zip ov map { case (c, oc) => c * oc }
 
+    def div(ov: Vector): Vector = v zip ov map { case (c, oc) => c / oc }
+
     def distance(norm: Vector => Double, ov: Vector): Double = norm(v.sub(ov))
 
     def distance(ov: Vector): Double = distance(Vectors.pNorm(_, 2), ov)
@@ -78,6 +80,8 @@ object Vectors {
     def *(s: Double): Vector = scale(s)
 
     def /(d: Double): Vector = scale(1 / d)
+
+    def /(ov: Vector): Vector = div(ov)
 
     def +(ov: Vector): Vector = add(ov)
 

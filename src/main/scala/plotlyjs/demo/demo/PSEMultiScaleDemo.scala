@@ -8,7 +8,7 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.scalajs.dom.html
 import plotlyjs.demo.utils.Colors._
-import plotlyjs.demo.utils.Utils.printCode
+import plotlyjs.demo.utils.Utils.{onDemand, printCode}
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
@@ -86,15 +86,11 @@ object PSEMultiScaleDemo {
       toIntVector(vector.map(_.floor))
     }
 
-    def plotDiv(basis: MultiScaleBasis, size: Int) = {
-      val boxes = IntVectors.positiveNCube(basis.sourceDimension, basis.subdivision).toSeq.map(_.vector)
+    def analyse(subdivision: Int, patternSpaceMin: Vector, patternSpaceMax: Vector, points: Seq[Vector]) = {
+      val dimension = patternSpaceMin.dimension;
 
-      val pointSet = new PointSet(/*Utils.randomizeDimensions*/(
-        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension)/* :+ (0 at dimension).replace(3, 10)*/
-        ))
-      val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(basis.subdivision)) //TODO use bounds to be specified for each dimension.
-      //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
-
+      val boxes = IntVectors.positiveNCube(dimension, subdivision).toSeq.map(_.vector)
+      val discovered = points.map(v => (v - patternSpaceMin)/(patternSpaceMax - patternSpaceMin)).map(_.scale(subdivision))
       val counts = {
         val countMap = discovered
           .groupBy(subdivisionIndexOf)
@@ -107,6 +103,14 @@ object PSEMultiScaleDemo {
       }
       val boxCounts = HashMap.from(boxes.zip(counts));
       val boxDensities = HashMap.from(boxes.zip(densities))
+
+      (boxes, discovered, boxCounts, boxDensities)
+    }
+
+    def plotDiv(basis: MultiScaleBasis, size: Int) = {
+
+      val points = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension)
+      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, 0 at basis.sourceDimension, 1 at basis.sourceDimension, points)
 
       val boxesShapeSeq = boxDensities.map { case (box, density) =>
         val b0 = box
@@ -122,7 +126,7 @@ object PSEMultiScaleDemo {
           .y0(coordinates(1)(0))
           .y1(coordinates(1)(1))
           .line(line
-            .width(1)
+            .width(1)//.width(0)
             .color(0.5 at 4)
           )
           .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
@@ -157,7 +161,7 @@ object PSEMultiScaleDemo {
                 (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axisIndex(i), 0)
               })
               val text = {
-                val values = pointSet.rawOutputs.map(_(i))
+                val values = points.map(_(i))
                 val minValue = values.min
                 val maxValue = values.max
                 val bound = minValue + (maxValue - minValue) * s/basis.subdivision
@@ -236,28 +240,8 @@ object PSEMultiScaleDemo {
 
       }
 
-      //Data generation and analysis
-      val boxes = IntVectors.positiveNCube(basis.sourceDimension, basis.subdivision).toSeq.map(_.vector)
-
-      val pointSet = new PointSet(/*Utils.randomizeDimensions*/(
-        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension)/* :+ (0 at dimension).replace(3, 10)*/
-        ))
-      val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(basis.subdivision)) //TODO use bounds to be specified for each dimension.
-      //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
-
-      val counts = {
-        val countMap = discovered
-          .groupBy(subdivisionIndexOf)
-          .map { case (box, members) => (box, members.size) }
-        boxes.map(countMap.getOrElse(_, 0))
-      }
-      val densities = {
-        val maxCount = counts.max
-        counts.map(_.toDouble / maxCount)
-      }
-      val boxCounts = HashMap.from(boxes.zip(counts));
-      val boxDensities = HashMap.from(boxes.zip(densities))
-      //
+      val points = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension);
+      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, 0 at basis.sourceDimension, 1 at basis.sourceDimension, points);
 
       val zipped = (toIntVector(0 at subplotDimension) +: IntVectors.positiveNCube(subplotDimension, basis.subdivision).toSeq).distinct.map(subplotIndexVector => {
         val subplotIndex = (subplotDimension match {
@@ -306,7 +290,7 @@ object PSEMultiScaleDemo {
               .y0(coordinates(1)(0))
               .y1(coordinates(1)(1))
               .line(line
-                .width(1)
+                .width(1)//.width(0)
                 .color(0.5 at 4)
               )
               .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
@@ -435,9 +419,10 @@ object PSEMultiScaleDemo {
     val size = 800
 
     div(
-      comparisonDiv(maxSubdivisionBasis(2), size),
-      comparisonDiv(maxSubdivisionBasis(3), size),
-      comparisonDiv(maxSubdivisionBasis(4), size),
+      onDemand(comparisonDiv(maxSubdivisionBasis(2), size)),
+      onDemand(comparisonDiv(maxSubdivisionBasis(3), size)),
+      onDemand(comparisonDiv(maxSubdivisionBasis(3, allowStretch = true), size)),
+      onDemand(comparisonDiv(maxSubdivisionBasis(4), size)),
     )
   }
 

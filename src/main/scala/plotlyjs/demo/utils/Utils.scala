@@ -248,4 +248,8 @@ object Utils {
     sc.value
   }
 
+  def onDemand(sc: sourcecode.Text[ReactiveHtmlElement[org.scalajs.dom.html.Div]]): ReactiveHtmlElement[html.Div] = {
+    onDemand(sc.source, _ => sc.value)
+  }
+
 }

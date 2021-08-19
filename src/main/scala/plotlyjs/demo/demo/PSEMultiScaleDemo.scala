@@ -86,6 +86,141 @@ object PSEMultiScaleDemo {
       toIntVector(vector.map(_.floor))
     }
 
+    def plotDiv(basis: MultiScaleBasis, size: Int) = {
+      val boxes = IntVectors.positiveNCube(basis.sourceDimension, basis.subdivision).toSeq.map(_.vector)
+
+      val pointSet = new PointSet(/*Utils.randomizeDimensions*/(
+        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension)/* :+ (0 at dimension).replace(3, 10)*/
+        ))
+      val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(basis.subdivision)) //TODO use bounds to be specified for each dimension.
+      //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
+
+      val counts = {
+        val countMap = discovered
+          .groupBy(subdivisionIndexOf)
+          .map { case (box, members) => (box, members.size) }
+        boxes.map(countMap.getOrElse(_, 0))
+      }
+      val densities = {
+        val maxCount = counts.max
+        counts.map(_.toDouble / maxCount)
+      }
+      val boxCounts = HashMap.from(boxes.zip(counts));
+      val boxDensities = HashMap.from(boxes.zip(densities))
+
+      val boxesShapeSeq = boxDensities.map { case (box, density) =>
+        val b0 = box
+        val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
+        val points = Seq(b0, b1).map(basis.transform)
+        val coordinates = points.transpose
+        Shape
+          .`type`(rect)
+          .xref("x")
+          .yref("y")
+          .x0(coordinates(0)(0))
+          .x1(coordinates(0)(1))
+          .y0(coordinates(1)(0))
+          .y1(coordinates(1)(1))
+          .line(line
+            .width(1)
+            .color(0.5 at 4)
+          )
+          .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
+          .layer("above")
+          ._result
+      }
+
+      val boundsAnnotationSeq = {
+        (0 until basis.sourceDimension).flatMap(i => {
+
+          //Repeating 0-scaleIndex legend in 1-scaleIndex space.
+          val shiftSeq = if(basis.scaleIndex(i) == 0 && basis.destinationDimension + i < basis.sourceDimension) {
+            (1 until basis.subdivision).map(s => {
+              (0.0 at basis.sourceDimension).replace(basis.destinationDimension + i, s)
+            })
+          } else Seq()
+          ((0.0 at basis.sourceDimension) +: shiftSeq).flatMap(shift => {
+
+            (0 to basis.subdivision).map(s => {
+              val point = basis.transform(
+                (0.0 at basis.sourceDimension)
+                  .replace(i, s)
+                  .add(shift)
+              ).add({
+                val margin = (basis.sourceDimension match {
+                  case 2 => 0.25
+                  case _ => basis.scaleIndex(i) match {
+                    case 0 => 1.5
+                    case 1 => 2
+                  }
+                }) * 1.5
+                (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axisIndex(i), 0)
+              })
+              val text = {
+                val values = pointSet.rawOutputs.map(_(i))
+                val minValue = values.min
+                val maxValue = values.max
+                val bound = minValue + (maxValue - minValue) * s/basis.subdivision
+                s"o${i + 1} = %.2f".format(bound)
+              }
+              val textangle = basis.axisIndex(i) match {
+                case 0 => -90
+                case 1 => 0
+              }
+              Annotation
+                .x(point(0))
+                .y(point(1))
+                .text(text)
+                .textangle(textangle)
+                .showarrow(false)
+                ._result
+            })
+
+          })
+
+        })
+      }
+      val data = {
+        val coordinates = discovered
+          .map(_.zipWithIndex.map { case (c, i) => if(i < 2) c else floor(c) })
+          .map(basis.transform)
+          .transpose
+        scatter
+          .x(coordinates(0).toJSArray)
+          .y(coordinates(1).toJSArray)
+          .marker(marker
+            .size(2)
+            .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
+          )
+          ._result
+      }
+
+      val plotDiv = div()
+      val plotDataSeq = Seq(data)
+      val size = 800
+      Plotly.newPlot(
+        plotDiv.ref,
+        plotDataSeq.toJSArray,
+        Layout
+          .title("PSE" + (if(basis.stretched) " stretched" else ""))
+          .width(size)
+          .height(size)
+          .showlegend(false)
+          .xaxis(axis
+            .visible(false)
+          )
+          .yaxis(axis
+            .scaleanchor("x")
+            .visible(false)
+          )
+          .shapes(boxesShapeSeq.toJSArray)
+          //.annotations(boundsAnnotationSeq.toJSArray)
+          ._result
+      )
+
+      plotDiv
+    }
+
     def subplotDiv(msb: MultiScaleBasis, size: Int): ReactiveHtmlElement[html.Div] = {
       val subplotDimension = msb.sourceDimension - msb.destinationDimension
       val basis = new MultiScaleBasis(msb.sourceDimension, msb.subdivision, msb.destinationDimension, msb.allowStretch, msb.gap) {
@@ -286,148 +421,23 @@ object PSEMultiScaleDemo {
       plotDiv
     }
 
-    val dimension = 3
-    val subdivision = 5
-
-    val basis = MultiScaleBasis(dimension, subdivision, 2, allowStretch = true)
-
-    val boxes = IntVectors.positiveNCube(dimension, subdivision).toSeq.map(_.vector)
-
-    val pointSet = new PointSet(/*Utils.randomizeDimensions*/(
-        (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at dimension)/* :+ (0 at dimension).replace(3, 10)*/
-    ))
-    val discovered = pointSet.spaceNormalizedOutputs.map(_.scale(subdivision)) //TODO use bounds to be specified for each dimension.
-    //val discovered = new PointSet(Data.pse.map(_.values).transpose).spaceNormalizedOutputs.map(scale(subdivision))
-
-    val counts = {
-      val countMap = discovered
-        .groupBy(subdivisionIndexOf)
-        .map { case (box, members) => (box, members.size) }
-      boxes.map(countMap.getOrElse(_, 0))
-    }
-    val densities = {
-      val maxCount = counts.max
-      counts.map(_.toDouble / maxCount)
-    }
-    val boxCounts = HashMap.from(boxes.zip(counts));
-    val boxDensities = HashMap.from(boxes.zip(densities))
-
-    val boxesShapeSeq = boxDensities.map { case (box, density) =>
-      val b0 = box
-      val b1 = b0 + (0.0 at dimension).replace(0, 1.0).replace(1, 1.0)
-      val points = Seq(b0, b1).map(basis.transform)
-      val coordinates = points.transpose
-      Shape
-        .`type`(rect)
-        .xref("x")
-        .yref("y")
-        .x0(coordinates(0)(0))
-        .x1(coordinates(0)(1))
-        .y0(coordinates(1)(0))
-        .y1(coordinates(1)(1))
-        .line(line
-          .width(1)
-          .color(0.5 at 4)
-        )
-        .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
-        .layer("above")
-        ._result
+    def comparisonDiv(basis: MultiScaleBasis, size: Int) = {
+      div(
+        plotDiv(basis, size),
+        subplotDiv(basis, size)
+      )
     }
 
-    val boundsAnnotationSeq = {
-      (0 until basis.sourceDimension).flatMap(i => {
-
-        //Repeating 0-scaleIndex legend in 1-scaleIndex space.
-        val shiftSeq = if(basis.scaleIndex(i) == 0 && basis.destinationDimension + i < basis.sourceDimension) {
-          (1 until subdivision).map(s => {
-            (0.0 at basis.sourceDimension).replace(basis.destinationDimension + i, s)
-          })
-        } else Seq()
-        ((0.0 at basis.sourceDimension) +: shiftSeq).flatMap(shift => {
-
-          (0 to subdivision).map(s => {
-            val point = basis.transform(
-              (0.0 at basis.sourceDimension)
-                .replace(i, s)
-                .add(shift)
-            ).add({
-              val margin = (basis.sourceDimension match {
-                case 2 => 0.25
-                case _ => basis.scaleIndex(i) match {
-                  case 0 => 1.5
-                  case 1 => 2
-                }
-              }) * 1.5
-              (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axisIndex(i), 0)
-            })
-            val text = {
-              val values = pointSet.rawOutputs.map(_(i))
-              val minValue = values.min
-              val maxValue = values.max
-              val bound = minValue + (maxValue - minValue) * s/subdivision
-              s"o${i + 1} = %.2f".format(bound)
-            }
-            val textangle = basis.axisIndex(i) match {
-              case 0 => -90
-              case 1 => 0
-            }
-            Annotation
-              .x(point(0))
-              .y(point(1))
-              .text(text)
-              .textangle(textangle)
-              .showarrow(false)
-              ._result
-          })
-
-        })
-
-      })
-    }
-    val data = {
-      val coordinates = discovered
-        .map(_.zipWithIndex.map { case (c, i) => if(i < 2) c else floor(c) })
-        .map(basis.transform)
-        .transpose
-      scatter
-        .x(coordinates(0).toJSArray)
-        .y(coordinates(1).toJSArray)
-        .marker(marker
-          .size(2)
-          .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
-        )
-        ._result
+    def maxSubdivisionBasis(dimension: Int, allowStretch: Boolean = false) = {
+      MultiScaleBasis(dimension, ceil(pow(5000, 1d/dimension)).toInt, 2, allowStretch = allowStretch)
     }
 
-    val plotDiv = div()
-    val plotDataSeq = Seq(data)
     val size = 800
-    Plotly.newPlot(
-      plotDiv.ref,
-      plotDataSeq.toJSArray,
-      Layout
-        .title("PSE" + (if(basis.stretched) " stretched" else ""))
-        .width(size)
-        .height(size)
-        .showlegend(false)
-        .xaxis(axis
-          .visible(false)
-        )
-        .yaxis(axis
-          .scaleanchor("x")
-          .visible(false)
-        )
-        .shapes(boxesShapeSeq.toJSArray)
-        //.annotations(boundsAnnotationSeq.toJSArray)
-        ._result
-    )
 
     div(
-      plotDiv,
-      subplotDiv(MultiScaleBasis(2, 5, 2), size),
-      subplotDiv(MultiScaleBasis(3, 5, 2), size),
-      subplotDiv(MultiScaleBasis(3, 5, 2, allowStretch = true), size),
-      subplotDiv(MultiScaleBasis(4, 5, 2), size),
+      comparisonDiv(maxSubdivisionBasis(2), size),
+      comparisonDiv(maxSubdivisionBasis(3), size),
+      comparisonDiv(maxSubdivisionBasis(4), size),
     )
   }
 

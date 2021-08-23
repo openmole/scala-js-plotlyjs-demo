@@ -107,10 +107,9 @@ object PSEMultiScaleDemo {
       (boxes, discovered, boxCounts, boxDensities)
     }
 
-    def plotDiv(basis: MultiScaleBasis, size: Int) = {
+    def plotDiv(basis: MultiScaleBasis, patternSpaceMin: Vector, patternSpaceMax: Vector, points: Seq[Vector], size: Int) = {
 
-      val points = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension)
-      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, 0 at basis.sourceDimension, 1 at basis.sourceDimension, points)
+      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, patternSpaceMin, patternSpaceMax, points)
 
       val boxesShapeSeq = boxDensities.map { case (box, density) =>
         val b0 = box
@@ -201,7 +200,6 @@ object PSEMultiScaleDemo {
 
       val plotDiv = div()
       val plotDataSeq = Seq(data)
-      val size = 800
       Plotly.newPlot(
         plotDiv.ref,
         plotDataSeq.toJSArray,
@@ -225,7 +223,7 @@ object PSEMultiScaleDemo {
       plotDiv
     }
 
-    def subplotDiv(msb: MultiScaleBasis, size: Int): ReactiveHtmlElement[html.Div] = {
+    def subplotDiv(msb: MultiScaleBasis, patternSpaceMin: Vector, patternSpaceMax: Vector, points: Seq[Vector], size: Int): ReactiveHtmlElement[html.Div] = {
       val subplotDimension = msb.sourceDimension - msb.destinationDimension
       val basis = new MultiScaleBasis(msb.sourceDimension, msb.subdivision, msb.destinationDimension, msb.allowStretch, msb.gap) {
 
@@ -240,8 +238,7 @@ object PSEMultiScaleDemo {
 
       }
 
-      val points = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.125)) at basis.sourceDimension);
-      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, 0 at basis.sourceDimension, 1 at basis.sourceDimension, points);
+      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, patternSpaceMin, patternSpaceMax, points);
 
       val zipped = (toIntVector(0 at subplotDimension) +: IntVectors.positiveNCube(subplotDimension, basis.subdivision).toSeq).distinct.map(subplotIndexVector => {
         val subplotIndex = (subplotDimension match {
@@ -343,6 +340,7 @@ object PSEMultiScaleDemo {
 
         var layout = Layout
           .title("PSE subplots" + (if(basis.stretched) " stretched" else ""))
+          //.autosize(true)
           .width(size)
           .height({
             if(basis.sourceDimension == 3 && !basis.stretched) {
@@ -383,6 +381,7 @@ object PSEMultiScaleDemo {
             .asJsOpt("yaxis" + indexString, {
               var yaxis = axis
                 .range(0, basis.subdivision)
+                //.fixedrange(true)
                 .dtick(1)
               if(!basis.stretched) {
                 yaxis = yaxis
@@ -406,9 +405,14 @@ object PSEMultiScaleDemo {
     }
 
     def comparisonDiv(basis: MultiScaleBasis, size: Int) = {
+
+      val patternSpaceMin = 0 at basis.sourceDimension
+      val patternSpaceMax = 1 at basis.sourceDimension
+      val points = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.1)) at basis.sourceDimension)
+
       div(
-        plotDiv(basis, size),
-        subplotDiv(basis, size)
+        plotDiv(basis, patternSpaceMin, patternSpaceMax, points, size),
+        subplotDiv(basis, patternSpaceMin, patternSpaceMax, points, size)
       )
     }
 
@@ -419,10 +423,10 @@ object PSEMultiScaleDemo {
     val size = 800
 
     div(
-      onDemand(comparisonDiv(maxSubdivisionBasis(2), size)),
-      onDemand(comparisonDiv(maxSubdivisionBasis(3), size)),
-      onDemand(comparisonDiv(maxSubdivisionBasis(3, allowStretch = true), size)),
-      onDemand(comparisonDiv(maxSubdivisionBasis(4), size)),
+      onDemand("dimension = 2", _ => comparisonDiv(maxSubdivisionBasis(2), size)),
+      onDemand("dimension = 3", _ => comparisonDiv(maxSubdivisionBasis(3), size)),
+      onDemand("dimension = 3, allowStretch = true", _ => comparisonDiv(maxSubdivisionBasis(3, allowStretch = true), size)),
+      onDemand("dimension = 4", _ => comparisonDiv(maxSubdivisionBasis(4), size)),
     )
   }
 

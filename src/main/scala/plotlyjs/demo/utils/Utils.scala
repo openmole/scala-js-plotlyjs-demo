@@ -248,6 +248,7 @@ object Utils {
     sc.value
   }
 
+  @deprecated //ne fonctionne pas
   def onDemand(sc: sourcecode.Text[ReactiveHtmlElement[org.scalajs.dom.html.Div]]): ReactiveHtmlElement[html.Div] = {
     onDemand(sc.source, _ => sc.value)
   }

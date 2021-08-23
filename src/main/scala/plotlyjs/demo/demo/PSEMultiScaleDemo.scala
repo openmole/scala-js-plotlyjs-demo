@@ -8,11 +8,12 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.scalajs.dom.html
 import plotlyjs.demo.utils.Colors._
-import plotlyjs.demo.utils.Utils.{onDemand, printCode}
+import plotlyjs.demo.utils.Utils.{ExtraTraceManager, onDemand, printCode}
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils.{Basis, PointSet}
+import scaladget.bootstrapnative.bsn.btn_success
 
 import scala.collection.immutable.HashMap
 import scala.math._
@@ -107,33 +108,75 @@ object PSEMultiScaleDemo {
       (boxes, discovered, boxCounts, boxDensities)
     }
 
-    def plotDiv(basis: MultiScaleBasis, patternSpaceMin: Vector, patternSpaceMax: Vector, points: Seq[Vector], size: Int) = {
+    def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int): ReactiveHtmlElement[html.Div] = {
 
-      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, patternSpaceMin, patternSpaceMax, points)
-
-      val boxesShapeSeq = boxDensities.map { case (box, density) =>
-        val b0 = box
-        val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
-        val points = Seq(b0, b1).map(basis.transform)
-        val coordinates = points.transpose
-        Shape
-          .`type`(rect)
-          .xref("x")
-          .yref("y")
-          .x0(coordinates(0)(0))
-          .x1(coordinates(0)(1))
-          .y0(coordinates(1)(0))
-          .y1(coordinates(1)(1))
-          .line(line
-            .width(1)//.width(0)
-            .color(0.5 at 4)
-          )
-          .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
-          .layer("above")
-          ._result
+      def computeDiscoveredShapeSeq(discovered: Seq[IntVector], slice: Option[IntVector] = None) = {
+        slice
+          .map { slice =>
+            discovered
+              .map(_.vector)
+              .filter(_.drop(basis.destinationDimension).equals(slice))
+              .map(_.take(basis.destinationDimension) ++ (0.0 at basis.sourceDimension - basis.destinationDimension))
+          }
+          .getOrElse(discovered.map(_.vector))
+          .map { box =>
+            val b0 = box
+            val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
+            val points = Seq(b0, b1).map(basis.transform)
+            val coordinates = points.transpose
+            Shape
+              .`type`(rect)
+              .xref("x")
+              .yref("y")
+              .x0(coordinates(0)(0))
+              .x1(coordinates(0)(1))
+              .y0(coordinates(1)(0))
+              .y1(coordinates(1)(1))
+              .line(line
+                .width(0)
+                .color(0.5 at 4)
+              )
+              .fillcolor(Seq(0.0, 1.0, 0.0))
+              ._result
+          }
       }
 
-      val boundsAnnotationSeq = {
+      lazy val discoveredShapeSeq = computeDiscoveredShapeSeq(discovered);
+
+      lazy val (sliceShapeSeq, sliceDataSeq) = IntVectors.positiveNCube(basis.sourceDimension - basis.destinationDimension, basis.subdivision).toSeq
+        .map((0.0 at basis.destinationDimension) ++ _.vector)
+        .map { slice =>
+          val s0 = slice
+          val s1 = s0 + (0.0 at basis.sourceDimension).replace(0, basis.subdivision).replace(1, basis.subdivision)
+          val points = Seq(s0, s1).map(basis.transform)
+          val coordinates = points.transpose
+          (
+            Shape
+              .`type`(rect)
+              .xref("x")
+              .yref("y")
+              .x0(coordinates(0)(0))
+              .x1(coordinates(0)(1))
+              .y0(coordinates(1)(0))
+              .y1(coordinates(1)(1))
+              .line(line
+                .width(1)
+                .color(0.5 at 4)
+              )
+              ._result,
+            scatter
+              .x(Seq((coordinates(0)(0) + coordinates(0)(1))/2).toJSArray)
+              .y(Seq((coordinates(1)(0) + coordinates(1)(1))/2).toJSArray)
+              .marker(marker
+                .size(basis.subdivision)
+                .symbol(square)
+                .opacity(0.0)
+              )
+              ._result
+          )
+        }.unzip
+
+      lazy val boundsAnnotationSeq = {
         (0 until basis.sourceDimension).flatMap(i => {
 
           //Repeating 0-scaleIndex legend in 1-scaleIndex space.
@@ -159,13 +202,7 @@ object PSEMultiScaleDemo {
                 }) * 1.5
                 (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axisIndex(i), 0)
               })
-              val text = {
-                val values = points.map(_(i))
-                val minValue = values.min
-                val maxValue = values.max
-                val bound = minValue + (maxValue - minValue) * s/basis.subdivision
-                s"o${i + 1} = %.2f".format(bound)
-              }
+              val text = s"o${i + 1} s$s"
               val textangle = basis.axisIndex(i) match {
                 case 0 => -90
                 case 1 => 0
@@ -183,23 +220,9 @@ object PSEMultiScaleDemo {
 
         })
       }
-      val data = {
-        val coordinates = discovered
-          .map(_.zipWithIndex.map { case (c, i) => if(i < 2) c else floor(c) })
-          .map(basis.transform)
-          .transpose
-        scatter
-          .x(coordinates(0).toJSArray)
-          .y(coordinates(1).toJSArray)
-          .marker(marker
-            .size(2)
-            .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
-          )
-          ._result
-      }
 
       val plotDiv = div()
-      val plotDataSeq = Seq(data)
+      val plotDataSeq = if(basis.sourceDimension <= 2) Seq(scatter._result) else sliceDataSeq
       Plotly.newPlot(
         plotDiv.ref,
         plotDataSeq.toJSArray,
@@ -215,14 +238,33 @@ object PSEMultiScaleDemo {
             .scaleanchor("x")
             .visible(false)
           )
-          .shapes(boxesShapeSeq.toJSArray)
+          .shapes((discoveredShapeSeq ++ sliceShapeSeq).toJSArray)
           //.annotations(boundsAnnotationSeq.toJSArray)
           ._result
       )
 
-      plotDiv
+      val content = Var(plotDiv)
+      plotDiv.ref.on("plotly_click", pointsData => {
+        val curveNumber = printCode(pointsData.points(0).curveNumber)
+        val xSlice = curveNumber % basis.subdivision
+        val ySlice = curveNumber / basis.subdivision
+        val slice = Seq(xSlice, ySlice)
+
+        val sliceDiscovered = discovered
+          .map(_.vector)
+          .filter(_.drop(basis.destinationDimension).equals(slice))
+          .map(_.take(basis.destinationDimension))
+          .map(toIntVector)
+
+        content.set(div(
+          button("back", btn_success, inContext { _ => onClick.mapTo(plotDiv) --> content.writer }),
+          computePlotDiv(basis.copy(sourceDimension = basis.destinationDimension), sliceDiscovered, size)
+        ))
+      })
+      div(child <-- content.signal)
     }
 
+    /*
     def subplotDiv(msb: MultiScaleBasis, patternSpaceMin: Vector, patternSpaceMax: Vector, points: Seq[Vector], size: Int): ReactiveHtmlElement[html.Div] = {
       val subplotDimension = msb.sourceDimension - msb.destinationDimension
       val basis = new MultiScaleBasis(msb.sourceDimension, msb.subdivision, msb.destinationDimension, msb.allowStretch, msb.gap) {
@@ -271,7 +313,7 @@ object PSEMultiScaleDemo {
           }).getOrElse(scatter._result)
         }
 
-        val shapeSeq = boxDensities
+        lazy val shapeSeq = boxDensities
           .filter(bd => predicate(bd._1))
           .map { case (box, density) =>
             val b0 = box
@@ -298,7 +340,7 @@ object PSEMultiScaleDemo {
         (data, shapeSeq)
       })
       val (plotDataSeq, shapeSeqSeq) = zipped.unzip
-      val shapeSeq = shapeSeqSeq.flatten
+      lazy val shapeSeq = shapeSeqSeq.flatten
 
       val boundsAnnotationSeq = {
         (basis.destinationDimension until basis.sourceDimension).flatMap(i => {
@@ -310,13 +352,6 @@ object PSEMultiScaleDemo {
                 (-margin at basis.destinationDimension).replace(basis.axis(i), 0)
               })
             val text = {
-              /*
-              val values = pointSet.rawOutputs.map(_(i))
-              val minValue = values.min
-              val maxValue = values.max
-              val bound = minValue + (maxValue - minValue) * s/basis.subdivision
-              s"o${i + 1} = %.2f".format(bound)
-              */
               s.toString
             }
             val textangle = basis.axis(i) match {
@@ -350,7 +385,7 @@ object PSEMultiScaleDemo {
             }
           })
           .showlegend(false)
-          .shapes(shapeSeq.toJSArray)
+          //.shapes(shapeSeq.toJSArray)
           .annotations(boundsAnnotationSeq.toJSArray)
 
         if(subplotDimension != 0)  {
@@ -403,6 +438,7 @@ object PSEMultiScaleDemo {
 
       plotDiv
     }
+    */
 
     def comparisonDiv(basis: MultiScaleBasis, size: Int) = {
 
@@ -410,9 +446,11 @@ object PSEMultiScaleDemo {
       val patternSpaceMax = 1 at basis.sourceDimension
       val points = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.1)) at basis.sourceDimension)
 
+      val discovered = (0 to (0.25 * pow(basis.subdivision, basis.sourceDimension)).toInt).map(_ => (() => (random() * basis.subdivision).toInt.toDouble) at basis.sourceDimension).map(toIntVector)
+
       div(
-        plotDiv(basis, patternSpaceMin, patternSpaceMax, points, size),
-        subplotDiv(basis, patternSpaceMin, patternSpaceMax, points, size)
+        computePlotDiv(basis, discovered, size),
+        //subplotDiv(basis, patternSpaceMin, patternSpaceMax, points, size)
       )
     }
 

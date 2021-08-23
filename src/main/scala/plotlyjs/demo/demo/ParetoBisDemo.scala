@@ -8,7 +8,7 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import plotlyjs.demo.utils.Colors.{ImplicitColor, implicitToOMColor}
 import plotlyjs.demo.utils.PointSet._
-import plotlyjs.demo.utils.Utils.SkipOnBusy
+import plotlyjs.demo.utils.Utils.{ExtraTraceManager, SkipOnBusy}
 import plotlyjs.demo.utils.vector.Vectors._
 import plotlyjs.demo.utils.{Basis, ParetoFront, PointSet, Utils}
 
@@ -179,6 +179,8 @@ object ParetoBisDemo {
       //Events
       def get[A](plotData: PlotData, key: String, index: Int): Option[A] = entries(plotData).filter(_._1 == key).headOption.map(_._2.asInstanceOf[scala.scalajs.js.Array[A]](index))
 
+      val extraTraceManager = new ExtraTraceManager(plotDiv, dataSeq.size)
+      /*
       var tracesDisplayedCount = 0
 
       def addTraces(plotDataSeq: Seq[PlotData]): Unit = {
@@ -190,6 +192,8 @@ object ParetoBisDemo {
         Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + dataSeq.size).map(_.toDouble).toJSArray)
         tracesDisplayedCount = 0
       }
+
+       */
 
       val rawOutputCoordinates = Var(div(""))
 
@@ -289,8 +293,8 @@ object ParetoBisDemo {
             ._result
           ).reverse
 
-          deleteTraces()
-          addTraces(plotDataSeq)
+          extraTraceManager.deleteTraces()
+          extraTraceManager.addTraces(plotDataSeq)
 
           val textDiv = div()
           textDiv.ref.innerHTML = "Model output :<br>" + (pointSet.rawOutputs(index).zipWithIndex map { case (c, i) => s"o${i + 1} : $c" }).mkString("<br>")
@@ -300,7 +304,7 @@ object ParetoBisDemo {
 
       val skipOnBusy = new SkipOnBusy
       plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData)))
-      plotDiv.ref.on("plotly_doubleclick", _ => skipOnBusy.skipOnBusy(deleteTraces()))
+      plotDiv.ref.on("plotly_doubleclick", _ => skipOnBusy.skipOnBusy(extraTraceManager.deleteTraces()))
       //
 
       div(

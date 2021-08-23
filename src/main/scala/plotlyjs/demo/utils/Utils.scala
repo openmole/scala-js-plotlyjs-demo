@@ -17,6 +17,7 @@ package plotlyjs.demo.utils
 
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import org.openmole.plotlyjs.{PlotData, Plotly}
 import org.scalajs.dom.html
 import plotlyjs.demo.utils.vector.Vectors._
 
@@ -226,6 +227,22 @@ object Utils {
         busy = false
       }
     }
+  }
+
+  class ExtraTraceManager(plotDiv: ReactiveHtmlElement[html.Div], initialTraceCount: Int) {
+
+    private var tracesDisplayedCount = 0
+
+    def addTraces(plotDataSeq: Seq[PlotData]): Unit = {
+      Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
+      tracesDisplayedCount += plotDataSeq.size
+    }
+
+    def deleteTraces(): Unit = {
+      Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + initialTraceCount).map(_.toDouble).toJSArray)
+      tracesDisplayedCount = 0
+    }
+
   }
 
   def onDemand(title: String, supplier: String => ReactiveHtmlElement[org.scalajs.dom.html.Div]): ReactiveHtmlElement[html.Div] = {

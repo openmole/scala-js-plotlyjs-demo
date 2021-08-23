@@ -19,13 +19,10 @@ object ParallelCoordinatesDemo {
 
     val dim = 8
     val results = Utils.randomizeDimensions(new ParetoFront(dim, 128).front)
-    val pointSet = new PointSet(results)
-      .optimizationProblems(MIN at dim)
-      .lowerPlotIsBetter
 
     val plotData = parallelCoordinates
       .dimensions(
-        pointSet.rawOutputs.transpose.zipWithIndex.map({ case (values, index) =>
+        results.transpose.zipWithIndex.map({ case (values, index) =>
           dimension
             .label("o" + (index + 1))
             .values(values.toJSArray)

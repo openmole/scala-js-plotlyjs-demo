@@ -33,38 +33,42 @@ object PSEMultiScaleDemo {
       val stretchable: Boolean = remainder != 0
       val stretched: Boolean = allowStretch && stretchable
 
-      def axisIndex(i: Int): Int = {
+      private def _axisIndex(i: Int): Int = {
         i % destinationDimension
       }
 
-      def scaleIndex(i: Int): Int = {
+      private def _scaleIndex(i: Int): Int = {
         i / destinationDimension
       }
 
       //Stretching
-      def stretchedAxisIndex(i: Int): Int = {
+      private def axisIndex(i: Int): Int = {
         if(stretched && i >= destinationDimension) {
-            axisIndex(i + remainder)
+            _axisIndex(i + remainder)
         } else {
-          axisIndex(i)
+          _axisIndex(i)
         }
       }
 
-      def stretchedScaleIndex(i: Int): Int = {
-        if(stretched && stretchedAxisIndex(i) < remainder) {
-          scaleIndex(i) + 1
+      def scaleIndex(i: Int): Int = {
+        if(stretched && axisIndex(i) < remainder) {
+          _scaleIndex(i) + 1
         } else {
-          scaleIndex(i)
+          _scaleIndex(i)
         }
       }
       //
 
       def axis(i: Int): Int = {
-        stretchedAxisIndex(i)
+        axisIndex(i)
       }
 
       def scale(i: Int): Double = {
-        pow(subdivision + gap, stretchedScaleIndex(i))
+        pow(subdivision + gap, scaleIndex(i))
+      }
+
+      def destinationAxis(i: Int): Int = {
+        axis(i) % destinationDimension
       }
 
       override val size: Int = sourceDimension
@@ -108,73 +112,70 @@ object PSEMultiScaleDemo {
       (boxes, discovered, boxCounts, boxDensities)
     }
 
-    def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int): ReactiveHtmlElement[html.Div] = {
+    def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int, contentOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
 
-      def computeDiscoveredShapeSeq(discovered: Seq[IntVector], slice: Option[IntVector] = None) = {
-        slice
-          .map { slice =>
-            discovered
-              .map(_.vector)
-              .filter(_.drop(basis.destinationDimension).equals(slice))
-              .map(_.take(basis.destinationDimension) ++ (0.0 at basis.sourceDimension - basis.destinationDimension))
-          }
-          .getOrElse(discovered.map(_.vector))
-          .map { box =>
-            val b0 = box
-            val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
-            val points = Seq(b0, b1).map(basis.transform)
-            val coordinates = points.transpose
-            Shape
-              .`type`(rect)
-              .xref("x")
-              .yref("y")
-              .x0(coordinates(0)(0))
-              .x1(coordinates(0)(1))
-              .y0(coordinates(1)(0))
-              .y1(coordinates(1)(1))
-              .line(line
-                .width(0)
-                .color(0.5 at 4)
-              )
-              .fillcolor(Seq(0.0, 1.0, 0.0))
-              ._result
-          }
-      }
-
-      lazy val discoveredShapeSeq = computeDiscoveredShapeSeq(discovered);
-
-      lazy val (sliceShapeSeq, sliceDataSeq) = IntVectors.positiveNCube(basis.sourceDimension - basis.destinationDimension, basis.subdivision).toSeq
-        .map((0.0 at basis.destinationDimension) ++ _.vector)
-        .map { slice =>
-          val s0 = slice
-          val s1 = s0 + (0.0 at basis.sourceDimension).replace(0, basis.subdivision).replace(1, basis.subdivision)
-          val points = Seq(s0, s1).map(basis.transform)
+      val discoveredShapeSeq = discovered
+        .map(_.vector)
+        .map { box =>
+          val b0 = box
+          val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
+          val points = Seq(b0, b1).map(basis.transform)
           val coordinates = points.transpose
-          (
-            Shape
+          Shape
+            .`type`(rect)
+            .xref("x")
+            .yref("y")
+            .x0(coordinates(0)(0))
+            .x1(coordinates(0)(1))
+            .y0(coordinates(1)(0))
+            .y1(coordinates(1)(1))
+            .line(line
+              .width(0)
+              .color(0.5 at 4)
+            )
+            .fillcolor(Seq(0.0, 1.0, 0.0))
+            ._result
+        }
+
+      val (frameShapeSeq, hitboxDataSeq) = {
+        val frameSeq = {
+          val sliceSpaceDimension = basis.sourceDimension - basis.destinationDimension
+          if(sliceSpaceDimension == 0) {
+            Seq(Seq())
+          } else {
+            IntVectors.positiveNCube(sliceSpaceDimension, basis.subdivision).toSeq
+          }
+        }
+        frameSeq
+          .map((0.0 at basis.destinationDimension) ++ _.vector)
+          .map { frame =>
+            val s0 = frame
+            val s1 = s0 + (0.0 at basis.sourceDimension).replace(0, basis.subdivision).replace(1, basis.subdivision)
+            val points = Seq(s0, s1).map(basis.transform)
+            val coordinates = points.transpose
+            val (x0, y0) = (coordinates(0)(0), coordinates(1)(0))
+            val (x1, y1) = (coordinates(0)(1), coordinates(1)(1))
+            val frameShape = Shape
               .`type`(rect)
-              .xref("x")
-              .yref("y")
-              .x0(coordinates(0)(0))
-              .x1(coordinates(0)(1))
-              .y0(coordinates(1)(0))
-              .y1(coordinates(1)(1))
+              .xref("x").yref("y")
+              .x0(x0).x1(x1).y0(y0).y1(y1)
               .line(line
                 .width(1)
                 .color(0.5 at 4)
               )
-              ._result,
-            scatter
-              .x(Seq((coordinates(0)(0) + coordinates(0)(1))/2).toJSArray)
-              .y(Seq((coordinates(1)(0) + coordinates(1)(1))/2).toJSArray)
+              ._result
+            val hitboxData = scatter
+              .x(Seq((x0 + x1)/2.0).toJSArray)
+              .y(Seq((y0 + y1)/2.0).toJSArray)
               .marker(marker
-                .size(basis.subdivision)
+                .size(size/basis.subdivision.toDouble * 0.5)
                 .symbol(square)
                 .opacity(0.0)
               )
               ._result
-          )
-        }.unzip
+            (frameShape, hitboxData)
+          }.unzip
+      }
 
       lazy val boundsAnnotationSeq = {
         (0 until basis.sourceDimension).flatMap(i => {
@@ -198,14 +199,16 @@ object PSEMultiScaleDemo {
                   case _ => basis.scaleIndex(i) match {
                     case 0 => 1.5
                     case 1 => 2
+                    case _ => 0
                   }
                 }) * 1.5
-                (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axisIndex(i), 0)
+                (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
               })
               val text = s"o${i + 1} s$s"
-              val textangle = basis.axisIndex(i) match {
+              val textangle = basis.destinationAxis(i) match {
                 case 0 => -90
                 case 1 => 0
+                case _ => 0
               }
               Annotation
                 .x(point(0))
@@ -222,12 +225,14 @@ object PSEMultiScaleDemo {
       }
 
       val plotDiv = div()
-      val plotDataSeq = if(basis.sourceDimension <= 2) Seq(scatter._result) else sliceDataSeq
+      val plotDataSeq = if(basis.sourceDimension <= 2) Seq(scatter._result) else hitboxDataSeq
       Plotly.newPlot(
         plotDiv.ref,
         plotDataSeq.toJSArray,
         Layout
-          .title("PSE" + (if(basis.stretched) " stretched" else ""))
+          .title("PSE" + (if(basis.stretched) " stretched" else "" + sliceOption.map { slice =>
+            " slice " + slice.zipWithIndex.map { case (c, i) => s"o${i + basis.destinationDimension + 1} s$c" }.reduce(_ + ", " + _)
+          }.getOrElse("")))
           .width(size)
           .height(size)
           .showlegend(false)
@@ -238,30 +243,49 @@ object PSEMultiScaleDemo {
             .scaleanchor("x")
             .visible(false)
           )
-          .shapes((discoveredShapeSeq ++ sliceShapeSeq).toJSArray)
-          //.annotations(boundsAnnotationSeq.toJSArray)
-          ._result
+          .shapes((discoveredShapeSeq ++ frameShapeSeq).toJSArray)
+          .annotations(boundsAnnotationSeq.toJSArray)
+          .hovermode("closest")
+          ._result,
+        Config
+          .modeBarButtonsToRemove(Seq(
+            "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
+            "hoverClosestCartesian", "hoverCompareCartesian",
+            "toggleSpikelines",
+          ).toJSArray)
       )
 
-      val content = Var(plotDiv)
-      plotDiv.ref.on("plotly_click", pointsData => {
-        val curveNumber = printCode(pointsData.points(0).curveNumber)
-        val xSlice = curveNumber % basis.subdivision
-        val ySlice = curveNumber / basis.subdivision
-        val slice = Seq(xSlice, ySlice)
+      if(contentOption.isEmpty) {
+        val content = Var(plotDiv)
+        plotDiv.ref.on("plotly_click", pointsData => {
+          val curveNumber = pointsData.points(0).curveNumber
+          val slice = basis.sourceDimension match {
+            case 3 =>
+              Seq(curveNumber)
+            case 4 =>
+              val xSlice = curveNumber % basis.subdivision
+              val ySlice = curveNumber / basis.subdivision
+              Seq(xSlice, ySlice)
+          }
 
-        val sliceDiscovered = discovered
-          .map(_.vector)
-          .filter(_.drop(basis.destinationDimension).equals(slice))
-          .map(_.take(basis.destinationDimension))
-          .map(toIntVector)
+          val sliceDiscovered = discovered
+            .map(_.vector)
+            .filter(_.takeRight(slice.vector.dimension).equals(slice))
+            .map(_.take(basis.destinationDimension))
+            .map(toIntVector)
 
-        content.set(div(
-          button("back", btn_success, inContext { _ => onClick.mapTo(plotDiv) --> content.writer }),
-          computePlotDiv(basis.copy(sourceDimension = basis.destinationDimension), sliceDiscovered, size)
-        ))
-      })
-      div(child <-- content.signal)
+          content.set(computePlotDiv(basis.copy(sourceDimension = basis.destinationDimension), sliceDiscovered, size,
+            Some(content), Some(slice)))
+        })
+        div(child <-- content.signal)
+      } else {
+        val content = contentOption.get
+        val backup = content.now()
+        plotDiv.ref.on("plotly_relayout", () => {
+          content.set(backup)
+        })
+        plotDiv
+      }
     }
 
     /*
@@ -463,8 +487,9 @@ object PSEMultiScaleDemo {
     div(
       onDemand("dimension = 2", _ => comparisonDiv(maxSubdivisionBasis(2), size)),
       onDemand("dimension = 3", _ => comparisonDiv(maxSubdivisionBasis(3), size)),
-      onDemand("dimension = 3, allowStretch = true", _ => comparisonDiv(maxSubdivisionBasis(3, allowStretch = true), size)),
+      //onDemand("dimension = 3, allowStretch = true", _ => comparisonDiv(maxSubdivisionBasis(3, allowStretch = true), size)),
       onDemand("dimension = 4", _ => comparisonDiv(maxSubdivisionBasis(4), size)),
+      onDemand("dimension = 6 (test de robustesse du code)", _ => comparisonDiv(maxSubdivisionBasis(6), size)),
     )
   }
 

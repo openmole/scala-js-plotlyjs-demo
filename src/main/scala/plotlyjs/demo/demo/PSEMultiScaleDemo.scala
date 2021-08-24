@@ -85,6 +85,12 @@ object PSEMultiScaleDemo {
         }
       }
 
+      val maxScaleIndex: Int = scaleIndex(sourceDimension - 1)
+
+      def size(i: Int): Double = {
+        (basisVector(sourceDimension - 1 - ((sourceDimension - 1 - i) % destinationDimension)) * subdivision).norm
+      }
+
     }
 
     def subdivisionIndexOf(vector: Vector): IntVector = {
@@ -110,6 +116,10 @@ object PSEMultiScaleDemo {
       val boxDensities = HashMap.from(boxes.zip(densities))
 
       (boxes, discovered, boxCounts, boxDensities)
+    }
+
+    def sliceToString(basis: MultiScaleBasis, slice: IntVector): String = {
+      slice.zipWithIndex.map { case (c, i) => s"o${i + basis.destinationDimension + 1} s$c" }.reduceOption(_ + ", " + _).getOrElse("")
     }
 
     def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int, contentOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
@@ -170,58 +180,52 @@ object PSEMultiScaleDemo {
               .marker(marker
                 .size(size/basis.subdivision.toDouble * 0.5)
                 .symbol(square)
+                .color(Seq(0.0, 1.0, 0.0))
                 .opacity(0.0)
               )
+              .hoverinfo("text")
+              .text(sliceToString(basis, frame.drop(basis.destinationDimension)) + " – click to zoom")
               ._result
             (frameShape, hitboxData)
           }.unzip
       }
 
       lazy val boundsAnnotationSeq = {
-        (0 until basis.sourceDimension).flatMap(i => {
-
-          //Repeating 0-scaleIndex legend in 1-scaleIndex space.
-          val shiftSeq = if(basis.scaleIndex(i) == 0 && basis.destinationDimension + i < basis.sourceDimension) {
-            (1 until basis.subdivision).map(s => {
-              (0.0 at basis.sourceDimension).replace(basis.destinationDimension + i, s)
-            })
-          } else Seq()
-          ((0.0 at basis.sourceDimension) +: shiftSeq).flatMap(shift => {
-
-            (0 to basis.subdivision).map(s => {
-              val point = basis.transform(
-                (0.0 at basis.sourceDimension)
-                  .replace(i, s)
-                  .add(shift)
-              ).add({
-                val margin = (basis.sourceDimension match {
-                  case 2 => 0.25
-                  case _ => basis.scaleIndex(i) match {
-                    case 0 => 1.5
-                    case 1 => 2
-                    case _ => 0
+        (0 until basis.destinationDimension)
+          .reverse
+          .map(basis.sourceDimension - 1 - _)
+          .filter(i => basis.scaleIndex(i) == basis.maxScaleIndex)
+          .flatMap(i => {
+            (0 to basis.subdivision)
+              .filter(s => if(size/basis.subdivision > 14) true else s % 2 == 0)
+              .map(s => {
+                val point = basis.transform(
+                  (0.0 at basis.sourceDimension)
+                    .replace(i, s)
+                ).add({
+                  val margin = basis.size(i)/size.toDouble * 32
+                  val adjustmentFactor = basis.scaleIndex(i) match {
+                    case 0 => 1
+                    case 1 => 0.5
+                    case _ => 1
                   }
-                }) * 1.5
-                (-margin * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
+                  (-(margin * adjustmentFactor) * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
+                })
+                val text = s"o${i + 1} s$s"
+                val textangle = basis.destinationAxis(i) match {
+                  case 0 => -90
+                  case 1 => 0
+                  case _ => 0
+                }
+                Annotation
+                  .x(point(0))
+                  .y(point(1))
+                  .text(text)
+                  .textangle(textangle)
+                  .showarrow(false)
+                  ._result
               })
-              val text = s"o${i + 1} s$s"
-              val textangle = basis.destinationAxis(i) match {
-                case 0 => -90
-                case 1 => 0
-                case _ => 0
-              }
-              Annotation
-                .x(point(0))
-                .y(point(1))
-                .text(text)
-                .textangle(textangle)
-                .showarrow(false)
-                ._result
-            })
-
           })
-
-        })
       }
 
       val plotDiv = div()
@@ -230,9 +234,7 @@ object PSEMultiScaleDemo {
         plotDiv.ref,
         plotDataSeq.toJSArray,
         Layout
-          .title("PSE" + (if(basis.stretched) " stretched" else "" + sliceOption.map { slice =>
-            " slice " + slice.zipWithIndex.map { case (c, i) => s"o${i + basis.destinationDimension + 1} s$c" }.reduce(_ + ", " + _)
-          }.getOrElse("")))
+          .title("PSE" + (if(basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
           .width(size)
           .height(size)
           .showlegend(false)
@@ -246,6 +248,7 @@ object PSEMultiScaleDemo {
           .shapes((discoveredShapeSeq ++ frameShapeSeq).toJSArray)
           .annotations(boundsAnnotationSeq.toJSArray)
           .hovermode("closest")
+
           ._result,
         Config
           .modeBarButtonsToRemove(Seq(

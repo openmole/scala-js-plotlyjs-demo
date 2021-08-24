@@ -17,6 +17,7 @@ import scaladget.bootstrapnative.bsn.btn_success
 
 import scala.collection.immutable.HashMap
 import scala.math._
+import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 object PSEMultiScaleDemo {
@@ -122,7 +123,7 @@ object PSEMultiScaleDemo {
       slice.zipWithIndex.map { case (c, i) => s"o${i + basis.destinationDimension + 1} s$c" }.reduceOption(_ + ", " + _).getOrElse("")
     }
 
-    def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int, contentOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
+    def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int, parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
 
       val discoveredShapeSeq = discovered
         .map(_.vector)
@@ -228,6 +229,11 @@ object PSEMultiScaleDemo {
           })
       }
 
+      def backupFunction(contentVar: Var[ReactiveHtmlElement[html.Div]]) = {
+        val backup = contentVar.now()
+        () => contentVar.set(backup)
+      }
+
       val plotDiv = div()
       val plotDataSeq = if(basis.sourceDimension <= 2) Seq(scatter._result) else hitboxDataSeq
       Plotly.newPlot(
@@ -237,6 +243,11 @@ object PSEMultiScaleDemo {
           .title("PSE" + (if(basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
           .width(size)
           .height(size)
+          .margin(Margin
+               .t(32 + 8)
+            .l(0)     .r(0)
+                 .b(0)
+          )
           .showlegend(false)
           .xaxis(axis
             .visible(false)
@@ -248,18 +259,32 @@ object PSEMultiScaleDemo {
           .shapes((discoveredShapeSeq ++ frameShapeSeq).toJSArray)
           .annotations(boundsAnnotationSeq.toJSArray)
           .hovermode("closest")
-
           ._result,
         Config
           .modeBarButtonsToRemove(Seq(
             "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
             "hoverClosestCartesian", "hoverCompareCartesian",
             "toggleSpikelines",
+            //TODO remove plotly-logomark button
           ).toJSArray)
+          .modeBarButtonsToAdd(js.Array(
+            ModeBarButton
+              .name("back")
+              .icon(Icon // custom
+                .width(2000)
+                .height(1500)
+                .path("m146.84375,14.552083 -6.61459,6.614583 6.61459,6.614584 0,-3.96875c 2.64583,0 9.26042,0 13.22917,5.291667 -3.96875,-10.583334 -10.58334,-10.583334 -13.22917,-10.583334z")
+              )
+              .click({
+                val f = backupFunction(parentContentVarOption.getOrElse(Var(plotDiv)))
+                _ => f()
+              })
+              ._result
+          ))
       )
 
-      if(contentOption.isEmpty) {
-        val content = Var(plotDiv)
+      if(parentContentVarOption.isEmpty) {
+        val contentVar = Var(plotDiv)
         plotDiv.ref.on("plotly_click", pointsData => {
           val curveNumber = pointsData.points(0).curveNumber
           val slice = basis.sourceDimension match {
@@ -277,222 +302,34 @@ object PSEMultiScaleDemo {
             .map(_.take(basis.destinationDimension))
             .map(toIntVector)
 
-          content.set(computePlotDiv(basis.copy(sourceDimension = basis.destinationDimension), sliceDiscovered, size,
-            Some(content), Some(slice)))
+          contentVar.set(computePlotDiv(basis.copy(sourceDimension = basis.destinationDimension), sliceDiscovered, size,
+            Some(contentVar), Some(slice)))
         })
-        div(child <-- content.signal)
+        div(child <-- contentVar.signal)
       } else {
-        val content = contentOption.get
-        val backup = content.now()
-        plotDiv.ref.on("plotly_relayout", () => {
-          content.set(backup)
-        })
+        val onRelayout = backupFunction(parentContentVarOption.get)
+        plotDiv.ref.on("plotly_relayout", onRelayout)
         plotDiv
       }
-    }
-
-    /*
-    def subplotDiv(msb: MultiScaleBasis, patternSpaceMin: Vector, patternSpaceMax: Vector, points: Seq[Vector], size: Int): ReactiveHtmlElement[html.Div] = {
-      val subplotDimension = msb.sourceDimension - msb.destinationDimension
-      val basis = new MultiScaleBasis(msb.sourceDimension, msb.subdivision, msb.destinationDimension, msb.allowStretch, msb.gap) {
-
-        override def transform(vector: Vector): Vector = {
-          val v = super.transform(vector.take(destinationDimension) ++ (0 at subplotDimension))
-          if(stretched) {
-            v.replace(0, _/(subdivision + gap)) // no longer stretched
-          } else {
-            v
-          }
-        }
-
-      }
-
-      val (boxes, discovered, boxCounts, boxDensities) = analyse(basis.subdivision, patternSpaceMin, patternSpaceMax, points);
-
-      val zipped = (toIntVector(0 at subplotDimension) +: IntVectors.positiveNCube(subplotDimension, basis.subdivision).toSeq).distinct.map(subplotIndexVector => {
-        val subplotIndex = (subplotDimension match {
-          case 0 => 1
-          case 1 => basis.subdivision - 1 - subplotIndexVector(0)
-          case 2 => subplotIndexVector(0) + basis.subdivision * (basis.subdivision - 1 - subplotIndexVector(1))
-        }) + 1
-
-        def predicate(vector: Vector) = {
-          subdivisionIndexOf(vector).drop(basis.destinationDimension) == subplotIndexVector
-        }
-
-        def filter(seq: Seq[Vector]) = {
-          seq.filter(predicate)
-        }
-
-        val data = {
-          val coordinates = filter(discovered).map(basis.transform).transpose
-          Option.when(coordinates.nonEmpty)({
-            scatter
-              .x(coordinates(0).toJSArray)
-              .y(coordinates(1).toJSArray)
-              .xaxis("x" + subplotIndex)
-              .yaxis("y" + subplotIndex)
-              .marker(marker
-                .size(2)
-                .set(Seq(0.0, 0.0, 1.0).opacity(0.5))
-              )
-              ._result
-          }).getOrElse(scatter._result)
-        }
-
-        lazy val shapeSeq = boxDensities
-          .filter(bd => predicate(bd._1))
-          .map { case (box, density) =>
-            val b0 = box
-            val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
-            val points = Seq(b0, b1).map(basis.transform)
-            val coordinates = points.transpose
-            Shape
-              .`type`(rect)
-              .xref("x" + subplotIndex)
-              .yref("y" + subplotIndex)
-              .x0(coordinates(0)(0))
-              .x1(coordinates(0)(1))
-              .y0(coordinates(1)(0))
-              .y1(coordinates(1)(1))
-              .line(line
-                .width(1)//.width(0)
-                .color(0.5 at 4)
-              )
-              .fillcolor(Seq(1.0, 0.0, 0.0).opacity(if(density == 0) 0 else 0.1 + density * 0.6))
-              .layer("above")
-              ._result
-          }.toSeq
-
-        (data, shapeSeq)
-      })
-      val (plotDataSeq, shapeSeqSeq) = zipped.unzip
-      lazy val shapeSeq = shapeSeqSeq.flatten
-
-      val boundsAnnotationSeq = {
-        (basis.destinationDimension until basis.sourceDimension).flatMap(i => {
-
-          (0 to basis.subdivision).map(s => {
-            val point = (0.0 at basis.destinationDimension).replace(basis.axis(i), s)
-              .add({
-                val margin = 0.35
-                (-margin at basis.destinationDimension).replace(basis.axis(i), 0)
-              })
-            val text = {
-              s.toString
-            }
-            val textangle = basis.axis(i) match {
-              case 0 => 0
-              case 1 => -90
-            }
-            Annotation
-              .x(point(0) / basis.subdivision).xref("paper")
-              .y(point(1) / basis.subdivision).yref("paper")
-              .xanchor("center")
-              .yanchor("center")
-              .text(text)
-              .textangle(textangle)
-              .showarrow(false)
-              ._result
-          })
-
-        })
-      }
-      val layout = {
-
-        var layout = Layout
-          .title("PSE subplots" + (if(basis.stretched) " stretched" else ""))
-          //.autosize(true)
-          .width(size)
-          .height({
-            if(basis.sourceDimension == 3 && !basis.stretched) {
-              size//printCode(size/basis.subdivision.toDouble)
-            } else {
-              size
-            }
-          })
-          .showlegend(false)
-          //.shapes(shapeSeq.toJSArray)
-          .annotations(boundsAnnotationSeq.toJSArray)
-
-        if(subplotDimension != 0)  {
-          layout = layout
-            .grid(grid
-              .rows({
-                basis.sourceDimension match {
-                  case 3 => if(basis.stretched) basis.subdivision else 1
-                  case 4 => basis.subdivision
-                }
-              })
-              .columns({
-                basis.sourceDimension match {
-                  case 3 => if(basis.stretched) 1 else basis.subdivision
-                  case 4 => basis.subdivision
-                }
-              })
-              .pattern(Pattern.independent)
-            )
-        }
-
-        (1 to plotDataSeq.size).map(_.toString).foreach(indexString => {
-          layout = layout
-            .asJsOpt("xaxis" + indexString, axis
-              .range(0, basis.subdivision)
-              .dtick(1)
-            )
-            .asJsOpt("yaxis" + indexString, {
-              var yaxis = axis
-                .range(0, basis.subdivision)
-                //.fixedrange(true)
-                .dtick(1)
-              if(!basis.stretched) {
-                yaxis = yaxis
-                  .scaleanchor("x" + (if(indexString == "1") "" else indexString))
-              }
-              yaxis
-            })
-        })
-
-        layout._result
-      }
-
-      val plotDiv = div()
-      Plotly.newPlot(
-        plotDiv.ref,
-        plotDataSeq.toJSArray,
-        layout
-      )
-
-      plotDiv
-    }
-    */
-
-    def comparisonDiv(basis: MultiScaleBasis, size: Int) = {
-
-      val patternSpaceMin = 0 at basis.sourceDimension
-      val patternSpaceMax = 1 at basis.sourceDimension
-      val points = (1 to 1024).map(_ => (() => normalDistribution(0.5, 0.1)) at basis.sourceDimension)
-
-      val discovered = (0 to (0.25 * pow(basis.subdivision, basis.sourceDimension)).toInt).map(_ => (() => (random() * basis.subdivision).toInt.toDouble) at basis.sourceDimension).map(toIntVector)
-
-      div(
-        computePlotDiv(basis, discovered, size),
-        //subplotDiv(basis, patternSpaceMin, patternSpaceMax, points, size)
-      )
     }
 
     def maxSubdivisionBasis(dimension: Int, allowStretch: Boolean = false) = {
       MultiScaleBasis(dimension, ceil(pow(5000, 1d/dimension)).toInt, 2, allowStretch = allowStretch)
     }
 
+    def maxSubdivisionPlotDiv(basis: MultiScaleBasis, size: Int): ReactiveHtmlElement[html.Div] = {
+      val discovered = (0 to (0.25 * pow(basis.subdivision, basis.sourceDimension)).toInt).map(_ => (() => (random() * basis.subdivision).toInt.toDouble) at basis.sourceDimension).map(toIntVector)
+      computePlotDiv(basis, discovered, size)
+    }
+
     val size = 800
 
     div(
-      onDemand("dimension = 2", _ => comparisonDiv(maxSubdivisionBasis(2), size)),
-      onDemand("dimension = 3", _ => comparisonDiv(maxSubdivisionBasis(3), size)),
+      onDemand("dimension = 2", _ => maxSubdivisionPlotDiv(maxSubdivisionBasis(2), size)),
+      onDemand("dimension = 3", _ => maxSubdivisionPlotDiv(maxSubdivisionBasis(3), size)),
       //onDemand("dimension = 3, allowStretch = true", _ => comparisonDiv(maxSubdivisionBasis(3, allowStretch = true), size)),
-      onDemand("dimension = 4", _ => comparisonDiv(maxSubdivisionBasis(4), size)),
-      onDemand("dimension = 6 (test de robustesse du code)", _ => comparisonDiv(maxSubdivisionBasis(6), size)),
+      onDemand("dimension = 4", _ => maxSubdivisionPlotDiv(maxSubdivisionBasis(4), size)),
+      onDemand("dimension = 6 (test de robustesse du code)", _ => maxSubdivisionPlotDiv(maxSubdivisionBasis(6), size)),
     )
   }
 

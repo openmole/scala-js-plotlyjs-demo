@@ -68,9 +68,7 @@ object PSEMultiScaleDemo {
         pow(subdivision + gap, scaleIndex(i))
       }
 
-      def destinationAxis(i: Int): Int = {
-        axis(i) % destinationDimension
-      }
+      val maxScaleIndex: Int = scaleIndex(sourceDimension - 1)
 
       override val size: Int = sourceDimension
 
@@ -86,10 +84,18 @@ object PSEMultiScaleDemo {
         }
       }
 
-      val maxScaleIndex: Int = scaleIndex(sourceDimension - 1)
+      def totalSize(i: Int): Double = {
+        val maxParallel = sourceDimension - 1 - ((sourceDimension - 1 - i) % destinationDimension)
+        (basisVector(maxParallel) * subdivision).norm
+      }
 
-      def size(i: Int): Double = {
-        (basisVector(sourceDimension - 1 - ((sourceDimension - 1 - i) % destinationDimension)) * subdivision).norm
+      def size(destinationAxis: Int): Double = {
+        for(i <- 0 until sourceDimension) {
+          if(axis(i) == destinationAxis) {
+            return totalSize(i)
+          }
+        }
+        -1
       }
 
     }
@@ -197,23 +203,39 @@ object PSEMultiScaleDemo {
           .map(basis.sourceDimension - 1 - _)
           .filter(i => basis.scaleIndex(i) == basis.maxScaleIndex)
           .flatMap(i => {
+            val subdivisionSize = size/basis.subdivision.toDouble
+            val annotationMinimumSize = 16
+            val step = ceil(annotationMinimumSize / subdivisionSize).toInt
             (0 to basis.subdivision)
-              .filter(s => if(size/basis.subdivision > 14) true else s % 2 == 0)
+              .filter(s => s % step == 0 || s == basis.subdivision)
               .map(s => {
-                val point = basis.transform(
-                  (0.0 at basis.sourceDimension)
-                    .replace(i, s)
-                ).add({
-                  val margin = basis.size(i)/size.toDouble * 32
-                  val adjustmentFactor = basis.scaleIndex(i) match {
-                    case 0 => 1
-                    case 1 => 0.5
-                    case _ => 1
+                val pixelToPlot = basis.totalSize(i)/size.toDouble
+                val destinationAxis = basis.axis(i)
+                val destinationScaleIndex = basis.scaleIndex(i);
+                val point = ((basis.transform((0.0 at basis.sourceDimension).replace(i, s)) + {
+                  if(basis.sourceDimension <= 2) {
+                    basis.transform((0.0 at basis.sourceDimension).replace(i, s + 1))
+                  } else {
+                    basis.transform((0.0 at basis.sourceDimension).replace(i, s).replace(i - basis.destinationDimension, basis.subdivision))
                   }
-                  (-(margin * adjustmentFactor) * (basis.scaleIndex(i) + 1) at basis.destinationDimension).replace(basis.axis(i), 0)
-                })
-                val text = s"o${i + 1} s$s"
-                val textangle = basis.destinationAxis(i) match {
+                })/2)
+                  .add({
+                    val margin = 32 * pixelToPlot
+                    val adjustmentFactor = destinationScaleIndex match {
+                      case 0 => 1
+                      case 1 => 0.5
+                      case _ => 1
+                    }
+                    (-(margin * adjustmentFactor) * (destinationScaleIndex + 1) at basis.destinationDimension).replace(destinationAxis, 0)
+                  }).add({
+                    if(s == basis.subdivision) {
+                      (0.0 at basis.destinationDimension)//.replace(destinationAxis, 16 * pixelToPlot) // TODO objective position
+                    } else {
+                      0.0 at basis.destinationDimension
+                    }
+                  })
+                val text = if(s < basis.subdivision) "s" + s else "o" + (i + 1) //TODO objective style ?
+                val textangle = destinationAxis match {
                   case 0 => -90
                   case 1 => 0
                   case _ => 0
@@ -236,6 +258,32 @@ object PSEMultiScaleDemo {
 
       val plotDiv = div()
       val plotDataSeq = if(basis.sourceDimension <= 2) Seq(scatter._result) else hitboxDataSeq
+      val layout = {
+        val subdivisionToPixel = size / max(basis.size(0), basis.size(1))
+        val topMargin = 32 + 8
+        val internalBottomMargin = 64
+        Layout
+          .title("PSE" + (if(basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
+          .width(basis.size(0) * subdivisionToPixel)
+          .height(basis.size(1) * subdivisionToPixel + topMargin + internalBottomMargin)
+          .margin(Margin
+            .t(topMargin)
+            .l(0).r(0)
+            .b(0)
+          )
+          .showlegend(false)
+          .xaxis(axis
+            .visible(false)
+          )
+          .yaxis(axis
+            .scaleanchor("x")
+            .visible(false)
+          )
+          .shapes((discoveredShapeSeq ++ frameShapeSeq).toJSArray)
+          .annotations(boundsAnnotationSeq.toJSArray)
+          .hovermode("closest")
+          ._result
+      }
       val config = {
         var config = Config
           .modeBarButtonsToRemove(Seq(
@@ -261,33 +309,7 @@ object PSEMultiScaleDemo {
         }
         config
       }
-
-      Plotly.newPlot(
-        plotDiv.ref,
-        plotDataSeq.toJSArray,
-        Layout
-          .title("PSE" + (if(basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
-          .width(size)
-          .height(size)
-          .margin(Margin
-               .t(32 + 8)
-            .l(0)     .r(0)
-                 .b(0)
-          )
-          .showlegend(false)
-          .xaxis(axis
-            .visible(false)
-          )
-          .yaxis(axis
-            .scaleanchor("x")
-            .visible(false)
-          )
-          .shapes((discoveredShapeSeq ++ frameShapeSeq).toJSArray)
-          .annotations(boundsAnnotationSeq.toJSArray)
-          .hovermode("closest")
-          ._result,
-        config
-      )
+      Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray, layout, config)
 
       if(parentContentVarOption.isEmpty) {
         val contentVar = Var(plotDiv)
@@ -336,6 +358,13 @@ object PSEMultiScaleDemo {
       //onDemand("dimension = 3, allowStretch = true", _ => comparisonDiv(maxSubdivisionBasis(3, allowStretch = true), size)),
       onDemand("dimension = 4", _ => maxSubdivisionPlotDiv(maxSubdivisionBasis(4), size)),
       onDemand("dimension = 6 (test de robustesse du code)", _ => maxSubdivisionPlotDiv(maxSubdivisionBasis(6), size)),
+      onDemand("adaptive legend", _ => div(maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 800),
+        maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 600),
+        maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 400),
+        maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 300),
+        maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 200),
+        maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 100)
+      )),
     )
   }
 

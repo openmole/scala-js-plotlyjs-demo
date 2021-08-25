@@ -236,6 +236,28 @@ object PSEMultiScaleDemo {
 
       val plotDiv = div()
       val plotDataSeq = if(basis.sourceDimension <= 2) Seq(scatter._result) else hitboxDataSeq
+      var config = Config
+        .modeBarButtonsToRemove(Seq(
+          "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
+          "hoverClosestCartesian", "hoverCompareCartesian",
+          "toggleSpikelines",
+          //TODO remove plotly-logomark button
+        ).toJSArray)
+      if(parentContentVarOption.isDefined) {
+        config = config
+          .modeBarButtonsToAdd(js.Array(
+            ModeBarButton
+              .name("Go back to overview")
+              .icon(Icon // plotly home icon
+                .width(928.6)
+                .height(1000)
+                .path("m786 296v-267q0-15-11-26t-25-10h-214v214h-143v-214h-214q-15 0-25 10t-11 26v267q0 1 0 2t0 2l321 264 321-264q1-1 1-4z m124 39l-34-41q-5-5-12-6h-2q-7 0-12 3l-386 322-386-322q-7-4-13-4-7 2-12 7l-35 41q-4 5-3 13t6 12l401 334q18 15 42 15t43-15l136-114v109q0 8 5 13t13 5h107q8 0 13-5t5-13v-227l122-102q5-5 6-12t-4-13z")
+                .transform("matrix(1 0 0 -1 0 850)")
+              )
+              .click(backupFunction(parentContentVarOption.get))
+              ._result
+          ))
+      }
       Plotly.newPlot(
         plotDiv.ref,
         plotDataSeq.toJSArray,
@@ -260,27 +282,7 @@ object PSEMultiScaleDemo {
           .annotations(boundsAnnotationSeq.toJSArray)
           .hovermode("closest")
           ._result,
-        Config
-          .modeBarButtonsToRemove(Seq(
-            "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
-            "hoverClosestCartesian", "hoverCompareCartesian",
-            "toggleSpikelines",
-            //TODO remove plotly-logomark button
-          ).toJSArray)
-          .modeBarButtonsToAdd(js.Array(
-            ModeBarButton
-              .name("back")
-              .icon(Icon // custom
-                .width(2000)
-                .height(1500)
-                .path("m146.84375,14.552083 -6.61459,6.614583 6.61459,6.614584 0,-3.96875c 2.64583,0 9.26042,0 13.22917,5.291667 -3.96875,-10.583334 -10.58334,-10.583334 -13.22917,-10.583334z")
-              )
-              .click({
-                val f = backupFunction(parentContentVarOption.getOrElse(Var(plotDiv)))
-                _ => f()
-              })
-              ._result
-          ))
+        config
       )
 
       if(parentContentVarOption.isEmpty) {

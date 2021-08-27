@@ -140,8 +140,7 @@ object PSEMultiScaleDemo {
           val coordinates = points.transpose
           Shape
             .`type`(rect)
-            .xref("x")
-            .yref("y")
+            .xref("x").yref("y")
             .x0(coordinates(0)(0))
             .x1(coordinates(0)(1))
             .y0(coordinates(1)(0))
@@ -198,20 +197,20 @@ object PSEMultiScaleDemo {
       }
 
       lazy val boundsAnnotationSeq = {
+        val subdivisionSize = size/basis.subdivision.toDouble
+        val annotationMinimumSize = 16 + 8
+        val step = ceil(annotationMinimumSize / subdivisionSize).toInt
         (0 until basis.destinationDimension)
-          .reverse
-          .map(basis.sourceDimension - 1 - _)
+          .map(basis.sourceDimension - 1 - _).reverse
           .filter(i => basis.scaleIndex(i) == basis.maxScaleIndex)
           .flatMap(i => {
-            val subdivisionSize = size/basis.subdivision.toDouble
-            val annotationMinimumSize = 16
-            val step = ceil(annotationMinimumSize / subdivisionSize).toInt
-            (0 to basis.subdivision)
-              .filter(s => s % step == 0 || s == basis.subdivision)
+            val destinationAxis = basis.axis(i)
+            val destinationScaleIndex = basis.scaleIndex(i);
+            (0 until basis.subdivision)
+              .filter(s => s % step == 0/* || s == basis.subdivision*/)
               .map(s => {
                 val pixelToPlot = basis.totalSize(i)/size.toDouble
-                val destinationAxis = basis.axis(i)
-                val destinationScaleIndex = basis.scaleIndex(i);
+
                 val point = ((basis.transform((0.0 at basis.sourceDimension).replace(i, s)) + {
                   if(basis.sourceDimension <= 2) {
                     basis.transform((0.0 at basis.sourceDimension).replace(i, s + 1))
@@ -227,16 +226,10 @@ object PSEMultiScaleDemo {
                       case _ => 1
                     }
                     (-(margin * adjustmentFactor) * (destinationScaleIndex + 1) at basis.destinationDimension).replace(destinationAxis, 0)
-                  }).add({
-                    if(s == basis.subdivision) {
-                      (0.0 at basis.destinationDimension)//.replace(destinationAxis, 16 * pixelToPlot) // TODO objective position
-                    } else {
-                      0.0 at basis.destinationDimension
-                    }
                   })
-                val text = if(s < basis.subdivision) "s" + s else "o" + (i + 1) //TODO objective style ?
+                val text = "s" + s
                 val textangle = destinationAxis match {
-                  case 0 => -90
+                  case 0 => 0//-90
                   case 1 => 0
                   case _ => 0
                 }
@@ -247,7 +240,25 @@ object PSEMultiScaleDemo {
                   .textangle(textangle)
                   .showarrow(false)
                   ._result
-              })
+              }) :+ {
+              destinationAxis match {
+                case 0 => Annotation
+                  .xref("paper").yref("paper")
+                  .x(1).xanchor("right")
+                  .y(0).yanchor("bottom")
+                  .text("o" + (i + 1))
+                  .showarrow(false)
+                  ._result
+                case 1 => Annotation
+                  .xref("paper").yref("paper")
+                  .x(0).xanchor("left")
+                  .y(1).yanchor("top")
+                  .text("o" + (i + 1))
+                  .showarrow(false)
+                  ._result
+                case _ => Annotation.showarrow(false)._result
+              }
+            }
           })
       }
 

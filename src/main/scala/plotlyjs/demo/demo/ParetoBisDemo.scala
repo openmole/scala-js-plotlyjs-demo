@@ -124,7 +124,8 @@ object ParetoBisDemo {
           .symbol(circle)
           .color(pointColor)
         )
-        .hoverinfo("none")
+        .hoverinfo("text")
+        .text("click me")
         .customdata(points.map(_.index.toString).toJSArray)
         ._result
 
@@ -296,7 +297,7 @@ object ParetoBisDemo {
       }
 
       val skipOnBusy = new SkipOnBusy
-      plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData)))
+      plotDiv.ref.on("plotly_click", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData)))
       plotDiv.ref.on("plotly_relayout", _ => skipOnBusy.skipOnBusy({
         extraTraceManager.deleteTraces()
         extraTraceManager.addTraces(defaultTraces)

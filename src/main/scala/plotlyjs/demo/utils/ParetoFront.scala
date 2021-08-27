@@ -86,9 +86,8 @@ object ParetoFront {
     )
   }
 
-  def compromise(front: Seq[Vector], v0: Vector): Seq[directed.weighted.GraphMap.VertexAndWeight[Vector, Int]] = {
+  def compromise(front: Seq[Vector], v0: Vector): Seq[(Vector, Int)] = {
     front.zipWithIndex
-      .filterNot(_._1 == v0)
       .map { case (v, _) => (v, (v - v0).count(_ > 0))}
   }
 

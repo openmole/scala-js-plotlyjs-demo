@@ -134,7 +134,6 @@ object PSEMultiScaleDemo {
       val _replications = if(replications.isEmpty) discovered.map(_ => 100) else replications
 
       val discoveredShapeSeq = {
-        val minimumOpacity = 0.2
         discovered
           .map(_.vector)
           .zip(_replications)
@@ -146,7 +145,6 @@ object PSEMultiScaleDemo {
             val replicability = repli/100.0
             Shape
               .`type`(rect)
-              .xref("x").yref("y")
               .x0(coordinates(0)(0))
               .x1(coordinates(0)(1))
               .y0(coordinates(1)(0))
@@ -156,7 +154,6 @@ object PSEMultiScaleDemo {
                 .color(0.5 at 4)
               )
               .fillcolor((1 - replicability) * Seq(0.0, 0.0, 1.0) + replicability * Seq(1.0, 0.0, 0.0))
-              //.opacity(minimumOpacity + (1 - minimumOpacity) * repli/100.0)
               ._result
           }
       }
@@ -184,7 +181,6 @@ object PSEMultiScaleDemo {
             val (x1, y1) = (coordinates(0)(1), coordinates(1)(1))
             val frameShape = Shape
               .`type`(rect)
-              .xref("x").yref("y")
               .x0(x0).x1(x1).y0(y0).y1(y1)
               .line(customLine)
               ._result
@@ -223,7 +219,7 @@ object PSEMultiScaleDemo {
               .marker(marker
                 .size(size/basis.subdivision.toDouble * 0.5)
                 .symbol(square)
-                .color(0.5 at 3)
+                .color(1 at 3)
                 .opacity(0.0)
               )
               .hoverinfo("text")

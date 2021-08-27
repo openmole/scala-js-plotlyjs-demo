@@ -83,30 +83,25 @@ object ParetoBisDemo {
       val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
       val polarObjectives = cartesianObjectives.map(polarFromCartesian)
       val colors = polarObjectives.map(vector => Seq(((vector(1) + 360) % 360) / 360, 1, 0.5).fromHSLtoRGB.opacity(0.5))
-      val objectivesDataSeq = (0 until dimension).flatMap(i => { //TODO add ticks and values on axes
-        val objective = cartesianObjectives(i)
-        val textPosition = 1.1 * objective
-        Seq(
-          scatter
-            .x(js.Array(objective(0), 0))
-            .y(js.Array(objective(1), 0))
-            .setMode(lines)
-            .line(line
-              .color(colors(i))
-            )
-            .hoverinfo("none")
-            ._result,
-          scatter
-            .x(js.Array(textPosition(0)))
-            .y(js.Array(textPosition(1)))
-            .setMode(markersAndText)
-            .marker(marker.set(0.0 at 4))
-            .text(s"o${i + 1}")
-            .textPosition(TextPosition.middleCenter)
-            .hoverinfo("none")
-            ._result
-        )
-      })
+      val axisShapeSeq = cartesianObjectives.zipWithIndex.map { case(o, i) =>
+        Shape
+          .`type`("line")
+          .x0(0).y0(0)
+          .x1(o(0)).y1(o(1))
+          .line(line
+            .color(colors(i))
+          )
+          ._result
+      }
+      val legendAnnotationSeq = cartesianObjectives.zipWithIndex.map { case (o, i) =>
+        val textPosition = 1.1 * o
+        Annotation
+          .x(textPosition(0))
+          .y(textPosition(1))
+          .text("o" + (i + 1))
+          .showarrow(false)
+          ._result
+      }
 
       val pointSet = new PointSet(paretoFrontPoints)
         .optimizationProblems(MIN at dimension) //To configure with metadata.
@@ -119,6 +114,7 @@ object ParetoBisDemo {
         .zipWithIndex.map { case (point, index) => IndexedPoint(point(0), point(1), index) }
 
       val markerSize = 8
+      val pointColor = 0.5 at 4
       val paretoFrontData = scatter
         .x(points.map(_.x).toJSArray)
         .y(points.map(_.y).toJSArray)
@@ -126,7 +122,8 @@ object ParetoBisDemo {
         .set(marker
           .size(markerSize)
           .symbol(circle)
-          .opacity(0.5))
+          .color(pointColor)
+        )
         .hoverinfo("none")
         .customdata(points.map(_.index.toString).toJSArray)
         ._result
@@ -150,11 +147,14 @@ object ParetoBisDemo {
             .width(1)
             .color(0.0 at 4)
           )
+          ._result
       }
 
       //Display
       val plotDiv = div()
-      val dataSeq = objectivesDataSeq :+ paretoFrontData
+      val dataSeq = Seq()///*objectivesDataSeq :+ */Seq(paretoFrontData)
+      val shapeSeq = axisShapeSeq ++ (if(dimension == 2) None else Some(borderShape))
+      val annotationSeq = legendAnnotationSeq
       val size = 800
       Plotly.newPlot(
         plotDiv.ref,
@@ -171,29 +171,18 @@ object ParetoBisDemo {
             .visible(false)
           )
           .showlegend(false)
-          .shapes(if(dimension == 2) js.Array() else js.Array(borderShape))
+          .shapes(shapeSeq.toJSArray)
+          .annotations(annotationSeq.toJSArray)
           .hovermode(closest)
       )
       //
 
-      //Events
+      //Events and paretoFrontData
       def get[A](plotData: PlotData, key: String, index: Int): Option[A] = entries(plotData).filter(_._1 == key).headOption.map(_._2.asInstanceOf[scala.scalajs.js.Array[A]](index))
 
+      val defaultTraces = Seq(paretoFrontData)
       val extraTraceManager = new ExtraTraceManager(plotDiv, dataSeq.size)
-      /*
-      var tracesDisplayedCount = 0
-
-      def addTraces(plotDataSeq: Seq[PlotData]): Unit = {
-        Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
-        tracesDisplayedCount += plotDataSeq.size
-      }
-
-      def deleteTraces(): Unit = {
-        Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + dataSeq.size).map(_.toDouble).toJSArray)
-        tracesDisplayedCount = 0
-      }
-
-       */
+      extraTraceManager.addTraces(defaultTraces)
 
       val rawOutputCoordinates = Var(div(""))
 
@@ -217,6 +206,7 @@ object ParetoBisDemo {
                   .symbol(circle.open)
                   .color(0.5 at 3)
                 )
+                ._result
             )
           }
           lazy val coordinateStar = {
@@ -236,6 +226,8 @@ object ParetoBisDemo {
                   .size(0)
                 )
                 */
+                .hoverinfo("none")
+                ._result
             })
           }
           lazy val componentSum = {
@@ -253,6 +245,8 @@ object ParetoBisDemo {
                   .dash("dot")
                   .color(/*(0.5 at 3)*/colors(i).opacity(0.5))
                 )
+                .hoverinfo("none")
+                ._result
             })
           }
           lazy val oneObjectiveCompromise = { //very few compromises in high dimension
@@ -267,31 +261,30 @@ object ParetoBisDemo {
                   .line(line
                     .width(1)
                     .color(colors(arrow.weight).opacity(1.0))
-                  ),
+                  )
+                  .hoverinfo("none")
+                  ._result
               )
             })
           }
           lazy val multiObjectiveCompromise = {
             val neighbourhood = ParetoFront.compromise(pointSet.spaceNormalizedOutputs, plotOutput)
-            neighbourhood.flatMap(vertexAndWeight => {
-              val coordinates = Seq(vertexAndWeight.vertex).map(basis.transform).transpose
-              Seq(
+            neighbourhood.zipWithIndex.map { case ((point, count), index) => {
+              val coordinates = Seq(point).map(basis.transform).transpose
                 scatter
                   .x(coordinates(0).toJSArray)
                   .y(coordinates(1).toJSArray)
                   .marker(marker
-                    .size(markerSize + vertexAndWeight.weight)
-                    .symbol(circle.open)
-                    .color(0.5 at 3)
+                    .size(markerSize + 4 * count)
+                    .symbol(circle)
+                    .color(pointColor)
                   )
-              )
-            })
+                  .customdata(Seq(index.toString).toJSArray)
+                  .hoverinfo("none")
+                  ._result
+            }}
           }
-          val plotDataBuilderSeq = coordinateStar ++ componentSum ++ multiObjectiveCompromise ++ oneObjectiveCompromise
-          val plotDataSeq = plotDataBuilderSeq.map(_
-            .hoverinfo("none")
-            ._result
-          ).reverse
+          val plotDataSeq = componentSum ++ multiObjectiveCompromise ++ coordinateStar //++ oneObjectiveCompromise
 
           extraTraceManager.deleteTraces()
           extraTraceManager.addTraces(plotDataSeq)
@@ -304,7 +297,10 @@ object ParetoBisDemo {
 
       val skipOnBusy = new SkipOnBusy
       plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData)))
-      plotDiv.ref.on("plotly_doubleclick", _ => skipOnBusy.skipOnBusy(extraTraceManager.deleteTraces()))
+      plotDiv.ref.on("plotly_relayout", _ => skipOnBusy.skipOnBusy({
+        extraTraceManager.deleteTraces()
+        extraTraceManager.addTraces(defaultTraces)
+      }))
       //
 
       div(

@@ -12,7 +12,7 @@ import plotlyjs.demo.utils.Utils.{ExtraTraceManager, onDemand, printCode}
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
-import plotlyjs.demo.utils.{Basis, PointSet}
+import plotlyjs.demo.utils.{Basis, Data, PointSet}
 import scaladget.bootstrapnative.bsn.btn_success
 
 import scala.collection.immutable.HashMap
@@ -129,31 +129,39 @@ object PSEMultiScaleDemo {
       slice.zipWithIndex.map { case (c, i) => s"o${i + basis.destinationDimension + 1} s$c" }.reduceOption(_ + ", " + _).getOrElse("")
     }
 
-    def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int, parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
+    def computePlotDiv(basis: MultiScaleBasis, discovered: Seq[IntVector], size: Int, replications: Seq[Int] = Seq(), parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
 
-      val discoveredShapeSeq = discovered
-        .map(_.vector)
-        .map { box =>
-          val b0 = box
-          val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
-          val points = Seq(b0, b1).map(basis.transform)
-          val coordinates = points.transpose
-          Shape
-            .`type`(rect)
-            .xref("x").yref("y")
-            .x0(coordinates(0)(0))
-            .x1(coordinates(0)(1))
-            .y0(coordinates(1)(0))
-            .y1(coordinates(1)(1))
-            .line(line
-              .width(0)
-              .color(0.5 at 4)
-            )
-            .fillcolor(Seq(0.0, 1.0, 0.0))
-            ._result
-        }
+      val _replications = if(replications.isEmpty) discovered.map(_ => 100) else replications
 
-      val (frameShapeSeq, hitboxDataSeq) = {
+      val discoveredShapeSeq = {
+        val minimumOpacity = 0.2
+        discovered
+          .map(_.vector)
+          .zip(_replications)
+          .map { case (box, repli) =>
+            val b0 = box
+            val b1 = b0 + (0.0 at basis.sourceDimension).replace(0, 1.0).replace(1, 1.0)
+            val points = Seq(b0, b1).map(basis.transform)
+            val coordinates = points.transpose
+            val replicability = repli/100.0
+            Shape
+              .`type`(rect)
+              .xref("x").yref("y")
+              .x0(coordinates(0)(0))
+              .x1(coordinates(0)(1))
+              .y0(coordinates(1)(0))
+              .y1(coordinates(1)(1))
+              .line(line
+                .width(0)
+                .color(0.5 at 4)
+              )
+              .fillcolor((1 - replicability) * Seq(0.0, 0.0, 1.0) + replicability * Seq(1.0, 0.0, 0.0))
+              //.opacity(minimumOpacity + (1 - minimumOpacity) * repli/100.0)
+              ._result
+          }
+      }
+
+      val (frameShapeSeqSeq, hitboxDataSeq) = {
         val frameSeq = {
           val sliceSpaceDimension = basis.sourceDimension - basis.destinationDimension
           if(sliceSpaceDimension == 0) {
@@ -162,6 +170,9 @@ object PSEMultiScaleDemo {
             IntVectors.positiveNCube(sliceSpaceDimension, basis.subdivision).toSeq
           }
         }
+        val customLine = line
+          .width(1)
+          .color(0.5 at 4)
         frameSeq
           .map((0.0 at basis.destinationDimension) ++ _.vector)
           .map { frame =>
@@ -175,26 +186,53 @@ object PSEMultiScaleDemo {
               .`type`(rect)
               .xref("x").yref("y")
               .x0(x0).x1(x1).y0(y0).y1(y1)
-              .line(line
-                .width(1)
-                .color(0.5 at 4)
-              )
+              .line(customLine)
               ._result
+            val gridShapeSeq = if(basis.sourceDimension != 2) Seq() else {
+              val lowSBound = 0
+              val highSBound = basis.subdivision
+              (lowSBound + 1 until highSBound)
+                .flatMap(s => {
+                  val p0H = basis.transform(frame.replace(0, lowSBound).replace(1, s))
+                  val p1H = basis.transform(frame.replace(0, highSBound).replace(1, s))
+                  val p0V = basis.transform(frame.replace(0, s).replace(1, lowSBound))
+                  val p1V = basis.transform(frame.replace(0, s).replace(1, highSBound))
+                  Seq(
+                    Shape
+                      .`type`("line")
+                      .x0(p0H(0))
+                      .y0(p0H(1))
+                      .x1(p1H(0))
+                      .y1(p1H(1))
+                      .line(customLine)
+                      ._result,
+                    Shape
+                      .`type`("line")
+                      .x0(p0V(0))
+                      .y0(p0V(1))
+                      .x1(p1V(0))
+                      .y1(p1V(1))
+                      .line(customLine)
+                      ._result
+                  )
+                })
+            }
             val hitboxData = scatter
               .x(Seq((x0 + x1)/2.0).toJSArray)
               .y(Seq((y0 + y1)/2.0).toJSArray)
               .marker(marker
                 .size(size/basis.subdivision.toDouble * 0.5)
                 .symbol(square)
-                .color(Seq(0.0, 1.0, 0.0))
+                .color(0.5 at 3)
                 .opacity(0.0)
               )
               .hoverinfo("text")
               .text(sliceToString(basis, frame.drop(basis.destinationDimension)) + " – click to zoom")
               ._result
-            (frameShape, hitboxData)
+            (frameShape +: gridShapeSeq, hitboxData)
           }.unzip
       }
+      val frameShapeSeq = frameShapeSeqSeq.flatten
 
       lazy val boundsAnnotationSeq = {
         val subdivisionSize = size/basis.subdivision.toDouble
@@ -228,16 +266,10 @@ object PSEMultiScaleDemo {
                     (-(margin * adjustmentFactor) * (destinationScaleIndex + 1) at basis.destinationDimension).replace(destinationAxis, 0)
                   })
                 val text = "s" + s
-                val textangle = destinationAxis match {
-                  case 0 => 0//-90
-                  case 1 => 0
-                  case _ => 0
-                }
                 Annotation
                   .x(point(0))
                   .y(point(1))
                   .text(text)
-                  .textangle(textangle)
                   .showarrow(false)
                   ._result
               }) :+ {
@@ -285,10 +317,14 @@ object PSEMultiScaleDemo {
           .showlegend(false)
           .xaxis(axis
             .visible(false)
+            //.dtick(1)
+            //.showgrid(basis.sourceDimension == 2)
           )
           .yaxis(axis
             .scaleanchor("x")
             .visible(false)
+            //.dtick(1)
+            //.showgrid(basis.sourceDimension == 2)
           )
           .shapes((discoveredShapeSeq ++ frameShapeSeq).toJSArray)
           .annotations(boundsAnnotationSeq.toJSArray)
@@ -335,14 +371,19 @@ object PSEMultiScaleDemo {
               Seq(xSlice, ySlice)
           }
 
-          val sliceDiscovered = discovered
+          val (filteredDiscovered, filteredReplications) = discovered
             .map(_.vector)
-            .filter(_.takeRight(slice.vector.dimension).equals(slice))
+            .zip(_replications)
+            .filter(_._1.takeRight(slice.vector.dimension).equals(slice))
+            .unzip
+          val sliceDiscovered = filteredDiscovered
             .map(_.take(basis.destinationDimension))
             .map(toIntVector)
 
-          contentVar.set(computePlotDiv(basis.copy(sourceDimension = basis.destinationDimension), sliceDiscovered, size,
-            Some(contentVar), Some(slice)))
+          contentVar.set(computePlotDiv(
+            basis.copy(sourceDimension = basis.destinationDimension), sliceDiscovered, size, filteredReplications,
+            Some(contentVar), Some(slice)
+          ))
         })
         div(child <-- contentVar.signal)
       } else {
@@ -358,7 +399,8 @@ object PSEMultiScaleDemo {
 
     def maxSubdivisionPlotDiv(basis: MultiScaleBasis, size: Int): ReactiveHtmlElement[html.Div] = {
       val discovered = (0 to (0.25 * pow(basis.subdivision, basis.sourceDimension)).toInt).map(_ => (() => (random() * basis.subdivision).toInt.toDouble) at basis.sourceDimension).map(toIntVector)
-      computePlotDiv(basis, discovered, size)
+      val replications = discovered.indices.map(_ => (random() * 100).toInt)
+      computePlotDiv(basis, discovered, size, replications)
     }
 
     val size = 800
@@ -376,6 +418,22 @@ object PSEMultiScaleDemo {
         maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 200),
         maxSubdivisionPlotDiv(maxSubdivisionBasis(2), 100)
       )),
+      onDemand("Zombies model", _ => {
+        //TODO requires the actual subdivisions
+        val basis = MultiScaleBasis(2, 32, 2)
+        val (discoveredPoints, replications) = Data.pseZombiesData.map(_.drop(4)).map(v => (v.take(2), v.takeRight(1).head.toInt)).unzip
+        val pointSet = new PointSet(discoveredPoints)
+        val Subdivision = basis.subdivision
+        val discoveredBoxes = pointSet.spaceNormalizedOutputs.map(_ * basis.subdivision).map(
+          _
+            .map(_.floor.toInt)
+            .map {
+              case Subdivision => basis.subdivision - 1
+              case s => s
+            }
+        )
+        computePlotDiv(basis, discoveredBoxes, size, replications)
+      })
     )
   }
 

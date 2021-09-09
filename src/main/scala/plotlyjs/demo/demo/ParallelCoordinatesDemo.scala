@@ -18,7 +18,7 @@ object ParallelCoordinatesDemo {
     val plotDiv = div()
 
     val dim = 8
-    val results = Utils.randomizeDimensions(new ParetoFront(dim, 128).front)
+    val results = Utils.randomizeDimensions(ParetoFront.random(dim, 128))
 
     val plotData = parallelCoordinates
       .dimensions(

@@ -1,8 +1,6 @@
 package plotlyjs.demo.utils
 
-import plotlyjs.demo.directions.angularadjustment.AngularAdjustment.{Geometry, cellRadialAdjustment}
-import plotlyjs.demo.directions.restrictedspacetransformation.v4.{IndexedTransformation, MaxMagnitude, Transformation}
-import plotlyjs.demo.utils.vector.IntVectors._
+import plotlyjs.demo.labo.directions.restrictedspacetransformation.v4.{IndexedTransformation, Transformation}
 import plotlyjs.demo.utils.vector.Vectors._
 
 object Data {

@@ -4,6 +4,7 @@ import scaladget.highlightjs.HighlightJS
 import scaladget.bootstrapnative.bsn._
 import com.raquo.laminar.api.L._
 import org.scalajs
+import plotlyjs.demo.homemade.pse.PSEAPIDemo
 import plotlyjs.demo.labo.{DirectionsScatterDemo, HyperplaneSubdivisionDemo, PSEDemo, PSEMultiScaleDemo, PSESVGDemo, PSESubPlotsDemo, Pareto3dDemo, ParetoBisDemo, ParetoDemo, ParetoFrontGenerationDemo}
 
 /*
@@ -61,6 +62,7 @@ object PlotlyDemo {
               HeatMapDemo.elementDemo,
               ErrorBarDemo.elementDemo,
               ParallelCoordinatesDemo.elementDemo,
+              PSEAPIDemo.elementDemo,
 
               PSESubPlotsDemo.elementDemo,
               PSESVGDemo.elementDemo,

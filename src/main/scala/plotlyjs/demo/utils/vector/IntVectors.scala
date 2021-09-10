@@ -23,6 +23,41 @@ object IntVectors {
 
 
 
+  def vectorIndices(sizes: Seq[Int]): Iterable[IntVector] = {
+    if(sizes.isEmpty) {
+      new Iterable[IntVector] {
+        override def iterator: Iterator[IntVector] = new Iterator[IntVector] {
+          override def hasNext: Boolean = false
+          override def next(): IntVector = ???
+        }
+      }
+    } else {
+      new Iterable[IntVector] {
+        override def iterator: Iterator[IntVector] = new Iterator[IntVector] {
+
+          private val dimension = sizes.size
+          private val totalCount = sizes.product
+
+          private val pointGenerator = sizes.map(_ - 1).toArray//Array.fill[Int](dimension)(_size - 1)
+          private var count = 0
+
+          override def hasNext: Boolean = count < totalCount
+
+          override def next(): IntVector = {
+            pointGenerator(0) += 1
+            for(i <- 0 until dimension if pointGenerator(i) == sizes(i)) {
+              pointGenerator(i) = 0
+              if(i + 1 < dimension) pointGenerator(i + 1) += 1
+            }
+            count = count + 1
+            pointGenerator
+          }
+
+        }
+      }.view
+    }
+  }
+
   def positiveNCube(dimension: Int, p: Int): Iterable[IntVector] = {
     if(dimension == 0) {
       new Iterable[IntVector] {

@@ -4,17 +4,17 @@ import com.raquo.airstream.state.Var
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.PlotlyImplicits.elToPlotlyElement
-import org.openmole.plotlyjs.{Annotation, Config, Icon, Layout, Margin, ModeBarButton, Plotly, Shape}
 import org.openmole.plotlyjs.ShapeType.rect
 import org.openmole.plotlyjs.all.{axis, line, marker, scatter, square}
+import org.openmole.plotlyjs._
 import org.scalajs.dom.html
 import plotlyjs.demo.demo.Demo
-import plotlyjs.demo.utils.{Basis, Data, PointSet}
+import plotlyjs.demo.utils.Colors._
+import plotlyjs.demo.utils.Utils.onDemand
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
-import plotlyjs.demo.utils.Colors._
-import plotlyjs.demo.utils.Utils.onDemand
+import plotlyjs.demo.utils.{Basis, Data, PointSet}
 
 import scala.collection.immutable.HashMap
 import scala.math._
@@ -24,10 +24,6 @@ import scala.scalajs.js.JSConverters.JSRichIterableOnce
 object PSEMultiScaleDemo {
 
   private lazy val sc = sourcecode.Text {
-
-    def normalDistribution(mu: Double, sigma: Double): Double = {
-      sqrt(-2 * log(random)) * cos(2 * Pi * random) * sigma + mu
-    }
 
     case class MultiScaleBasis(sourceDimension: Int, subdivision: Int, destinationDimension: Int, allowStretch: Boolean = false, gap: Int = 1) extends Basis {
 
@@ -392,7 +388,7 @@ object PSEMultiScaleDemo {
     }
 
     def maxSubdivisionBasis(dimension: Int, allowStretch: Boolean = false) = {
-      MultiScaleBasis(dimension, /*ceil(pow(5000, 1d/dimension)).toInt*/ 5, 2, allowStretch = allowStretch)
+      MultiScaleBasis(dimension, ceil(pow(5000, 1d/dimension)).toInt, 2, allowStretch = allowStretch)
     }
 
     def maxSubdivisionPlotDiv(basis: MultiScaleBasis, size: Int): ReactiveHtmlElement[html.Div] = {

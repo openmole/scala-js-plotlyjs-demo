@@ -1,11 +1,13 @@
-package plotlyjs.demo.homemade
+package plotlyjs.demo.homemade.api
 
-import plotlyjs.demo.homemade.Data.Outcome
+import plotlyjs.demo.homemade.api.Data.Outcome
 
 object Pareto {
 
   trait OptimizationType
+
   object Maximization extends OptimizationType
+
   object Minimization extends OptimizationType
 
   case class ParetoObjective(name: String, optimizationType: OptimizationType)

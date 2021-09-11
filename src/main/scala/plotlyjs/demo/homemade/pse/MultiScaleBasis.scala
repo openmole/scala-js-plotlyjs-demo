@@ -4,8 +4,9 @@ import plotlyjs.demo.utils.Basis
 import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math.pow
+import scala.util.control.Breaks.break
 
-case class MultiScaleBasis(sourceDimension: Int, subdivisions: Seq[Int], destinationDimension: Int, allowStretch: Boolean = false, gap: Int = 1) extends Basis {
+case class MultiScaleBasis(sourceDimension: Int, subdivisions: Seq[Int], destinationDimension: Int, allowStretch: Boolean = false) extends Basis {
 
   val remainder: Int = sourceDimension % destinationDimension
   val stretchable: Boolean = remainder != 0
@@ -24,7 +25,18 @@ case class MultiScaleBasis(sourceDimension: Int, subdivisions: Seq[Int], destina
   }
 
   def scale(i: Int): Double = {
-    pow(subdivisions(i) + gap, scaleIndex(i))
+    var iSubScale = i
+    var scaleFactor = 1
+    var valid = true
+    while(valid) {
+      iSubScale -= destinationDimension
+      if(iSubScale >=0) {
+        scaleFactor *= (subdivisions(iSubScale) + 1)
+      } else {
+        valid = false
+      }
+    }
+    scaleFactor
   }
 
   val maxScaleIndex: Int = scaleIndex(sourceDimension - 1)

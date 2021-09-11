@@ -3,14 +3,15 @@ package plotlyjs.demo.homemade.pse
 import com.raquo.airstream.state.Var
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
-import org.openmole.plotlyjs.PlotlyImplicits.elToPlotlyElement
+import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ShapeType.rect
-import org.openmole.plotlyjs.all.{axis, line, marker, scatter, square}
+import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs._
 import org.scalajs.dom.html
 import plotlyjs.demo.homemade.api.Data.Outcome
 import plotlyjs.demo.homemade.api.PSE.PSEDimension
 import plotlyjs.demo.utils.Colors._
+import plotlyjs.demo.utils.Utils.printCode
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
@@ -21,12 +22,12 @@ import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
 object PSE {
 
-  def sliceToString(basis: MultiScaleBasis, slice: IntVector): String = {
-    slice.zipWithIndex.map { case (c, i) => s"o${i + basis.destinationDimension + 1} s$c" }.reduceOption(_ + ", " + _).getOrElse("")
+  def subdivisionIndexOf(dimensions: Seq[PSEDimension], outcome: Outcome): IntVector = {
+    outcome.outputs.zip(dimensions).map { case (o, d) => d.bounds.lastIndexWhere(_ <= o.value) }
   }
 
-  def subdivisionIndexOf(dimensions: Seq[PSEDimension], outcome: Outcome): IntVector = {
-    outcome.outputs.zip(dimensions).map { case (o, d) => d.bounds.lastIndexWhere(_ < o.value) }
+  def sliceToString(basis: MultiScaleBasis, slice: IntVector): String = {
+    slice.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1} s$c" }.reduceOption(_ + ", " + _).getOrElse("")
   }
 
   def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], size: Int, parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
@@ -38,6 +39,7 @@ object PSE {
       val points = Seq(b0, b1).map(basis.transform)
       val coordinates = points.transpose
       val replication = outcome.samples.getOrElse(100) / 100.0
+      val offset = 0.2
       Shape
         .`type`(rect)
         .x0(coordinates(0)(0))
@@ -46,10 +48,8 @@ object PSE {
         .y1(coordinates(1)(1))
         .line(line
           .width(0)
-          .color(0.5 at 4)
         )
-        //.fillcolor((1 - replicability) * Seq(0.0, 0.0, 1.0) + replicability * Seq(1.0, 0.0, 0.0))
-        .fillcolor(Seq(1.0, 0.0, 0.0).opacity(0.2 + replication / 2.0))
+        .fillcolor(Seq(1.0, 0.0, 0.0).opacity(offset + replication * (1 - offset)))
         ._result
     }
 
@@ -59,7 +59,7 @@ object PSE {
         if (sliceSpaceDimension == 0) {
           Seq(Seq())
         } else {
-          IntVectors.vectorIndices(basis.subdivisions.drop(basis.destinationDimension)).toSeq //TODO incompatible with stretching
+          IntVectors.vectorIndices(basis.subdivisions.drop(basis.destinationDimension)).toSeq
         }
       }
       val customLine = line
@@ -82,7 +82,7 @@ object PSE {
           val gridShapeSeq = if (basis.sourceDimension != 2) Seq() else {
             val lowSBound = 0
             val highSBound = basis.subdivisions
-            (lowSBound + 1 until highSBound(0)).map(s => {
+            (lowSBound + 1 until highSBound(1)).map(s => {
               val p0 = basis.transform(frame.replace(0, lowSBound).replace(1, s))
               val p1 = basis.transform(frame.replace(0, highSBound(0)).replace(1, s))
               Shape
@@ -93,7 +93,7 @@ object PSE {
                 .y1(p1(1))
                 .line(customLine)
                 ._result
-              }) ++ (lowSBound + 1 until highSBound(1))
+              }) ++ (lowSBound + 1 until highSBound(0))
               .map(s => {
                 val p0V = basis.transform(frame.replace(0, s).replace(1, lowSBound))
                 val p1V = basis.transform(frame.replace(0, s).replace(1, highSBound(1)))
@@ -110,11 +110,11 @@ object PSE {
           val hitboxData = scatter
             .x(Seq((x0 + x1) / 2.0).toJSArray)
             .y(Seq((y0 + y1) / 2.0).toJSArray)
-            .set(marker //TODO .marker(
-              .size(size / (basis.subdivisions.sum.toDouble / basis.subdivisions.size) * 0.5)
-              .set(square) //TODO .symbol(
-              .set(1 at 3) //TODO .color(
-              .opacity(0.0)
+            .marker(marker
+              //.size(size / (basis.subdivisions.sum.toDouble / basis.subdivisions.size) * 0.5)
+              .symbol(square)
+              .color(Seq(0.0, 1.0, 0.0))
+              .opacity(1.0)
             )
             .hoverinfo("text")
             .text(sliceToString(basis, frame.drop(basis.destinationDimension)) + " – click to zoom")
@@ -125,17 +125,20 @@ object PSE {
     val frameShapeSeq = frameShapeSeqSeq.flatten
 
     lazy val boundsAnnotationSeq = {
-      val subdivisionSize = size / (basis.subdivisions.sum.toDouble / basis.subdivisions.size)
       val annotationMinimumSize = 16 + 8
-      val step = ceil(annotationMinimumSize / subdivisionSize).toInt
-      (0 until basis.destinationDimension)
-        .map(basis.sourceDimension - 1 - _).reverse
+
+      def step(i: Int) = {
+        val subdivisionSize = size.toDouble / basis.subdivisions(i)
+        ceil(annotationMinimumSize / subdivisionSize)
+      }
+
+      (basis.sourceDimension - basis.destinationDimension until basis.sourceDimension)
         .filter(i => basis.scaleIndex(i) == basis.maxScaleIndex)
         .flatMap(i => {
           val destinationAxis = basis.axis(i)
           val destinationScaleIndex = basis.scaleIndex(i);
           (0 until basis.subdivisions(i))
-            .filter(s => s % step == 0 /* || s == basis.subdivision*/)
+            .filter(s => s % step(i) == 0 /* || s == basis.subdivision*/)
             .map(s => {
               val pixelToPlot = basis.totalSize(i) / size.toDouble
 
@@ -143,7 +146,8 @@ object PSE {
                 if (basis.sourceDimension <= 2) {
                   basis.transform((0.0 at basis.sourceDimension).replace(i, s + 1))
                 } else {
-                  basis.transform((0.0 at basis.sourceDimension).replace(i, s).replace(i - basis.destinationDimension, basis.subdivisions(i)))
+                  val iSubScale = i - basis.destinationDimension
+                  basis.transform((0.0 at basis.sourceDimension).replace(i, s).replace(iSubScale, basis.subdivisions(iSubScale)))
                 }
               }) / 2)
                 .add({
@@ -163,24 +167,24 @@ object PSE {
                 .showarrow(false)
                 ._result
             }) :+ {
-            destinationAxis match {
-              case 0 => Annotation
-                .xref("paper").yref("paper")
-                .x(1).xanchor("right")
-                .y(0).yanchor("bottom")
-                .text("o" + (i + 1))
-                .showarrow(false)
-                ._result
-              case 1 => Annotation
-                .xref("paper").yref("paper")
-                .x(0).xanchor("left")
-                .y(1).yanchor("top")
-                .text("o" + (i + 1))
-                .showarrow(false)
-                ._result
-              case _ => Annotation.showarrow(false)._result
+              destinationAxis match {
+                case 0 => Annotation
+                  .xref("paper").yref("paper")
+                  .x(1).xanchor("right")
+                  .y(0).yanchor("bottom")
+                  .text("d" + (i + 1))
+                  .showarrow(false)
+                  ._result
+                case 1 => Annotation
+                  .xref("paper").yref("paper")
+                  .x(0).xanchor("left")
+                  .y(1).yanchor("top")
+                  .text("d" + (i + 1))
+                  .showarrow(false)
+                  ._result
+                case _ => Annotation.showarrow(false)._result
+              }
             }
-          }
         })
     }
 
@@ -197,13 +201,16 @@ object PSE {
       val internalBottomMargin = 64
       Layout
         .title("PSE" + (if (basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
-        .width(basis.size(0) * subdivisionToPixel)
-        .height(basis.size(1) * subdivisionToPixel + topMargin + internalBottomMargin)
+        //.width(basis.size(0) * subdivisionToPixel)
+        //.height(basis.size(1) * subdivisionToPixel + topMargin + internalBottomMargin)
+        .autosize(true)
+        /*
         .margin(Margin
           .t(topMargin)
           .l(0).r(0)
           .b(0)
         )
+        */
         .showlegend(false)
         .xaxis(axis
           .visible(false)
@@ -256,8 +263,8 @@ object PSE {
           case 3 =>
             Seq(curveNumber)
           case 4 =>
-            val xSlice = curveNumber % basis.subdivisions(0)
-            val ySlice = curveNumber / basis.subdivisions(1)
+            val xSlice = curveNumber % basis.subdivisions(basis.destinationDimension)
+            val ySlice = curveNumber / basis.subdivisions(basis.destinationDimension)
             Seq(xSlice, ySlice)
         }
 

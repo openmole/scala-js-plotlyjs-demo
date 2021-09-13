@@ -232,15 +232,21 @@ object Utils {
   class ExtraTraceManager(plotDiv: ReactiveHtmlElement[html.Div], initialTraceCount: Int) {
 
     private var tracesDisplayedCount = 0
+    private var defaultTraces = Seq[PlotData]()
 
-    def addTraces(plotDataSeq: Seq[PlotData]): Unit = {
+    def addTraces(plotDataSeq: Seq[PlotData], default: Boolean = false): Unit = {
       Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
       tracesDisplayedCount += plotDataSeq.size
+      if(default) defaultTraces = defaultTraces ++ plotDataSeq
     }
 
     def deleteTraces(): Unit = {
       Plotly.deleteTraces(plotDiv.ref, (0 until tracesDisplayedCount).map(_ + initialTraceCount).map(_.toDouble).toJSArray)
       tracesDisplayedCount = 0
+    }
+
+    def addDefaultTraces(): Unit = {
+      addTraces(defaultTraces)
     }
 
   }

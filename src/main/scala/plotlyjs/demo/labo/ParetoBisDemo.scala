@@ -23,35 +23,39 @@ object ParetoBisDemo {
 
   private lazy val sc = sourcecode.Text {
 
-    def polarFromCartesian(vector: Vector): Vector = {
-      val r = vector.norm
-      val x = vector(0)
-      val y = vector(1)
-      val theta = atan2(y, x).toDegrees
-      Seq(r, theta)
-    }
-
-    def cartesianFromPolar(vector: Vector): Vector = {
-      val r = vector(0)
-      val theta = vector(1).toRadians
-      val x = r * cos(theta)
-      val y = r * sin(theta)
-      Seq(x, y)
-    }
-
-    class StarBasis(dimension: Int) extends Basis {
+    class SnowflakeBasis(dimension: Int) extends Basis {
 
       override val size: Int = dimension
 
       override def basisVector(i: Int): Vector = {
         if (dimension == 2) {
           i match {
-            case 0 => cartesianFromPolar(Seq(1, 0))
-            case 1 => cartesianFromPolar(Seq(1, 90))
+            case 0 => SnowflakeBasis.cartesianFromPolar(Seq(1, 0))
+            case 1 => SnowflakeBasis.cartesianFromPolar(Seq(1, 90))
           }
         } else {
-          cartesianFromPolar(Seq(1, 360 * i / dimension))
+          SnowflakeBasis.cartesianFromPolar(Seq(1, 360 * i / dimension))
         }
+      }
+
+    }
+
+    object SnowflakeBasis {
+
+      def polarFromCartesian(vector: Vector): Vector = {
+        val r = vector.norm
+        val x = vector(0)
+        val y = vector(1)
+        val theta = atan2(y, x).toDegrees
+        Seq(r, theta)
+      }
+
+      def cartesianFromPolar(vector: Vector): Vector = {
+        val r = vector(0)
+        val theta = vector(1).toRadians
+        val x = r * cos(theta)
+        val y = r * sin(theta)
+        Seq(x, y)
       }
 
     }
@@ -61,11 +65,11 @@ object ParetoBisDemo {
       val downHalfDimension = dimension / 2
       val upHalfDimension = ceil(dimension / 2.0).toInt
 
-      val basis = new StarBasis(dimension)
+      val basis = new SnowflakeBasis(dimension)
 
       val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
       val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
-      val polarObjectives = cartesianObjectives.map(polarFromCartesian)
+      val polarObjectives = cartesianObjectives.map(SnowflakeBasis.polarFromCartesian)
       val colors = polarObjectives.map(vector => Seq(((vector(1) + 360) % 360) / 360, 1, 0.5).fromHSLtoRGB.opacity(0.5))
       val axisShapeSeq = cartesianObjectives.zipWithIndex.map { case (o, i) =>
         Shape
@@ -271,7 +275,7 @@ object ParetoBisDemo {
             }
             }
           }
-          val plotDataSeq = /*componentSum ++ multiObjectiveCompromise ++*/ coordinateStar //++ oneObjectiveCompromise
+          val plotDataSeq = componentSum ++ multiObjectiveCompromise ++ coordinateStar //++ oneObjectiveCompromise
 
           extraTraceManager.deleteTraces()
           extraTraceManager.addTraces(plotDataSeq)

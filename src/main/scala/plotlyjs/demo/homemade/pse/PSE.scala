@@ -5,13 +5,12 @@ import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ShapeType.rect
-import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs._
+import org.openmole.plotlyjs.all._
 import org.scalajs.dom.html
 import plotlyjs.demo.homemade.api.Data.Outcome
 import plotlyjs.demo.homemade.api.PSE.PSEDimension
 import plotlyjs.demo.utils.Colors._
-import plotlyjs.demo.utils.Utils.printCode
 import plotlyjs.demo.utils.vector.IntVectors
 import plotlyjs.demo.utils.vector.IntVectors._
 import plotlyjs.demo.utils.vector.Vectors._
@@ -285,7 +284,7 @@ object PSE {
     }
   }
 
-  def api(dimensions: Seq[PSEDimension], outcomes: Seq[Outcome]): ReactiveHtmlElement[html.Div] = {
+  def plotAPI(dimensions: Seq[PSEDimension], outcomes: Seq[Outcome]): ReactiveHtmlElement[html.Div] = {
     plot(
       dimensions,
       MultiScaleBasis(dimensions.size, dimensions.map(_.bounds.size - 1), 2),

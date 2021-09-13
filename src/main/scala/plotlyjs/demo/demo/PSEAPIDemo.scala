@@ -14,7 +14,7 @@ object PSEAPIDemo {
     val dimensions = (0 until 4).map(i => PSEDimension("dimension " + i, (0 to 5 + 2*i).map(_.toDouble)))
     val outcomes = (0 until 1024)
       .map(_ => Outcome((0.0 at 4).map(Input("", _)), dimensions.map(d => (d.bounds.last * random()).toInt).map(Output("", _))))
-      .distinct//TODO distinct
+      .distinct
     div(
       PSE.pse(
         dimensions.take(2),
@@ -29,7 +29,6 @@ object PSEAPIDemo {
         outcomes
       )
     )
-
   }
 
   val elementDemo: Demo = new Demo {

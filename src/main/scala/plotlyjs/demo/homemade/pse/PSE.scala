@@ -3,6 +3,7 @@ package plotlyjs.demo.homemade.pse
 import com.raquo.airstream.state.Var
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import org.openmole.plotlyjs.PlotMode.lines
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.ShapeType.rect
 import org.openmole.plotlyjs._
@@ -19,7 +20,7 @@ import scala.math.{ceil, max}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
-object PSE {
+object PSE { //TODO no zoom
 
   def subdivisionIndexOf(dimensions: Seq[PSEDimension], outcome: Outcome): IntVector = {
     outcome.outputs.zip(dimensions).map { case (o, d) => d.bounds.lastIndexWhere(_ <= o.value) }
@@ -67,12 +68,13 @@ object PSE {
       frameSeq
         .map((0.0 at basis.destinationDimension) ++ _.vector)
         .map { frame =>
-          val s0 = frame
-          val s1 = s0 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0)).replace(1, basis.subdivisions(1))
-          val points = Seq(s0, s1).map(basis.transform)
-          val coordinates = points.transpose
-          val (x0, y0) = (coordinates(0)(0), coordinates(1)(0))
-          val (x1, y1) = (coordinates(0)(1), coordinates(1)(1))
+          val s00 = frame
+          val s10 = s00 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0))
+          val s01 = s00 + (0.0 at basis.sourceDimension).replace(1, basis.subdivisions(1))
+          val s11 = s00 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0)).replace(1, basis.subdivisions(1))
+          val points = Seq(s00, s11).map(basis.transform)
+          val (x0, y0) = (points(0)(0), points(0)(1))
+          val (x1, y1) = (points(1)(0), points(1)(1))
           val frameShape = Shape
             .`type`(rect)
             .x0(x0).x1(x1).y0(y0).y1(y1)
@@ -106,15 +108,17 @@ object PSE {
                   ._result
               })
           }
+          val coordinates = Seq(s00, s10, s11, s01).map(basis.transform).transpose
           val hitboxData = scatter
-            .x(Seq((x0 + x1) / 2.0).toJSArray)
-            .y(Seq((y0 + y1) / 2.0).toJSArray)
-            .marker(marker
-              //.size(size / (basis.subdivisions.sum.toDouble / basis.subdivisions.size) * 0.5)
-              .symbol(square)
-              .color(Seq(0.0, 1.0, 0.0))
-              .opacity(1.0)
+            .x(coordinates(0).toJSArray)
+            .y(coordinates(1).toJSArray)
+            .setMode(lines)
+            .line(line
+              .width(0)
+              .color(1 at 3)
             )
+            .fill("toself")
+            .fillcolor((0 at 3).opacity(0.0).toOMColor.toJS.toString) //TODO fillcolor(ColorType)
             .hoverinfo("text")
             .text(sliceToString(basis, frame.drop(basis.destinationDimension)) + " – click to zoom")
             ._result

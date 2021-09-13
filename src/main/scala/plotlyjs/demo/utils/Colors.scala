@@ -35,13 +35,15 @@ object Colors {
       rgb1 + m
     }
 
+    def toOMColor: OMColor = {
+      val intColor = color.take(3).map(c => rint(c * 255).toInt)
+      OMColor.rgba(intColor(0), intColor(1), intColor(2), color.alpha)
+    }
+
   }
 
   def randomColor: Color = (() => random) at 3
 
-  implicit def implicitToOMColor(color: Color): OMColor = {
-    val intColor = color.take(3).map(c => rint(c * 255).toInt)
-    OMColor.rgba(intColor(0), intColor(1), intColor(2), color.alpha)
-  }
+  implicit def implicitToOMColor(color: Color): OMColor = color.toOMColor
 
 }

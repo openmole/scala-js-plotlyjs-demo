@@ -22,7 +22,7 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 import scala.scalajs.js.Object.entries
 
-object Pareto {
+object Pareto { //TODO no zoom, no useless button
 
   def plot(objectives: Seq[ParetoObjective], paretoFront: Seq[Outcome], paretoDisplay: ParetoDisplay): ReactiveHtmlElement[html.Div] = {
     val dimension = objectives.size
@@ -114,14 +114,14 @@ object Pareto {
     val dataSeq = Seq()
     val shapeSeq = axisShapeSeq ++ (if (dimension == 2) None else Some(borderShape))
     val annotationSeq = legendAnnotationSeq
-    val size = 800
+    //val size = 800
     Plotly.newPlot(
       plotDiv.ref,
       dataSeq.toJSArray,
       Layout
         .title("Pareto")
-        .height(size)
-        .width(size)
+        //.height(size)
+        //.width(size)
         .xaxis(axis
           .visible(false)
         )
@@ -130,6 +130,8 @@ object Pareto {
           .visible(false)
         )
         .showlegend(false)
+        //.asJsOpt("paper_bgcolor", Color.rgb(245, 245, 245).toJS)
+        .paperbgcolor(245.toDouble / 256 at 3) //TODO not working
         .shapes(shapeSeq.toJSArray)
         .annotations(annotationSeq.toJSArray)
         .hovermode(closest)
@@ -153,7 +155,6 @@ object Pareto {
                      componentSum: Boolean = false,
                      compromiseHelp: Boolean = false
                     ): Unit = {
-      println("eventHandler called")
       val pointData = pointsData.points.head
 
       get[String](pointData.data, "customdata", pointData.pointNumber).map(_.toInt).foreach(index => {

@@ -27,7 +27,7 @@ object ParetoAPIDemo {
       pareto(
         objectives,
         outcomes,
-        ParetoDisplay(outputPath = false, lowerIsBetter = true)
+        ParetoDisplay(outputPath = false, lowerIsBetter = true) // 180° rotation
       )
     )
   }

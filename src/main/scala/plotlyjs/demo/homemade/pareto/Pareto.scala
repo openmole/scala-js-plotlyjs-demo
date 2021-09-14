@@ -62,7 +62,7 @@ object Pareto { //TODO no zoom, no useless button
     val pointPlotter = PointPlotter(
       objectives.map(_.optimizationType),
       paretoFront.map(_.outputs.map(_.value)),
-      if(paretoDisplay.lowerIsBetter) BetterPlot.IsLower else BetterPlot.IsHigher
+      BetterPlot.IsHigher
     )
 
     case class RichPoint(x: Double, y: Double, index: Int, color: Colors.Color)
@@ -118,14 +118,13 @@ object Pareto { //TODO no zoom, no useless button
     val dataSeq = Seq()
     val shapeSeq = axisShapeSeq ++ (if (dimension == 2) None else Some(borderShape))
     val annotationSeq = legendAnnotationSeq
-    //val size = 800
     Plotly.newPlot(
       plotDiv.ref,
       dataSeq.toJSArray,
       Layout
         .title("Pareto")
-        //.height(size)
-        //.width(size)
+        .width(paretoDisplay.size)
+        .height(paretoDisplay.size)
         .xaxis(axis
           .visible(false)
         )
@@ -295,7 +294,7 @@ object Pareto { //TODO no zoom, no useless button
     }
 
     val skipOnBusy = new SkipOnBusy
-    plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData, coordinateSnowflake = true, componentSum = paretoDisplay.outputPath)))
+    plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData, coordinateSnowflake = true, componentSum = paretoDisplay.showPath)))
     plotDiv.ref.on("plotly_click", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData, compromiseHelp = true)))
     plotDiv.ref.on("plotly_relayout", _ => skipOnBusy.skipOnBusy({
       extraTraceManager.deleteTraces()

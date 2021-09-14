@@ -10,7 +10,7 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.scalajs.dom.html
 import plotlyjs.demo.homemade.api.Data.Outcome
-import plotlyjs.demo.homemade.api.PSE.PSEDimension
+import plotlyjs.demo.homemade.api.PSE.{PSEDimension, PSEDisplay}
 import plotlyjs.demo.homemade.utils.Colors._
 import plotlyjs.demo.homemade.utils.IntVectors
 import plotlyjs.demo.homemade.utils.IntVectors._
@@ -30,7 +30,7 @@ object PSE { //TODO no zoom
     slice.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1} s$c" }.reduceOption(_ + ", " + _).getOrElse("")
   }
 
-  def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], size: Int, parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
+  def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], pseDisplay: PSEDisplay, parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
 
     val discoveredShapeSeq = discovered.map { outcome =>
       val box = subdivisionIndexOf(dimensions, outcome).vector
@@ -131,7 +131,7 @@ object PSE { //TODO no zoom
       val annotationMinimumSize = 16 + 8
 
       def step(i: Int) = {
-        val subdivisionSize = size.toDouble / basis.subdivisions(i)
+        val subdivisionSize = pseDisplay.size.toDouble / basis.subdivisions(i)
         ceil(annotationMinimumSize / subdivisionSize)
       }
 
@@ -143,7 +143,7 @@ object PSE { //TODO no zoom
           (0 until basis.subdivisions(i))
             .filter(s => s % step(i) == 0 /* || s == basis.subdivision*/)
             .map(s => {
-              val pixelToPlot = basis.totalSize(i) / size.toDouble
+              val pixelToPlot = basis.totalSize(i) / pseDisplay.size.toDouble
 
               val point = ((basis.transform((0.0 at basis.sourceDimension).replace(i, s)) + {
                 if (basis.sourceDimension <= 2) {
@@ -199,14 +199,13 @@ object PSE { //TODO no zoom
     val plotDiv = div()
     val plotDataSeq = if (basis.sourceDimension <= 2) Seq(scatter._result) else hitboxDataSeq
     val layout = {
-      val subdivisionToPixel = size / max(basis.size(0), basis.size(1))
+      val subdivisionToPixel = pseDisplay.size / max(basis.size(0), basis.size(1))
       val topMargin = 32 + 8
       val internalBottomMargin = 64
       Layout
         .title("PSE" + (if (basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
-        //.width(basis.size(0) * subdivisionToPixel)
-        //.height(basis.size(1) * subdivisionToPixel + topMargin + internalBottomMargin)
-        .autosize(true)
+        .width(basis.size(0) * subdivisionToPixel)
+        .height(basis.size(1) * subdivisionToPixel + topMargin + internalBottomMargin)
         /*
         .margin(Margin
           .t(topMargin)
@@ -276,7 +275,7 @@ object PSE { //TODO no zoom
           dimensions,
           basis.copy(sourceDimension = basis.destinationDimension),
           filteredDiscovered,
-          size,
+          pseDisplay,
           Some(contentVar), Some(slice)
         ))
       })
@@ -288,12 +287,12 @@ object PSE { //TODO no zoom
     }
   }
 
-  def plotAPI(dimensions: Seq[PSEDimension], outcomes: Seq[Outcome]): ReactiveHtmlElement[html.Div] = {
+  def plotAPI(dimensions: Seq[PSEDimension], outcomes: Seq[Outcome], pseDisplay: PSEDisplay): ReactiveHtmlElement[html.Div] = {
     plot(
       dimensions,
       MultiScaleBasis(dimensions.size, dimensions.map(_.bounds.size - 1), 2),
       outcomes,
-      800
+      pseDisplay
     )
   }
 

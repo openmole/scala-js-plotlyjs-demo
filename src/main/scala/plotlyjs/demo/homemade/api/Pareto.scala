@@ -15,7 +15,7 @@ object Pareto {
 
   case class ParetoObjective(name: String, optimizationType: OptimizationType)
 
-  case class ParetoDisplay(outputPath: Boolean /*TODO rename displayPath, showPath, tracePath, plotPath ?*/, lowerIsBetter: Boolean = false)
+  case class ParetoDisplay(size: Int, showPath: Boolean = false)
 
   def pareto(objectives: Seq[ParetoObjective], outcomes: Seq[Outcome], paretoDisplay: ParetoDisplay): ReactiveHtmlElement[Div] = plotAPI(objectives, outcomes, paretoDisplay)
 

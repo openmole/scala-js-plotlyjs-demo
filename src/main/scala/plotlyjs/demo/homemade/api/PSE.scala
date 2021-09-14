@@ -9,6 +9,8 @@ object PSE {
 
   case class PSEDimension(name: String, bounds: Seq[Double])
 
-  def pse(dimensions: Seq[PSEDimension], outcomes: Seq[Outcome]): ReactiveHtmlElement[Div] = plotAPI(dimensions, outcomes)
+  case class PSEDisplay(size: Int)
+
+  def pse(dimensions: Seq[PSEDimension], outcomes: Seq[Outcome], pseDisplay: PSEDisplay): ReactiveHtmlElement[Div] = plotAPI(dimensions, outcomes, pseDisplay)
 
 }

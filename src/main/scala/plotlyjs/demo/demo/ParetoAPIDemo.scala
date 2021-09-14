@@ -15,16 +15,17 @@ object ParetoAPIDemo {
       (0 until dimension).map(i => Input("", i)),
       v.map(c => Output("", c))
     ))
+
     div(
       pareto(
         objectives,
         outcomes,
-        ParetoDisplay(outputPath = false)
+        ParetoDisplay(800)
       ),
       pareto(
         objectives,
         outcomes,
-        ParetoDisplay(outputPath = false, lowerIsBetter = true) // 180° rotation
+        ParetoDisplay(800, showPath = true)
       )
     )
   }

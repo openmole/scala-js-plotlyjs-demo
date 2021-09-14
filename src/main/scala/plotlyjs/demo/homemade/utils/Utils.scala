@@ -22,12 +22,16 @@ object Utils {
   }
 
   class SkipOnBusy {
-    var busy = false
-    def skipOnBusy(f: => Unit): Unit = {
+    private var busy = false
+    def skipOnBusy(name: String, f: () => Unit): Unit = {
       if(!busy) {
         busy = true
-        f
+        println(name + "...")
+        f()
+        println(name + ".")
         busy = false
+      } else {
+        println(name + " skipped")
       }
     }
   }

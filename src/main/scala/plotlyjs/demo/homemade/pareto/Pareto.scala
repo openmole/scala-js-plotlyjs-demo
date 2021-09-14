@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.Color.rgb
 import org.openmole.plotlyjs.HoverMode.closest
-import org.openmole.plotlyjs.PlotMode.{lines, markers}
+import org.openmole.plotlyjs.PlotMode.{lines, markers, markersAndText, text}
 import org.openmole.plotlyjs.PlotlyImplicits.elToPlotlyElement
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all.{PlotMarkerAPI, _}
@@ -36,6 +36,7 @@ object Pareto { //TODO no zoom, no useless button
     val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
     val polarObjectives = cartesianObjectives.map(polarFromCartesian)
     val colors = polarObjectives.map(vector => Seq(((vector(1) + 360) % 360) / 360, 1, 0.5).fromHSLtoRGB)
+
     val axisShapeSeq = cartesianObjectives.zipWithIndex.map { case (o, i) =>
       Shape
         .`type`("line")
@@ -44,8 +45,10 @@ object Pareto { //TODO no zoom, no useless button
         .line(line
           .color(colors(i))
         )
+        .layer("below")
         ._result
     }
+
     val legendAnnotationSeq = cartesianObjectives.zipWithIndex.map { case (o, i) =>
       val textPosition = 1.1 * o
       val angle = polarFromCartesian(textPosition).angle
@@ -79,7 +82,7 @@ object Pareto { //TODO no zoom, no useless button
       RichPoint(outcome, index, plotOutput, point(0), point(1), color)
     }
 
-    val markerSize = 8
+    val markerSize = 16
     val paretoFrontDataSeq = richPoints.map { p =>
       scatter
         .x(Seq(p.x).toJSArray)
@@ -97,7 +100,7 @@ object Pareto { //TODO no zoom, no useless button
         ._result
     }
 
-    val borderShape = {
+    val backgroundShape = {
 
       val radius = {
         //basis.transform((1 at upHalfDimension) ++ (0 at dimension - upHalfDimension)).norm //Leave space for the componentSum to display...
@@ -120,8 +123,8 @@ object Pareto { //TODO no zoom, no useless button
 
     //Display
     val plotDiv = div()
-    val dataSeq = Seq()
-    val shapeSeq = axisShapeSeq ++ (if (dimension == 2) None else Some(borderShape))
+    val dataSeq = paretoFrontDataSeq
+    val shapeSeq = (if (dimension == 2) None else Some(backgroundShape)) ++ axisShapeSeq
     val annotationSeq = legendAnnotationSeq
     Plotly.newPlot(
       plotDiv.ref,
@@ -148,8 +151,7 @@ object Pareto { //TODO no zoom, no useless button
     var currentReference: Option[RichPoint] = None
 
     val extraTraceManager = new ExtraTraceManager(plotDiv, dataSeq.size)
-    var currentParetoFrontDisplay = paretoFrontDataSeq
-    extraTraceManager.addTraces(currentParetoFrontDisplay)
+    var currentParetoFrontDisplay = Seq[PlotData]()
     var currentSnowflakeReference = Seq[PlotData]()
 
     val rawOutputCoordinates = Var(div(""))
@@ -203,12 +205,14 @@ object Pareto { //TODO no zoom, no useless button
         })
       }
 
-      val referenceColor = 1 at 3
+      val referenceColor = 0.5 at 3
 
       lazy val snowflakeReferenceDataSeq = {
-        (0 until dimension).map(i => {
+        (0 until dimension).flatMap(i => {
           val cartesianComponentVector = basis.component(richPoint.plotOutput, i)
           val polarComponentVector = polarFromCartesian(cartesianComponentVector)
+          if(polarComponentVector.radius == 0) return
+
           val l = 0.05
           val r = 0.01
           val rawPoints = Seq(-r, +r).map { radiusDelta =>
@@ -225,20 +229,22 @@ object Pareto { //TODO no zoom, no useless button
           val points = Seq(rawPoints(0)(0), rawPoints(1)(0), rawPoints(1)(1), rawPoints(0)(1))
           //val points = Seq(rawPoints(0)(0), rawPoints(1)(0), rawPoints(0)(1), rawPoints(1)(1))
           val coordinates = (points :+ points.head).transpose
-          scatter
+          Some(scatter
             .x(coordinates(0).toJSArray)
             .y(coordinates(1).toJSArray)
             .setMode(lines)
             .line(line
-              .width(2)
+              .width(0)
               //.shape("spline")
               //.color((0 at 3).opacity(0.5))
               .color(colors(i))
             )
             .fill("toself")
             .fillcolor(/*colors(i)*/referenceColor.toOMColor.toJS.toString)
+            .fillcolor(colors(i).toOMColor.toJS.toString)
             .hoverinfo("skip")
             ._result
+          )
         })
       }
 
@@ -262,29 +268,32 @@ object Pareto { //TODO no zoom, no useless button
           scatter
             .x(coordinates(0).toJSArray)
             .y(coordinates(1).toJSArray)
+            .setMode(markersAndText)
             .marker(
               if(count == 0) {
                 marker
                   .size(bestSize)
-                  .symbol(circle)
+                  .symbol(circle.open)
                   .set(line
                     .width(2)
-                    .color(richPoint.color)
+                    //.color(richPoint.color)
                   ) //TODO .line(
-                  .color(referenceColor)
+                  //.color(referenceColor)
+                  .color(richPoint.color)
               } else {
                 marker
                   .size(compromise * worstSize + (1 - compromise) * bestSize)
-                  .symbol(circle)
+                  .symbol(circle.open)
                   .set(line
-                    .width(1)
+                    .width(2)
                   ) //TODO .line(
                   .color(richPoint.color)
               }
             )
+            .text(count.toString)
             .customdata(Seq(index.toString).toJSArray)
-            .hoverinfo("text")
-            .text("click me")
+            .hoverinfo("skip")
+            //.text("click me")
             ._result
           }
         }
@@ -313,14 +322,20 @@ object Pareto { //TODO no zoom, no useless button
     }
 
     val skipOnBusy = new SkipOnBusy
-    plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData, coordinateSnowflake = true, componentSum = paretoDisplay.showPath)))
-    plotDiv.ref.on("plotly_click", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData, compromiseHelp = true)))
-    plotDiv.ref.on("plotly_unhover", pointsData => skipOnBusy.skipOnBusy(eventHandler(pointsData))) //TODO
-    plotDiv.ref.on("plotly_relayout", _ => skipOnBusy.skipOnBusy({
+    plotDiv.ref.on("plotly_hover", pointsData => skipOnBusy.skipOnBusy("hover", () => {
+      eventHandler(pointsData, coordinateSnowflake = true, componentSum = paretoDisplay.showPath)
+    }))
+    plotDiv.ref.on("plotly_unhover", pointsData => skipOnBusy.skipOnBusy("unhover", () => {
+      eventHandler(pointsData)
+    }))
+    plotDiv.ref.on("plotly_click", pointsData => skipOnBusy.skipOnBusy("click", () => {
+      eventHandler(pointsData, compromiseHelp = true)
+    }))
+    plotDiv.ref.on("plotly_relayout", _ => skipOnBusy.skipOnBusy("relayout", () => {
       extraTraceManager.deleteTraces()
-      currentParetoFrontDisplay = paretoFrontDataSeq
-      extraTraceManager.addTraces(currentParetoFrontDisplay)
+      currentReference = None
       currentSnowflakeReference = Seq()
+      currentParetoFrontDisplay = Seq()
     }))
     //
 

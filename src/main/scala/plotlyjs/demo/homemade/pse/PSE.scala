@@ -11,10 +11,10 @@ import org.openmole.plotlyjs.all._
 import org.scalajs.dom.html
 import plotlyjs.demo.homemade.api.Data.Outcome
 import plotlyjs.demo.homemade.api.PSE.PSEDimension
-import plotlyjs.demo.utils.Colors._
-import plotlyjs.demo.utils.vector.IntVectors
-import plotlyjs.demo.utils.vector.IntVectors._
-import plotlyjs.demo.utils.vector.Vectors._
+import plotlyjs.demo.homemade.utils.Colors._
+import plotlyjs.demo.homemade.utils.IntVectors
+import plotlyjs.demo.homemade.utils.IntVectors._
+import plotlyjs.demo.homemade.utils.Vectors._
 
 import scala.math.{ceil, max}
 import scala.scalajs.js

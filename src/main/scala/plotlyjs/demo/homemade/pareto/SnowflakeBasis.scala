@@ -1,10 +1,10 @@
 package plotlyjs.demo.homemade.pareto
 
 import plotlyjs.demo.homemade.pareto.SnowflakeBasis.cartesianFromPolar
-import plotlyjs.demo.utils.Basis
-import plotlyjs.demo.utils.vector.Vectors._
+import plotlyjs.demo.homemade.utils.Basis
+import plotlyjs.demo.homemade.utils.Vectors._
 
-import scala.math.{atan2, cos, exp, sin}
+import scala.math.{atan2, cos, sin}
 
 class SnowflakeBasis(dimension: Int) extends Basis {
 

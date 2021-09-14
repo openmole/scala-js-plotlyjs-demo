@@ -11,10 +11,10 @@ import org.scalajs.dom.html
 import plotlyjs.demo.homemade.api.Data.Outcome
 import plotlyjs.demo.homemade.api.Pareto.{Maximization, ParetoDisplay, ParetoObjective}
 import plotlyjs.demo.homemade.pareto.PointPlotter.BetterPlot
-import plotlyjs.demo.utils.Colors._
-import plotlyjs.demo.utils.{Colors, ParetoFront}
-import plotlyjs.demo.utils.Utils.{ExtraTraceManager, SkipOnBusy}
-import plotlyjs.demo.utils.vector.Vectors._
+import plotlyjs.demo.homemade.utils.Colors._
+import plotlyjs.demo.homemade.utils.{Colors, ParetoFrontGenerator}
+import plotlyjs.demo.homemade.utils.Utils.{ExtraTraceManager, SkipOnBusy}
+import plotlyjs.demo.homemade.utils.Vectors._
 
 import scala.math.Numeric.BigDecimalAsIfIntegral.abs
 import scala.math.ceil
@@ -47,10 +47,14 @@ object Pareto { //TODO no zoom, no useless button
     }
     val legendAnnotationSeq = cartesianObjectives.zipWithIndex.map { case (o, i) =>
       val textPosition = 1.1 * o
+      val angle = SnowflakeBasis.polarFromCartesian(textPosition).angle
+      val (a1, a2, a3, a4) = (-135, -45, 45, 135)
       Annotation
         .x(textPosition(0))
         .y(textPosition(1))
         .text((if(objectives(i).optimizationType == Maximization) "-" else "") + objectives(i).name)
+        .xanchor(if(a2 <= angle && angle < a3) "left" else if(a4 <= angle || angle < a1) "right" else "center")
+        .yanchor(if(a1 <= angle && angle < a2) "top" else if(a3 <= angle && angle < a4) "bottom" else "center")
         .showarrow(false)
         ._result
     }
@@ -232,24 +236,6 @@ object Pareto { //TODO no zoom, no useless button
               )
               .hoverinfo("none")
               ._result
-          })
-        }
-        lazy val oneObjectiveCompromise = { //very few compromises in high dimensions
-          val neighbourhood = ParetoFront.oneObjectiveCompromiseGraph(pointPlotter.plotOutputs, plotOutput)
-          neighbourhood.arrows.flatMap(arrow => {
-            val coordinates = Seq(arrow.tail, arrow.head).map(basis.transform).transpose
-            Seq(
-              scatter
-                .x(coordinates(0).toJSArray)
-                .y(coordinates(1).toJSArray)
-                .setMode(lines)
-                .line(line
-                  .width(1)
-                  .color(colors(arrow.weight).opacity(1.0))
-                )
-                .hoverinfo("none")
-                ._result
-            )
           })
         }
         lazy val multiObjectiveCompromise = {

@@ -2,7 +2,7 @@ package plotlyjs.demo.homemade.pareto
 
 import plotlyjs.demo.homemade.api.Pareto.{Maximization, Minimization, OptimizationType}
 import plotlyjs.demo.homemade.pareto.PointPlotter._
-import plotlyjs.demo.utils.vector.Vectors._
+import plotlyjs.demo.homemade.utils.Vectors._
 
 case class PointPlotter(optimizationTypes: Seq[OptimizationType], outputs: Seq[Vector], betterPlot: BetterPlot) {
 

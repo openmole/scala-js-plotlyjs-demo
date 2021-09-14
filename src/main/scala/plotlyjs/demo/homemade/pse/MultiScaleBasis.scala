@@ -1,10 +1,7 @@
 package plotlyjs.demo.homemade.pse
 
-import plotlyjs.demo.utils.Basis
-import plotlyjs.demo.utils.vector.Vectors._
-
-import scala.math.pow
-import scala.util.control.Breaks.break
+import plotlyjs.demo.homemade.utils.Basis
+import plotlyjs.demo.homemade.utils.Vectors._
 
 case class MultiScaleBasis(sourceDimension: Int, subdivisions: Seq[Int], destinationDimension: Int, allowStretch: Boolean = false) extends Basis {
 

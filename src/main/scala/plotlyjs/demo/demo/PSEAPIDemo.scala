@@ -1,16 +1,17 @@
 package plotlyjs.demo.demo
 
 import com.raquo.laminar.api.L._
-import plotlyjs.demo.homemade.api.Data._
-import plotlyjs.demo.homemade.api.PSE
-import plotlyjs.demo.homemade.api.PSE.PSEDimension
-import plotlyjs.demo.utils.vector.Vectors._
 
 import scala.math.random
 
 object PSEAPIDemo {
 
   private lazy val sc = sourcecode.Text {
+    import plotlyjs.demo.homemade.api.Data._
+    import plotlyjs.demo.homemade.api.PSE
+    import plotlyjs.demo.homemade.api.PSE.PSEDimension
+    import plotlyjs.demo.homemade.utils.Vectors._
+
     val dimensions = (0 until 4).map(i => PSEDimension("dimension " + i, (0 to 5 + 2*i).map(_.toDouble)))
     val outcomes = (0 until 1024)
       .map(_ => Outcome((0.0 at 4).map(Input("", _)), dimensions.map(d => (d.bounds.last * random()).toInt).map(Output("", _))))

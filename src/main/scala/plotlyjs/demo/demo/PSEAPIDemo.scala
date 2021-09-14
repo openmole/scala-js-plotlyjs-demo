@@ -3,7 +3,7 @@ package plotlyjs.demo.demo
 import com.raquo.laminar.api.L._
 import plotlyjs.demo.homemade.api.PSE.PSEDisplay
 
-import scala.math.random
+import scala.math.{random, rint}
 
 object PSEAPIDemo {
 
@@ -15,7 +15,11 @@ object PSEAPIDemo {
 
     val dimensions = (0 until 4).map(i => PSEDimension("dimension " + i, (0 to 5 + 2*i).map(_.toDouble)))
     val outcomes = (0 until 1024)
-      .map(_ => Outcome((0.0 at 4).map(Input("", _)), dimensions.map(d => (d.bounds.last * random()).toInt).map(Output("", _))))
+      .map(_ => Outcome(
+        (0.0 at 4).map(Input("", _)),
+        dimensions.map(d => (d.bounds.last * random()).toInt).map(Output("", _)),
+        Some(rint(random() * 100).toInt)
+      ))
       .distinct
     val pseDisplay = PSEDisplay(800);
 

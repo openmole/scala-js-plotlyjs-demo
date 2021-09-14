@@ -12,6 +12,7 @@ object Colors {
 
   implicit class ImplicitColor(color: Color) {
 
+    val rgb: Seq[Double] = color.take(3)
     val alpha: Double = if(color.size >= 4) color(3) else 1
 
     def opacity(alpha: Double): Color = color.take(3) :+ alpha
@@ -36,8 +37,8 @@ object Colors {
     }
 
     def toOMColor: OMColor = {
-      val intColor = color.take(3).map(c => rint(c * 255).toInt)
-      OMColor.rgba(intColor(0), intColor(1), intColor(2), color.alpha)
+      val intRGB = color.rgb.map(c => rint(c * 255).toInt)
+      OMColor.rgba(intRGB(0), intRGB(1), intRGB(2), color.alpha)
     }
 
   }

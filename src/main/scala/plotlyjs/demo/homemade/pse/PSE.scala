@@ -75,11 +75,13 @@ object PSE { //TODO no zoom
           val points = Seq(s00, s11).map(basis.transform)
           val (x0, y0) = (points(0)(0), points(0)(1))
           val (x1, y1) = (points(1)(0), points(1)(1))
+
           val frameShape = Shape
             .`type`(rect)
             .x0(x0).x1(x1).y0(y0).y1(y1)
             .line(customLine)
             ._result
+
           val gridShapeSeq = if (basis.sourceDimension != 2) Seq() else {
             val lowSBound = 0
             val highSBound = basis.subdivisions
@@ -108,7 +110,9 @@ object PSE { //TODO no zoom
                   ._result
               })
           }
+
           val coordinates = Seq(s00, s10, s11, s01).map(basis.transform).transpose
+
           val hitboxData = scatter
             .x(coordinates(0).toJSArray)
             .y(coordinates(1).toJSArray)
@@ -122,6 +126,7 @@ object PSE { //TODO no zoom
             .hoverinfo("text")
             .text(sliceToString(basis, frame.drop(basis.destinationDimension)) + " – click to zoom")
             ._result
+
           (frameShape +: gridShapeSeq, hitboxData)
         }.unzip
     }
@@ -297,3 +302,72 @@ object PSE { //TODO no zoom
   }
 
 }
+
+/*
+eventHandler
+
+Uncaught TypeError: array is undefined
+    $p_Lplotlyjs_demo_homemade_pareto_Pareto$__eventHandler$1__Lorg_openmole_plotlyjs_PointsData__Z__Z__Z__Z__sci_Seq__I__I__Lplotlyjs_demo_homemade_pareto_SnowflakeBasis__sci_IndexedSeq__Lplotlyjs_demo_homemade_pareto_PointPlotter__sr_ObjectRef__sr_ObjectRef__Lplotlyjs_demo_homemade_utils_Utils$ExtraTraceManager__Lcom_raquo_airstream_state_Var__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51630
+    plotlyjs$demo$homemade$pareto$Pareto$$$anonfun$plot$29__Lorg_openmole_plotlyjs_PointsData__Lplotlyjs_demo_homemade_utils_Utils$SkipOnBusy__Lplotlyjs_demo_homemade_api_Pareto$ParetoDisplay__sci_Seq__I__I__Lplotlyjs_demo_homemade_pareto_SnowflakeBasis__sci_IndexedSeq__Lplotlyjs_demo_homemade_pareto_PointPlotter__sr_ObjectRef__sr_ObjectRef__Lplotlyjs_demo_homemade_utils_Utils$ExtraTraceManager__Lcom_raquo_airstream_state_Var__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51969
+    ParetoDisplay__Lcom_raquo_laminar_nodes_ReactiveHtmlElement http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51943
+    f http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:13
+    emit http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:13
+    emit http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    l http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    timer http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    setTimeout handler*[760]</r.throttle http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    onmousemove http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    initInteractions http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    initInteractions http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    syncOrAsync http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    plot http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    redraw http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    t http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    addTraces__sci_Seq__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:53091
+    $p_Lplotlyjs_demo_homemade_pareto_Pareto$__eventHandler$1__Lorg_openmole_plotlyjs_PointsData__Z__Z__Z__Z__sci_Seq__I__I__Lplotlyjs_demo_homemade_pareto_SnowflakeBasis__sci_IndexedSeq__Lplotlyjs_demo_homemade_pareto_PointPlotter__sr_ObjectRef__sr_ObjectRef__Lplotlyjs_demo_homemade_utils_Utils$ExtraTraceManager__Lcom_raquo_airstream_state_Var__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51666
+    plotlyjs$demo$homemade$pareto$Pareto$$$anonfun$plot$29__Lorg_openmole_plotlyjs_PointsData__Lplotlyjs_demo_homemade_utils_Utils$SkipOnBusy__Lplotlyjs_demo_homemade_api_Pareto$ParetoDisplay__sci_Seq__I__I__Lplotlyjs_demo_homemade_pareto_SnowflakeBasis__sci_IndexedSeq__Lplotlyjs_demo_homemade_pareto_PointPlotter__sr_ObjectRef__sr_ObjectRef__Lplotlyjs_demo_homemade_utils_Utils$ExtraTraceManager__Lcom_raquo_airstream_state_Var__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51969
+    ParetoDisplay__Lcom_raquo_laminar_nodes_ReactiveHtmlElement http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51943
+    f http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:13
+    emit http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:13
+    emit http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    l http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    timer http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    setTimeout handler*[760]</r.throttle http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    onmousemove http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    initInteractions http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    initInteractions http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    syncOrAsync http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    plot http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    redraw http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    t http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    addTraces__sci_Seq__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:53091
+    $p_Lplotlyjs_demo_homemade_pareto_Pareto$__eventHandler$1__Lorg_openmole_plotlyjs_PointsData__Z__Z__Z__Z__sci_Seq__I__I__Lplotlyjs_demo_homemade_pareto_SnowflakeBasis__sci_IndexedSeq__Lplotlyjs_demo_homemade_pareto_PointPlotter__sr_ObjectRef__sr_ObjectRef__Lplotlyjs_demo_homemade_utils_Utils$ExtraTraceManager__Lcom_raquo_airstream_state_Var__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51666
+    plotlyjs$demo$homemade$pareto$Pareto$$$anonfun$plot$29__Lorg_openmole_plotlyjs_PointsData__Lplotlyjs_demo_homemade_utils_Utils$SkipOnBusy__Lplotlyjs_demo_homemade_api_Pareto$ParetoDisplay__sci_Seq__I__I__Lplotlyjs_demo_homemade_pareto_SnowflakeBasis__sci_IndexedSeq__Lplotlyjs_demo_homemade_pareto_PointPlotter__sr_ObjectRef__sr_ObjectRef__Lplotlyjs_demo_homemade_utils_Utils$ExtraTraceManager__Lcom_raquo_airstream_state_Var__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51969
+    ParetoDisplay__Lcom_raquo_laminar_nodes_ReactiveHtmlElement http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51943
+    f http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:13
+    emit http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:13
+    emit http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    l http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    throttle http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    hover http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    onmousemove http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    initInteractions http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    initInteractions http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    syncOrAsync http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    plot http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    redraw http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    t http://localhost:63342/scala-js-plotlyjs-demo/js/deps.js:61
+    addTraces__sci_Seq__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:53091
+    plotlyjs$demo$homemade$pareto$Pareto$$$anonfun$plot$38__Lorg_openmole_plotlyjs_PointsData__Lplotlyjs_demo_homemade_utils_Utils$SkipOnBusy__Lplotlyjs_demo_homemade_utils_Utils$ExtraTraceManager__sr_ObjectRef__sci_Seq__sr_ObjectRef__V http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51992
+    ParetoDisplay__Lcom_raquo_laminar_nodes_ReactiveHtmlElement http://localhost:63342/scala-js-plotlyjs-demo/js/demoplotly.js:51955
+demoplotly.js:51630:8
+
+ */

@@ -6,11 +6,11 @@ import plotlyjs.demo.homemade.utils.Vectors._
 import scala.language.implicitConversions
 import scala.math.{abs, random, rint}
 
-object Colors {
+object VectorColor {
 
-  type Color = Seq[Double]
+  type Color = Vector
 
-  implicit class ImplicitColor(color: Color) {
+  implicit class ImplicitVectorColor(color: Color) {
 
     val rgb: Seq[Double] = color.take(3)
     val alpha: Double = if(color.size >= 4) color(3) else 1

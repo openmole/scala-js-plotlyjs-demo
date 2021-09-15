@@ -23,7 +23,7 @@ object PointPlotter {
 
   class BetterPlot
   object BetterPlot {
-    object IsLower extends BetterPlot
+    object IsLower extends BetterPlot //TODO delete
     object IsHigher extends BetterPlot
   }
 

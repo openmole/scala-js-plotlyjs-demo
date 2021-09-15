@@ -26,12 +26,12 @@ object Utils {
     def skipOnBusy(name: String, f: () => Unit): Unit = {
       if(!busy) {
         busy = true
-        println(name + "...")
+        //println(name + "...")
         f()
-        println(name + ".")
+        //println(name + ".")
         busy = false
       } else {
-        println(name + " skipped")
+        //println(name + " skipped")
       }
     }
   }

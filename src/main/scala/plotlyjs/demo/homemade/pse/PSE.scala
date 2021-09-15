@@ -11,7 +11,7 @@ import org.openmole.plotlyjs.all._
 import org.scalajs.dom.html
 import plotlyjs.demo.homemade.api.Data.Outcome
 import plotlyjs.demo.homemade.api.PSE.{PSEDimension, PSEDisplay}
-import plotlyjs.demo.homemade.utils.Colors._
+import plotlyjs.demo.homemade.utils.VectorColor._
 import plotlyjs.demo.homemade.utils.IntVectors
 import plotlyjs.demo.homemade.utils.IntVectors._
 import plotlyjs.demo.homemade.utils.Vectors._

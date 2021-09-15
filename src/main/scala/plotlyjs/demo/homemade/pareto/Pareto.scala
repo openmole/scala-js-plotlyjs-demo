@@ -320,9 +320,6 @@ object Pareto { //TODO no zoom, no useless button
           seq
           */
 
-          val discs = (dimension - 1)
-          var d = 0.0
-          var seq = Seq[PlotData]()
           (1 to count).map { d =>
             val p = d.toDouble/dimension
             scatter
@@ -331,29 +328,12 @@ object Pareto { //TODO no zoom, no useless button
               .marker(marker
                 .size(richPoint.size + p * size)
                 .symbol(circle)
-                .color(0.6 at 3)
+                .color(0.7 at 3)
                 .opacity(1 - p)
               )
               .hoverinfo("skip")
               ._result
           }.reverse
-          /*
-          while(d < improvement) {
-            seq = seq :+ scatter
-              .x(coordinates(0).toJSArray)
-              .y(coordinates(1).toJSArray)
-              .marker(marker
-                .size(richPoint.size + d * size)
-                .symbol(circle)
-                .color(0.6 at 3)
-                .opacity(1 - d)
-              )
-              .hoverinfo("skip")
-              ._result
-            d += 1.0/(discs + 1)
-          }
-          seq.reverse
-          */
         }}
       }
 

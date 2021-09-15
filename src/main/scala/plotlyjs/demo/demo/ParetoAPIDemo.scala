@@ -12,7 +12,7 @@ object ParetoAPIDemo {
     import plotlyjs.demo.homemade.utils.ParetoFrontGenerator
 
     val dimension = 5
-    val objectives = (0 until dimension).map(i => ParetoObjective("objective n°" + (i + 1), Minimization))
+    val objectives = (0 until dimension).map(i => ParetoObjective("objective " + (i + 1), Minimization))
     val outcomes = ParetoFrontGenerator.random(dimension, 42).map(v => Outcome(
       (0 until dimension).map(i => Input("", i)),
       v.map(c => Output("", c)),

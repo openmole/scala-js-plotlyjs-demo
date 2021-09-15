@@ -27,7 +27,7 @@ object PSE { //TODO no zoom
   }
 
   def sliceToString(basis: MultiScaleBasis, slice: IntVector): String = {
-    slice.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1} s$c" }.reduceOption(_ + ", " + _).getOrElse("")
+    slice.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1}-${c + 1}" }.reduceOption(_ + ", " + _).getOrElse("")
   }
 
   def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], pseDisplay: PSEDisplay, parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
@@ -167,7 +167,7 @@ object PSE { //TODO no zoom
                   }
                   (-(margin * adjustmentFactor) * (destinationScaleIndex + 1) at basis.destinationDimension).replace(destinationAxis, 0)
                 })
-              val text = if(basis.sourceDimension <= 2) dimensions(i).bounds(s).toString /*TODO deal with scientific notation*/ else "s" + s
+              val text = if(basis.sourceDimension <= 2) dimensions(i).bounds(s).toString /*TODO deal with scientific notation*/ else (s + 1).toString
               Annotation
                 .x(point(0))
                 .y(point(1))

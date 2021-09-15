@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.openmole.plotlyjs.Color.rgb
 import org.openmole.plotlyjs.HoverMode.closest
-import org.openmole.plotlyjs.PlotMode.{lines, markers, markersAndText, text}
+import org.openmole.plotlyjs.PlotMode.{lines, markers}
 import org.openmole.plotlyjs.PlotlyImplicits.elToPlotlyElement
 import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all.{PlotMarkerAPI, _}
@@ -13,17 +13,16 @@ import plotlyjs.demo.homemade.api.Data.Outcome
 import plotlyjs.demo.homemade.api.Pareto.{Maximization, ParetoDisplay, ParetoObjective}
 import plotlyjs.demo.homemade.pareto.PointPlotter.BetterPlot
 import plotlyjs.demo.homemade.pareto.SnowflakeBasis.{cartesianFromPolar, polarFromCartesian}
+import plotlyjs.demo.homemade.utils.Utils.{ExtraTraceManager, SkipOnBusy}
 import plotlyjs.demo.homemade.utils.VectorColor
 import plotlyjs.demo.homemade.utils.VectorColor._
-import plotlyjs.demo.homemade.utils.Utils.{ExtraTraceManager, SkipOnBusy}
 import plotlyjs.demo.homemade.utils.Vectors._
 
 import scala.math.Numeric.BigDecimalAsIfIntegral.abs
 import scala.math.ceil
-import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
-object Pareto { //TODO no zoom, no useless button
+object Pareto {
 
   def plot(objectives: Seq[ParetoObjective], outcomes: Seq[Outcome], paretoDisplay: ParetoDisplay): ReactiveHtmlElement[html.Div] = {
     val dimension = objectives.size
@@ -149,6 +148,14 @@ object Pareto { //TODO no zoom, no useless button
         .shapes(shapeSeq.toJSArray)
         .annotations(annotationSeq.toJSArray)
         .hovermode(closest)
+        .dragmode(false)
+        ._result,
+      Config
+        .modeBarButtonsToRemove(Seq(
+          "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
+          "hoverClosestCartesian", "hoverCompareCartesian",
+          "toggleSpikelines",
+        ).toJSArray)
         ._result
     )
     //

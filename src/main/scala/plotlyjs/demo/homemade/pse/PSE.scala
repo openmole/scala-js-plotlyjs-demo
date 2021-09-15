@@ -20,7 +20,7 @@ import scala.math.{ceil, max}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
 
-object PSE { //TODO no zoom
+object PSE {
 
   def subdivisionIndexOf(dimensions: Seq[PSEDimension], outcome: Outcome): IntVector = {
     outcome.outputs.zip(dimensions).map { case (o, d) => d.bounds.lastIndexWhere(_ <= o.value) }
@@ -211,28 +211,25 @@ object PSE { //TODO no zoom
         .title("PSE" + (if (basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
         .width(basis.size(0) * subdivisionToPixel)
         .height(basis.size(1) * subdivisionToPixel + topMargin + internalBottomMargin)
-        /*
+
         .margin(Margin
           .t(topMargin)
           .l(0).r(0)
           .b(0)
         )
-        */
+
         .showlegend(false)
         .xaxis(axis
           .visible(false)
-          //.dtick(1)
-          //.showgrid(basis.sourceDimension == 2)
         )
         .yaxis(axis
           .scaleanchor("x")
           .visible(false)
-          //.dtick(1)
-          //.showgrid(basis.sourceDimension == 2)
         )
         .shapes((discoveredShapeSeq ++ frameShapeSeq).toJSArray)
         .annotations(boundsAnnotationSeq.toJSArray)
         .hovermode("closest")
+        .dragmode(false)
         ._result
     }
     val config = {

@@ -188,7 +188,7 @@ object Pareto { //TODO no zoom, no useless button
             .line(line
               //.width(1)
               .dash("dot")
-              .color(/*(0.5 at 3)*/ colors(i).opacity(0.5))
+              .color(/*(0.5 at 3)*/ colors(i)/*.opacity(0.5)*/)
             )
             .hoverinfo("skip")
             ._result

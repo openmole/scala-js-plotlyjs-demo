@@ -144,20 +144,20 @@ object PSE { //TODO no zoom
         .filter(i => basis.scaleIndex(i) == basis.maxScaleIndex)
         .flatMap(i => {
           val destinationAxis = basis.axis(i)
-          val destinationScaleIndex = basis.scaleIndex(i);
-          (0 until basis.subdivisions(i))
+          val destinationScaleIndex = basis.scaleIndex(i)
+          (if(basis.sourceDimension <= 2) 0 to basis.subdivisions(i) else 0 until basis.subdivisions(i))
             .filter(s => s % step(i) == 0 /* || s == basis.subdivision*/)
             .map(s => {
               val pixelToPlot = basis.totalSize(i) / pseDisplay.size.toDouble
 
-              val point = ((basis.transform((0.0 at basis.sourceDimension).replace(i, s)) + {
-                if (basis.sourceDimension <= 2) {
-                  basis.transform((0.0 at basis.sourceDimension).replace(i, s + 1))
-                } else {
-                  val iSubScale = i - basis.destinationDimension
-                  basis.transform((0.0 at basis.sourceDimension).replace(i, s).replace(iSubScale, basis.subdivisions(iSubScale)))
-                }
-              }) / 2)
+              val point = (if(basis.sourceDimension <= 2) {
+                basis.transform((0.0 at basis.sourceDimension).replace(i, s))
+              } else {
+                val iSubScale = i - basis.destinationDimension
+                (basis.transform((0.0 at basis.sourceDimension).replace(i, s))
+                  + basis.transform((0.0 at basis.sourceDimension).replace(i, s).replace(iSubScale, basis.subdivisions(iSubScale)))
+                  )/2
+              })
                 .add({
                   val margin = 32 * pixelToPlot
                   val adjustmentFactor = destinationScaleIndex match {
@@ -167,7 +167,7 @@ object PSE { //TODO no zoom
                   }
                   (-(margin * adjustmentFactor) * (destinationScaleIndex + 1) at basis.destinationDimension).replace(destinationAxis, 0)
                 })
-              val text = "s" + s
+              val text = if(basis.sourceDimension <= 2) dimensions(i).bounds(s).toString /*TODO deal with scientific notation*/ else "s" + s
               Annotation
                 .x(point(0))
                 .y(point(1))

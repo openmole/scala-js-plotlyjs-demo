@@ -34,7 +34,7 @@ object ParetoAPIDemo {
   }
 
   val elementDemo: Demo = new Demo {
-    def title: String = "Pareto API"
+    def title: String = "OpenMOLE Pareto front display"
     def code: String = sc.source
     def element: HtmlElement = sc.value
   }

@@ -43,7 +43,7 @@ object PSEAPIDemo {
   }
 
   val elementDemo: Demo = new Demo {
-    def title: String = "PSE API"
+    def title: String = "OpenMOLE PSE display"
     def code: String = sc.source
     def element: HtmlElement = sc.value
   }

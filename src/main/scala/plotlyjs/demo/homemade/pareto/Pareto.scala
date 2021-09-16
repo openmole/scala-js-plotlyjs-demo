@@ -126,8 +126,10 @@ object Pareto {
     }
 
     //Display
+    val retrace = false
+
     val plotDiv = div()
-    val dataSeq = Seq[PlotData]()//paretoFrontDataSeq
+    val dataSeq = if(retrace) Seq[PlotData]() else paretoFrontDataSeq
     val shapeSeq = (if (dimension == 2) None else Some(backgroundShape)) ++ axisShapeSeq
     val annotationSeq = legendAnnotationSeq
     Plotly.newPlot(
@@ -163,7 +165,7 @@ object Pareto {
     var currentReference: Option[RichPoint] = None
 
     val extraTraceManager = new ExtraTraceManager(plotDiv, dataSeq.size)
-    val defaultParetoFrontDisplay = paretoFrontDataSeq
+    val defaultParetoFrontDisplay = if(retrace) paretoFrontDataSeq else Seq[PlotData]()
     var currentParetoFrontDisplay = defaultParetoFrontDisplay
     extraTraceManager.addTraces(currentParetoFrontDisplay)
     var currentSnowflakeReference = Seq[PlotData]()
@@ -276,11 +278,11 @@ object Pareto {
           }))
         }
         val size = 16
-        improvementParetoFront.zipWithIndex.flatMap { case ((point, count), index) => {
+        improvementParetoFront.zipWithIndex.flatMap { case ((point, count), index) =>
           val improvement = count.toDouble/dimension
           val coordinates = Seq(point).map(basis.transform).transpose
           val richPoint = richPoints(index)
-          /*
+
           Seq(scatter
             .x(coordinates(0).toJSArray)
             .y(coordinates(1).toJSArray)
@@ -301,8 +303,8 @@ object Pareto {
             )
             .hoverinfo("skip")
             ._result
-          })
-          */
+          )
+
 
           /*
           val circles = 3
@@ -327,6 +329,7 @@ object Pareto {
           seq
           */
 
+          /*
           (1 to count).map { d =>
             val p = d.toDouble/dimension
             scatter
@@ -341,14 +344,34 @@ object Pareto {
               .hoverinfo("skip")
               ._result
           }.reverse
-        }}
+          */
+
+          /*
+          Seq(
+            scatter
+              .x(coordinates(0).toJSArray)
+              .y(coordinates(1).toJSArray)
+              .marker(marker
+                .size(richPoint.size + improvement * size)
+                .symbol(circle)
+                .color(richPoint.color)
+                .set(line.
+                  width(1)
+                  .color(0.5 at 3)
+                )
+              )
+              .hoverinfo("skip")
+              ._result
+          )
+          */
+        }
       }
 
       if(compromiseHelp) {
         if(richPoint != currentReference.orNull) {
           currentReference = Some(richPoint)
           currentSnowflakeReference = snowflakeReferenceDataSeq
-          currentParetoFrontDisplay = multiObjectiveCompromiseDataSeq ++ paretoFrontDataSeq
+          currentParetoFrontDisplay = multiObjectiveCompromiseDataSeq ++ (if(retrace) paretoFrontDataSeq else Seq())
 
         } else {
           currentReference = None

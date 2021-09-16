@@ -36,7 +36,7 @@ object Utils {
     }
   }
 
-  class ExtraTraceManager(plotDiv: ReactiveHtmlElement[html.Div], initialTraceCount: Int) {
+  class ExtraTraceManager(plotDiv: ReactiveHtmlElement[html.Div], initialTraceCount: Int) {//TODO improve performances with a stack structure
 
     private var extraCount = 0
 

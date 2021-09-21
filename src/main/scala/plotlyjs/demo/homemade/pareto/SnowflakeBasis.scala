@@ -34,11 +34,11 @@ object SnowflakeBasis {
   }
 
   def polarFromCartesian(vector: Vector): PolarVector = {
-    val r = vector.norm
+    val radius = vector.norm
     val x = vector(0)
     val y = vector(1)
-    val theta = atan2(y, x).toDegrees
-    new PolarVector(Seq(r, theta))
+    val angle = atan2(y, x).toDegrees
+    new PolarVector(Seq(radius, angle))
   }
 
   class CartesianVector(vector: Vector) extends Vector {
@@ -50,10 +50,10 @@ object SnowflakeBasis {
   }
 
   def cartesianFromPolar(vector: Vector): CartesianVector = {
-    val r = vector(0)
+    val radius = vector(0)
     val theta = vector(1).toRadians
-    val x = r * cos(theta)
-    val y = r * sin(theta)
+    val x = radius * cos(theta)
+    val y = radius * sin(theta)
     new CartesianVector(Seq(x, y))
   }
 

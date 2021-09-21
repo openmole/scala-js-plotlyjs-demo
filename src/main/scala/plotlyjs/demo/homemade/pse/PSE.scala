@@ -119,7 +119,7 @@ object PSE {
             .setMode(lines)
             .line(line
               .width(0)
-              .color(1 at 3)
+              .color(1 at 3) //TODO remove ?
             )
             .fill("toself")
             .fillcolor((0 at 3).opacity(0.0).toOMColor.toJS.toString) //TODO fillcolor(ColorType)

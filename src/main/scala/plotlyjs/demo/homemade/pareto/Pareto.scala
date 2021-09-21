@@ -17,10 +17,14 @@ import plotlyjs.demo.homemade.utils.Utils.{ExtraTraceManager, SkipOnBusy}
 import plotlyjs.demo.homemade.utils.VectorColor
 import plotlyjs.demo.homemade.utils.VectorColor._
 import plotlyjs.demo.homemade.utils.Vectors._
+import plotlyjs.demo.utils.Utils.printCode
 
+import java.lang.NumberFormatException
 import scala.math.Numeric.BigDecimalAsIfIntegral.abs
-import scala.math.ceil
+import scala.math.{ceil, pow}
+import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
+import scala.scalajs.js.Object.entries
 
 object Pareto {
 
@@ -34,7 +38,7 @@ object Pareto {
     val spaceNormalObjectives = (0 until dimension).map((0 at dimension).replace(_, 1))
     val cartesianObjectives = spaceNormalObjectives.map(basis.transform)
     val polarObjectives = cartesianObjectives.map(polarFromCartesian)
-    val colors = polarObjectives.map(vector => Seq(((vector(1) + 360) % 360) / 360, 1.0, 0.75).fromHSLtoRGB)
+    val colors = polarObjectives.map(vector => Seq(((vector(1) + 360) % 360) / 360, 1.0, /*0.75*/0.5).fromHSLtoRGB.opacity(0.5))
 
     val axisShapeSeq = cartesianObjectives.zipWithIndex.map { case (o, i) =>
       Shape
@@ -42,7 +46,7 @@ object Pareto {
         .x0(0).y0(0)
         .x1(o(0)).y1(o(1))
         .line(line
-          .color(colors(i).opacity(1.0))
+          .color(colors(i))
         )
         .layer("below")
         ._result
@@ -68,47 +72,107 @@ object Pareto {
       BetterPlot.IsHigher
     )
 
-    case class RichPoint(outcome: Outcome, index: Int, plotOutput: Vector, x: Double, y: Double, size: Double, color: VectorColor.Color)
+    case class RichPoint(outcome: Outcome, index: Int, plotOutput: Vector, point: Vector, replication: Double, radius: Double, size: Double, color: VectorColor.Color)
     val offset = 0.2
     val richPoints = outcomes.zipWithIndex.map { case(outcome: Outcome, index) =>
       val plotOutput = pointPlotter.plotOutputs(index)
       val point = basis.transform(plotOutput)
       val replication = outcome.samples.getOrElse(100) / 100.0
+      val radius = 0.025 + replication * 0.05
       val size = 6 + replication * 16
       val color = (pointPlotter.betterPlot match {
         case BetterPlot.IsLower => colors(plotOutput.zipWithIndex.minBy(_._1)._2)
         case BetterPlot.IsHigher => colors(plotOutput.zipWithIndex.maxBy(_._1)._2)
       })//.opacity(0.5)//.opacity(offset + replication * (1 - offset))
-      RichPoint(outcome, index, plotOutput, point(0), point(1), size, color)
+      RichPoint(outcome, index, plotOutput, point, replication, radius, size, color)
     }
 
-    val markerSize = 16
-    val paretoFrontDataSeq = richPoints.map { p =>
-      val replication = p.outcome.samples.getOrElse(100) / 100.0
+    class Style
+    object Polygon extends Style
+    object Flower extends Style
+    val style: Style = Flower
+
+    val customLine = line
+      .width(2)
+      .color(0 at 3)
+    val paretoFrontDataSeq = richPoints.flatMap { rp =>
+
+      /*
       scatter
-        .x(Seq(p.x).toJSArray)
-        .y(Seq(p.y).toJSArray)
+        .x(js.Array(rp.point(0)))
+        .y(js.Array(rp.point(1)))
         .setMode(markers)
         .marker(marker
-          .size(p.size)
+          .size(rp.size)
           .symbol(circle)
-          .color(p.color)
-          .set(line
-            .width(1)
-            .color((0.5 at 3))
-          )
+          .color(rp.color.opacity(0.5))
+          .set(customLine)
         )
         .hoverinfo("text")
         .text("click me") //or changes color on hover ?
-        .customdata(Seq(p.index.toString).toJSArray)
+        .customdata(Seq(rp.index.toString).toJSArray)
         ._result
+      */
+
+      lazy val poly = {
+        val points = (0 until dimension).map { i =>
+          cartesianFromPolar(
+            polarFromCartesian(
+              basis.transform((0.0 at dimension).replace(i, rp.radius))
+            ).add(Seq(0.0, 360.0 / dimension / 2))
+          ).add(rp.point)
+        }
+        points :+ points.head
+      }
+
+      lazy val circle = {
+        val n = 12
+        val circleBasis = new SnowflakeBasis(n)
+        val points = (0 until n).map { i =>
+          circleBasis.transform((0.0 at n).replace(i, rp.radius)).add(rp.point)
+        }
+        points :+ points.head
+      }
+
+      val points = style match {
+        case Polygon => poly
+        case Flower => circle
+      }
+      val coordinates = points.transpose
+      val superMarker = scatter
+        .x(coordinates(0).toJSArray)
+        .y(coordinates(1).toJSArray)
+        .setMode(lines)
+        .line(style match {
+          case Polygon => customLine
+            .width(2)
+          case Flower => customLine
+            .width(2)
+            .shape("spline")
+        })
+        .fill("toself")
+        .fillcolor(rp.color.toOMColor.toJS.toString)
+        .hoverinfo("skip")
+        ._result
+      val hitbox = scatter
+        .x(js.Array(rp.point(0)))
+        .y(js.Array(rp.point(1)))
+        .marker(marker
+          .color(1.0 at 3)
+          .opacity(0.0)
+        )
+        .hoverinfo("text")
+        .text("click me") //or changes color on hover ?
+        .customdata(js.Array(rp.index.toString))
+        ._result
+      Seq(superMarker, hitbox)
     }
 
     val backgroundShape = {
 
       val radius = {
         //basis.transform((1 at upHalfDimension) ++ (0 at dimension - upHalfDimension)).norm //Leave space for the componentSum to display...
-        richPoints.map(p => Seq(p.x, p.y).norm).max //... or fit the points.
+        richPoints.map(rp => Seq(rp.point(0), rp.point(1)).norm).max //... or fit the points.
       } * 1.1
 
       Shape
@@ -165,9 +229,10 @@ object Pareto {
     var currentReference: Option[RichPoint] = None
 
     val extraTraceManager = new ExtraTraceManager(plotDiv, dataSeq.size)
+
     val defaultParetoFrontDisplay = if(retrace) paretoFrontDataSeq else Seq[PlotData]()
     var currentParetoFrontDisplay = defaultParetoFrontDisplay
-    extraTraceManager.addTraces(currentParetoFrontDisplay)
+    var currentParetoFrontDisplayRef = extraTraceManager.addTraces(currentParetoFrontDisplay)
     var currentSnowflakeReference = Seq[PlotData]()
 
     val rawOutputCoordinates = Var(div(""))
@@ -177,16 +242,39 @@ object Pareto {
                      componentSum: Boolean = false,
                      compromiseHelp: Boolean = false
                     ): Unit = {
+      if(js.isUndefined(pointsData.points)) return
       if(pointsData.points.isEmpty) return
+      val tuple2Option = entries(pointsData.points.head).find { t => t._1 == "customdata" }
+      if(tuple2Option.isEmpty) return
+      if(js.isUndefined(tuple2Option.get._2)) return
+      val stringCustomData = tuple2Option.get._2.toString
+      val intCustomData = try {
+        stringCustomData.toInt
+      } catch {
+        case _: NumberFormatException => return
+      }
 
-      val richPoint = richPoints(pointsData.points.head.customdata.toInt)
+      val rp = richPoints(intCustomData)
 
       var plotDataSeq = Seq[PlotData]()
 
+      /*
+      plotDataSeq = plotDataSeq :+ {
+        scatter
+          .x(js.Array(rp.point(0)))
+          .y(js.Array(rp.point(1)))
+          .marker(marker
+            .symbol(asterisk)
+            .color(0 at 3)
+          )
+          ._result
+      }
+      */
+
       if(componentSum) plotDataSeq = plotDataSeq ++ {
         var cartesianEnd = 0.0 at 2
-        richPoint.plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c) }).reverse.map(_._2).map(i => {
-          val cartesianComponentVector = basis.component(richPoint.plotOutput, i)
+        rp.plotOutput.zipWithIndex.sortBy({ case (c, _) => abs(c) }).reverse.map(_._2).map(i => {
+          val cartesianComponentVector = basis.component(rp.plotOutput, i)
           val cartesianBegin = cartesianEnd
           cartesianEnd = cartesianBegin + cartesianComponentVector
           val sumPolarCoordinates = Seq(cartesianBegin, cartesianEnd).transpose
@@ -206,7 +294,7 @@ object Pareto {
 
       if(coordinateSnowflake) plotDataSeq = plotDataSeq ++ {
         (0 until dimension).map(i => {
-          val componentVector = basis.component(richPoint.plotOutput, i)
+          val componentVector = basis.component(rp.plotOutput, i)
           val coordinates = Seq(0.0 at 2, componentVector).transpose
           scatter
             .x(coordinates(0).toJSArray)
@@ -214,7 +302,7 @@ object Pareto {
             .setMode(lines)
             .line(line
               .width(8)
-              .color(colors(i))
+              .color(colors(i).opacity(1.0))
             )
             .hoverinfo("skip")
             ._result
@@ -223,65 +311,177 @@ object Pareto {
 
       val referenceColor = 0.5 at 3
 
-      lazy val snowflakeReferenceDataSeq = {
+      def snowflakeReferenceDataSeq(rp: RichPoint) = {
         (0 until dimension).flatMap(i => {
-          val cartesianComponentVector = basis.component(richPoint.plotOutput, i)
+          val cartesianComponentVector = basis.component(rp.plotOutput, i)
           val polarComponentVector = polarFromCartesian(cartesianComponentVector)
-          if(polarComponentVector.radius == 0) return
-
-          val l = 0.05
-          val r = 0.01
-          lazy val segment = Seq(-90, +90).map { angleDelta =>
-            cartesianFromPolar(
-              Seq(l, polarComponentVector.angle + angleDelta)
-            ).add(cartesianComponentVector)
-          }
-          lazy val quad = Seq(-r, +r).map { radiusDelta =>
-            Seq(-90, +90).map { angleDelta =>
+          if(polarComponentVector.radius == 0) {
+            None
+          } else {
+            val l = 0.05
+            val r = 0.01
+            lazy val segment = Seq(-90, +90).map { angleDelta =>
               cartesianFromPolar(
-                polarFromCartesian(
-                  cartesianFromPolar(
-                    Seq(l, polarComponentVector.angle + angleDelta)
-                  ).add(cartesianComponentVector)
-                ).add(Seq(radiusDelta, 0))
-              )
+                Seq(l, polarComponentVector.angle + angleDelta)
+              ).add(cartesianComponentVector)
             }
-          }
-          lazy val rectangularQuad = Seq(quad(0)(0), quad(1)(0), quad(1)(1), quad(0)(1))
-          lazy val doubleTriangleQuad = Seq(quad(0)(0), quad(1)(0), quad(0)(1), quad(1)(1))
-          lazy val closedQuad = rectangularQuad :+ rectangularQuad.head//doubleTriangleQuad :+ doubleTriangleQuad.head
-          val coordinates = segment.transpose//closedQuad.transpose
-          Some(scatter
-            .x(coordinates(0).toJSArray)
-            .y(coordinates(1).toJSArray)
-            .setMode(lines)
-            .line(line
-              .width(1)
-              .shape("spline")
-              .color((0 at 3).opacity(0.5))
-              //.color(colors(i))
+            lazy val quad = Seq(-r, +r).map { radiusDelta =>
+              Seq(-90, +90).map { angleDelta =>
+                cartesianFromPolar(
+                  polarFromCartesian(
+                    cartesianFromPolar(
+                      Seq(l, polarComponentVector.angle + angleDelta)
+                    ).add(cartesianComponentVector)
+                  ).add(Seq(radiusDelta, 0))
+                )
+              }
+            }
+            lazy val rectangularQuad = Seq(quad(0)(0), quad(1)(0), quad(1)(1), quad(0)(1))
+            lazy val doubleTriangleQuad = Seq(quad(0)(0), quad(1)(0), quad(0)(1), quad(1)(1))
+            lazy val closedQuad = rectangularQuad :+ rectangularQuad.head//doubleTriangleQuad :+ doubleTriangleQuad.head
+            val coordinates = segment.transpose//closedQuad.transpose
+            Some(scatter
+              .x(coordinates(0).toJSArray)
+              .y(coordinates(1).toJSArray)
+              .setMode(lines)
+              .line(customLine
+                .shape("spline")
+                //.color(colors(i))
+              )
+              //.fill("toself")
+              //.fillcolor(/*colors(i)*/referenceColor.toOMColor.toJS.toString)
+              //.fillcolor(colors(i).toOMColor.toJS.toString)
+              .hoverinfo("skip")
+              ._result
             )
-            //.fill("toself")
-            //.fillcolor(/*colors(i)*/referenceColor.toOMColor.toJS.toString)
-            //.fillcolor(colors(i).toOMColor.toJS.toString)
-            .hoverinfo("skip")
-            ._result
-          )
+          }
         })
       }
 
-      lazy val multiObjectiveCompromiseDataSeq = {
+      def multiObjectiveCompromiseDataSeq(rp: RichPoint) = {
         val improvementParetoFront = pointPlotter.plotOutputs.map { v =>
-          (v, (v - richPoint.plotOutput).count(pointPlotter.betterPlot match {
+          (v - rp.plotOutput).map(pointPlotter.betterPlot match {
             case BetterPlot.IsLower => _ < 0
             case BetterPlot.IsHigher => _ > 0
-          }))
+          })
         }
-        val size = 16
-        improvementParetoFront.zipWithIndex.flatMap { case ((point, count), index) =>
+        improvementParetoFront.zipWithIndex.flatMap { case (improvementVector, index) =>
+          val rp = richPoints(index)
+
+          val polygon = (0 until dimension).map { i =>
+            cartesianFromPolar(
+              polarFromCartesian(
+                basis.transform((0.0 at dimension).replace(i, 1))
+              ).add(Seq(0.0, 360.0 / dimension / 2))
+            )
+          }
+          polygon.zip(polygon.drop(1) ++ polygon.take(1)).zipWithIndex.flatMap { case ((p1, p2), i) =>
+            if(improvementVector(i)) {
+              val n = 4
+              val points = (0 to n).map(_.toDouble / n).map { alpha =>
+                cartesianFromPolar(Seq(1.3 * rp.radius, polarFromCartesian((1 - alpha) * p1 + alpha * p2).angle))
+              }.map(_.add(rp.point))
+              val coordinates = points.transpose
+              Some(scatter
+                .x(coordinates(0).toJSArray)
+                .y(coordinates(1).toJSArray)
+                .setMode(lines)
+                .line(line
+                  .width(4)
+                  .color(colors(i).opacity(1.0))
+                  .shape("spline")
+                )
+                .hoverinfo("skip")
+                ._result)
+            } else {
+              None
+            }
+          }
+
+          /*
+          improvementVector.zipWithIndex.filter(_._1).map(_._2).map { i =>
+            val petalLength = style match {
+              case Polygon => rp.radius/2
+              case Flower => rp.radius
+            }
+            val angle = polarFromCartesian(basis.basisVector(i)).angle
+            val angleDelta = 360.0/dimension/2
+
+            lazy val trapezoid = {
+              val quad = Seq(rp.radius, rp.radius + petalLength).map { r =>
+                Seq(angle - angleDelta, angle + angleDelta).map { a =>
+                  rp.point.add(cartesianFromPolar(Seq(r, a)))
+                }
+              }
+              val rectangularQuad = Seq(quad(0)(0), quad(1)(0), quad(1)(1), quad(0)(1))
+              val closedLine = rectangularQuad :+ rectangularQuad.head
+              closedLine
+            }
+
+            lazy val petal = {
+              val alpha = 2
+              val n = 8
+              val halfPetal = (0 until n).map(_.toDouble / n)
+                .map(x => Seq(pow(1 - pow(1 - x, alpha), alpha), x))
+                .map(_.add(Seq(0.0, -1.0)))
+              val wholePetal = halfPetal ++ halfPetal.map(_.mul(Seq(1, -1))).reverse
+              val overlap = rp.radius/2 //experimental feature
+              val scaledPetal = wholePetal.map(_
+                .mul(Seq(overlap + petalLength, angleDelta))
+                .add(Seq(0, angle))
+              )
+              val placedPetal = scaledPetal
+                .map(cartesianFromPolar)
+                .map(_
+                  .add(basis.basisVector(i).scale(rp.radius - overlap))
+                  //.scale((rp.radius + petalLength)/(overlap + petalLength))
+                  .add(rp.point)
+                )
+                //.filter(_.distance(rp.point) > rp.radius)
+              val closedPetal = placedPetal :+ placedPetal.head
+              closedPetal
+            }
+
+            val points = style match {
+              case Polygon => trapezoid
+              case Flower => petal
+            }
+            val coordinates = points.transpose
+            scatter
+              .x(coordinates(0).toJSArray)
+              .y(coordinates(1).toJSArray)
+              .setMode(lines)
+              .line(style match {
+                case Polygon => customLine
+                  .width(1)
+                case Flower => customLine
+                  .width(1)
+                  .shape("spline")
+              })
+              .fill("toself")
+              .fillcolor(colors(i).toOMColor.toJS.toString)
+              .hoverinfo("skip")
+              ._result
+
+            /*
+            val points = Seq(rp.point, rp.point + basis.basisVector(i).scale(0.1))
+            val coordinates = points.transpose
+            scatter
+              .x(coordinates(0).toJSArray)
+              .y(coordinates(1).toJSArray)
+              .setMode(lines)
+              .marker(marker
+                .color(colors(i))
+              )
+              .hoverinfo("skip")
+              ._result
+            */
+          }
+          */
+
+          /*
           val improvement = count.toDouble/dimension
-          val coordinates = Seq(point).map(basis.transform).transpose
-          val richPoint = richPoints(index)
+          val coordinates = Seq(rp.point).transpose
 
           Seq(scatter
             .x(coordinates(0).toJSArray)
@@ -293,18 +493,18 @@ object Pareto {
                   .opacity(0.0)
               } else {
                 marker
-                  .size(richPoint.size + improvement * size)
+                  .size(rp.size + 2 * /*customLine.width*/2 + improvement * size)
                   .symbol(circle.open)
                   .set(line
-                    .width(1)
+                    .width(2)
                   ) //TODO .line(
-                  .color(0.5 at 3)
+                  //.color(customLine.color)
               }
             )
             .hoverinfo("skip")
             ._result
           )
-
+          */
 
           /*
           val circles = 3
@@ -315,7 +515,7 @@ object Pareto {
               .x(coordinates(0).toJSArray)
               .y(coordinates(1).toJSArray)
               .marker(marker
-                .size(richPoint.size + d * size)
+                .size(rp.size + d * size)
                 .symbol(circle.open)
                 .set(line
                   .width(1)
@@ -336,7 +536,7 @@ object Pareto {
               .x(coordinates(0).toJSArray)
               .y(coordinates(1).toJSArray)
               .marker(marker
-                .size(richPoint.size + p * size)
+                .size(rp.size + p * size)
                 .symbol(circle)
                 .color(0.7 at 3)
                 .opacity(1 - p)
@@ -352,9 +552,9 @@ object Pareto {
               .x(coordinates(0).toJSArray)
               .y(coordinates(1).toJSArray)
               .marker(marker
-                .size(richPoint.size + improvement * size)
+                .size(rp.size + improvement * size)
                 .symbol(circle)
-                .color(richPoint.color)
+                .color(rp.color)
                 .set(line.
                   width(1)
                   .color(0.5 at 3)
@@ -368,25 +568,28 @@ object Pareto {
       }
 
       if(compromiseHelp) {
-        if(richPoint != currentReference.orNull) {
-          currentReference = Some(richPoint)
-          currentSnowflakeReference = snowflakeReferenceDataSeq
-          currentParetoFrontDisplay = multiObjectiveCompromiseDataSeq ++ (if(retrace) paretoFrontDataSeq else Seq())
-
+        if(rp != currentReference.orNull) { //TODO bug
+          currentReference = Some(rp)
+          currentSnowflakeReference = snowflakeReferenceDataSeq(rp)
+          currentParetoFrontDisplay = multiObjectiveCompromiseDataSeq(rp) ++ (if(retrace) paretoFrontDataSeq else Seq())
+          currentParetoFrontDisplayRef = extraTraceManager.addTraces(currentParetoFrontDisplay)
         } else {
           currentReference = None
           currentSnowflakeReference = Seq()
           currentParetoFrontDisplay = defaultParetoFrontDisplay
+          extraTraceManager.deleteTraces(/*currentParetoFrontDisplayRef*/)
         }
       }
 
+      /*
       extraTraceManager.deleteTraces()
       extraTraceManager.addTraces(currentParetoFrontDisplay)
       extraTraceManager.addTraces(plotDataSeq)
       extraTraceManager.addTraces(currentSnowflakeReference)
+      */
 
       val textDiv = div()
-      textDiv.ref.innerHTML = "Model output :<br>" + (richPoint.outcome.outputs.map(_.value).zipWithIndex map { case (c, i) => s"o${i + 1} : $c" }).mkString("<br>")
+      textDiv.ref.innerHTML = "Model output :<br>" + (rp.outcome.outputs.map(_.value).zipWithIndex map { case (c, i) => s"o${i + 1} : $c" }).mkString("<br>")
       rawOutputCoordinates.set(textDiv)
     }
 

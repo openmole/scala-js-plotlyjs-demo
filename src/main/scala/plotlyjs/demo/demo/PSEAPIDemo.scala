@@ -46,6 +46,7 @@ object PSEAPIDemo {
     def title: String = "OpenMOLE PSE display"
     def code: String = sc.source
     def element: HtmlElement = sc.value
+    override def codeWidth: Int = 5
   }
 
 }

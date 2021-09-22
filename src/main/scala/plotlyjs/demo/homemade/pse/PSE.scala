@@ -15,6 +15,7 @@ import plotlyjs.demo.homemade.utils.VectorColor._
 import plotlyjs.demo.homemade.utils.IntVectors
 import plotlyjs.demo.homemade.utils.IntVectors._
 import plotlyjs.demo.homemade.utils.Vectors._
+import scaladget.bootstrapnative.bsn.{containerFluid, row}
 
 import scala.math.{ceil, max}
 import scala.scalajs.js
@@ -30,7 +31,7 @@ object PSE {
     slice.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1}-${c + 1}" }.reduceOption(_ + ", " + _).getOrElse("")
   }
 
-  def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], pseDisplay: PSEDisplay, parentContentVarOption: Option[Var[ReactiveHtmlElement[html.Div]]] = None, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
+  def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], pseDisplay: PSEDisplay, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
 
     val discoveredShapeSeq = discovered.map { outcome =>
       val box = subdivisionIndexOf(dimensions, outcome).vector
@@ -196,11 +197,6 @@ object PSE {
         })
     }
 
-    def backupFunction(contentVar: Var[ReactiveHtmlElement[html.Div]]) = {
-      val backup = contentVar.now()
-      () => contentVar.set(backup)
-    }
-
     val plotDiv = div()
     val plotDataSeq = if (basis.sourceDimension <= 2) Seq(scatter._result) else hitboxDataSeq
     val layout = {
@@ -240,8 +236,9 @@ object PSE {
           "toggleSpikelines",
         ).toJSArray)
         .displaylogo(false)
-      if (parentContentVarOption.isDefined) {
+      if (sliceOption.isDefined) {
         config = config
+          /*
           .modeBarButtonsToAdd(js.Array(
             ModeBarButton
               .name("Go back to overview")
@@ -254,13 +251,14 @@ object PSE {
               .click(backupFunction(parentContentVarOption.get))
               ._result
           ))
+          */
       }
       config
     }
     Plotly.newPlot(plotDiv.ref, plotDataSeq.toJSArray, layout, config._result)
 
-    if (parentContentVarOption.isEmpty) {
-      val contentVar = Var(plotDiv)
+    if(sliceOption.isEmpty) {
+      val zoom = Var(div())
       plotDiv.ref.on("plotly_click", pointsData => {
         val curveNumber = pointsData.points(0).curveNumber
         val slice = basis.sourceDimension match {
@@ -273,18 +271,25 @@ object PSE {
         }
 
         val filteredDiscovered = discovered.filter(outcome => subdivisionIndexOf(dimensions, outcome).takeRight(slice.vector.dimension).equals(slice))
-        contentVar.set(plot(
+        zoom.set(plot(
           dimensions,
           basis.copy(sourceDimension = basis.destinationDimension),
           filteredDiscovered,
           pseDisplay,
-          Some(contentVar), Some(slice)
+          Some(slice)
         ))
       })
-      div(child <-- contentVar.signal)
+      if(basis.sourceDimension == 4 && basis.subdivisions.reverse(1) < basis.subdivisions.reverse(0)) {
+        div(containerFluid,
+          div(row, //The container must be wide enough.
+            plotDiv,
+            child <-- zoom.signal
+          )
+        )
+      } else {
+        div(plotDiv, child <-- zoom.signal)
+      }
     } else {
-      val onRelayout = backupFunction(parentContentVarOption.get)
-      plotDiv.ref.on("plotly_relayout", onRelayout)
       plotDiv
     }
   }

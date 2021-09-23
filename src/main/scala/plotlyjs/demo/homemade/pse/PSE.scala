@@ -14,9 +14,12 @@ import plotlyjs.demo.homemade.api.PSE.{PSEDimension, PSEDisplay}
 import plotlyjs.demo.homemade.utils.VectorColor._
 import plotlyjs.demo.homemade.utils.IntVectors
 import plotlyjs.demo.homemade.utils.IntVectors._
+import plotlyjs.demo.homemade.utils.Utils.ExtraTraceManager
+import plotlyjs.demo.homemade.utils.Utils.ExtraTraceManager.ExtraTracesRef
 import plotlyjs.demo.homemade.utils.Vectors._
 import scaladget.bootstrapnative.bsn.{containerFluid, row}
 
+import scala.collection.IterableOnce.iterableOnceExtensionMethods
 import scala.math.{ceil, max}
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.JSRichIterableOnce
@@ -54,6 +57,18 @@ object PSE {
         ._result
     }
 
+    def sliceVertices(sliceIndex: IntVector): (Vector, Vector, Vector, Vector) = {
+      val s0 = (0.0 at basis.destinationDimension) ++ sliceIndex.vector
+      val sx = s0 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0))
+      val sy = s0 + (0.0 at basis.sourceDimension).replace(1, basis.subdivisions(1))
+      val sxy = s0 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0)).replace(1, basis.subdivisions(1))
+      (s0, sx, sy, sxy)
+    }
+
+    val customLine = line
+      .width(1)
+      .color(0.5 at 4)
+
     val (frameShapeSeqSeq, hitboxDataSeq) = {
       val frameSeq = {
         val sliceSpaceDimension = basis.sourceDimension - basis.destinationDimension
@@ -63,9 +78,7 @@ object PSE {
           IntVectors.vectorIndices(basis.subdivisions.drop(basis.destinationDimension)).toSeq
         }
       }
-      val customLine = line
-        .width(1)
-        .color(0.5 at 4)
+
       frameSeq
         .map((0.0 at basis.destinationDimension) ++ _.vector)
         .map { frame =>
@@ -73,6 +86,7 @@ object PSE {
           val s10 = s00 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0))
           val s01 = s00 + (0.0 at basis.sourceDimension).replace(1, basis.subdivisions(1))
           val s11 = s00 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0)).replace(1, basis.subdivisions(1))
+
           val points = Seq(s00, s11).map(basis.transform)
           val (x0, y0) = (points(0)(0), points(0)(1))
           val (x1, y1) = (points(1)(0), points(1)(1))
@@ -259,9 +273,11 @@ object PSE {
 
     if(sliceOption.isEmpty) {
       val zoom = Var(div())
+      val extraTraceManager = new ExtraTraceManager(plotDiv, plotDataSeq.size)
+      var focusedFrameRef: Option[ExtraTracesRef] = None
       plotDiv.ref.on("plotly_click", pointsData => {
         val curveNumber = pointsData.points(0).curveNumber
-        val slice = basis.sourceDimension match {
+        val sliceIndex = basis.sourceDimension match {
           case 3 =>
             Seq(curveNumber)
           case 4 =>
@@ -270,13 +286,30 @@ object PSE {
             Seq(xSlice, ySlice)
         }
 
-        val filteredDiscovered = discovered.filter(outcome => subdivisionIndexOf(dimensions, outcome).takeRight(slice.vector.dimension).equals(slice))
+        val focusedFrameData = {
+          val (s0, sx, sy, sxy) = sliceVertices(sliceIndex)
+          val points = Seq(s0, sx, sxy, sy, s0).map(basis.transform)
+          val coordinates = points.transpose
+          scatter
+            .x(coordinates(0).toJSArray)
+            .y(coordinates(1).toJSArray)
+            .setMode(lines)
+            .line(customLine
+              .width(2)
+              .color(0 at 3)
+            )
+            .hoverinfo("skip")
+            ._result
+        }
+        focusedFrameRef = extraTraceManager.updateTraces(focusedFrameRef, Some(Seq(focusedFrameData)))
+
+        val filteredDiscovered = discovered.filter(outcome => subdivisionIndexOf(dimensions, outcome).takeRight(sliceIndex.vector.dimension).equals(sliceIndex))
         zoom.set(plot(
           dimensions,
           basis.copy(sourceDimension = basis.destinationDimension),
           filteredDiscovered,
           pseDisplay,
-          Some(slice)
+          Some(sliceIndex)
         ))
       })
       if(basis.sourceDimension == 4 && basis.subdivisions.reverse(1) < basis.subdivisions.reverse(0)) {

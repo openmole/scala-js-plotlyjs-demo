@@ -14,7 +14,7 @@ import plotlyjs.demo.homemade.api.PSE.{PSEDimension, PSEDisplay}
 import plotlyjs.demo.homemade.utils.VectorColor._
 import plotlyjs.demo.homemade.utils.IntVectors
 import plotlyjs.demo.homemade.utils.IntVectors._
-import plotlyjs.demo.homemade.utils.Utils.ExtraTraceManager
+import plotlyjs.demo.homemade.utils.Utils.{ExtraTraceManager, resetViewButton}
 import plotlyjs.demo.homemade.utils.Utils.ExtraTraceManager.ExtraTracesRef
 import plotlyjs.demo.homemade.utils.Vectors._
 import scaladget.bootstrapnative.bsn.{containerFluid, row}
@@ -30,8 +30,8 @@ object PSE {
     outcome.outputs.zip(dimensions).map { case (o, d) => d.bounds.lastIndexWhere(_ <= o.value) }
   }
 
-  def sliceToString(basis: MultiScaleBasis, sliceIndex: IntVector): String = {
-    sliceIndex.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1}-${c + 1}" }.reduceOption(_ + ", " + _).getOrElse("")
+  def sliceToString(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, sliceIndex: IntVector): String = {
+    sliceIndex.zipWithIndex.map { case (c, i) => dimensions(i).name + " [" + (c + 1) + "]" }.reduceOption(_ + ", " + _).getOrElse("")
   }
 
   def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], pseDisplay: PSEDisplay, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
@@ -137,7 +137,7 @@ object PSE {
             .fill("toself")
             .fillcolor((0 at 3).opacity(0.0).toOMColor.toJS.toString) //TODO fillcolor(ColorType)
             .hoverinfo("text")
-            .text(sliceToString(basis, sliceIndex) + " – click to zoom")
+            .text(sliceToString(dimensions, basis, sliceIndex) + " – click to zoom")
             ._result
         }
 
@@ -217,7 +217,7 @@ object PSE {
       val topMargin = 32 + 8
       val internalBottomMargin = 64
       Layout
-        .title("PSE" + (if (basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(basis, slice)).getOrElse(""))
+        .title("PSE" + (if (basis.stretched) " stretched" else "") + sliceOption.map(slice => " slice – " + sliceToString(dimensions, basis, slice)).getOrElse(""))
         .width(basis.size(0) * subdivisionToPixel)
         .height(basis.size(1) * subdivisionToPixel + topMargin + internalBottomMargin)
 
@@ -249,22 +249,8 @@ object PSE {
           "toggleSpikelines",
         ).toJSArray)
         .displaylogo(false)
-      if (sliceOption.isDefined) {
-        config = config
-          /*
-          .modeBarButtonsToAdd(js.Array(
-            ModeBarButton
-              .name("Go back to overview")
-              .icon(Icon // plotly home icon
-                .width(928.6)
-                .height(1000)
-                .path("m786 296v-267q0-15-11-26t-25-10h-214v214h-143v-214h-214q-15 0-25 10t-11 26v267q0 1 0 2t0 2l321 264 321-264q1-1 1-4z m124 39l-34-41q-5-5-12-6h-2q-7 0-12 3l-386 322-386-322q-7-4-13-4-7 2-12 7l-35 41q-4 5-3 13t6 12l401 334q18 15 42 15t43-15l136-114v109q0 8 5 13t13 5h107q8 0 13-5t5-13v-227l122-102q5-5 6-12t-4-13z")
-                .transform("matrix(1 0 0 -1 0 850)")
-              )
-              .click(backupFunction(parentContentVarOption.get))
-              ._result
-          ))
-          */
+      if(sliceOption.isEmpty) {
+        config = config.modeBarButtonsToAdd(js.Array(resetViewButton(plotDiv, layout)))
       }
       config
     }
@@ -273,7 +259,7 @@ object PSE {
     if(sliceOption.isEmpty) {
       val zoom = Var(div())
       val extraTraceManager = new ExtraTraceManager(plotDiv, plotDataSeq.size)
-      var focusedFrameRef = ExtraTraceManager.nullRef
+      val focusedFrameRef = ExtraTraceManager.nullRef
       plotDiv.ref.on("plotly_click", pointsData => {
         val curveNumber = pointsData.points(0).curveNumber
         val sliceIndex = basis.sourceDimension match {
@@ -311,7 +297,11 @@ object PSE {
           Some(sliceIndex)
         ))
       })
-      if(basis.sourceDimension == 4 && basis.subdivisions.reverse(1) < basis.subdivisions.reverse(0)) {
+      plotDiv.ref.on("plotly_relayout", () => {
+        extraTraceManager.deleteAllTraces()
+        zoom.set(div())
+      })
+      if(basis.sourceDimension == 4 && basis.subdivisions.reverse(1) <= basis.subdivisions.reverse(0)) {
         div(containerFluid,
           div(row, //The container must be wide enough.
             plotDiv,

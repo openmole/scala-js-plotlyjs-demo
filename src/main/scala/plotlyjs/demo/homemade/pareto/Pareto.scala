@@ -11,7 +11,7 @@ import org.scalajs.dom.html
 import plotlyjs.demo.homemade.api.Data.Outcome
 import plotlyjs.demo.homemade.api.Pareto.{Maximization, ParetoDisplay, ParetoObjective}
 import plotlyjs.demo.homemade.pareto.SnowflakeBasis.{cartesianFromPolar, polarFromCartesian}
-import plotlyjs.demo.homemade.utils.Utils.{ExtraTraceManager, SkipOnBusy}
+import plotlyjs.demo.homemade.utils.Utils.{ExtraTraceManager, SkipOnBusy, resetViewButton}
 import plotlyjs.demo.homemade.utils.VectorColor
 import plotlyjs.demo.homemade.utils.VectorColor._
 import plotlyjs.demo.homemade.utils.Vectors._
@@ -35,6 +35,8 @@ object Pareto {
 
     val circleMargin = 0.025
 
+    val minMarkerRadius = 0.02
+    val maxMarkerRadius = 0.07
     val markerLineWidth = 2
     val markerLineColor = 0 at 3
     val markerLine = line
@@ -53,6 +55,7 @@ object Pareto {
       .width(focusWidth)
       .color(focusColor)
 
+    val tickRadius = 0.05
     val tickLineWidth = arcWidth
     val tickLineColor = focusColor
     val tickLine = line
@@ -90,7 +93,7 @@ object Pareto {
       val plotOutput = pointPlotter.plotOutputs(index)
       val point = basis.transform(plotOutput)
       val replication = outcome.samples.getOrElse(100) / 100.0
-      val radius = 0.02 + replication * 0.05
+      val radius = minMarkerRadius + replication * (maxMarkerRadius - minMarkerRadius)
       val color = colors(plotOutput.zipWithIndex.maxBy(_._1)._2)
       RichPoint(outcome, index, plotOutput, point, radius, color)
     }
@@ -191,10 +194,11 @@ object Pareto {
     }
     val config = Config
       .modeBarButtonsToRemove(Seq(
-        "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
+        "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
         "hoverClosestCartesian", "hoverCompareCartesian",
         "toggleSpikelines",
       ).toJSArray)
+      .modeBarButtonsToAdd(js.Array(resetViewButton(plotDiv, layout)))
       ._result
     Plotly.newPlot(plotDiv.ref, dataSeq.toJSArray, layout, config)
     //
@@ -246,9 +250,8 @@ object Pareto {
             .y(sumPolarCoordinates(1).toJSArray)
             .setMode(lines)
             .line(line
-              //.width(1)
               .dash("dot")
-              .color(/*(0.5 at 3)*/ colors(i)/*.opacity(0.5)*/)
+              .color(colors(i))
             )
             .hoverinfo("skip")
             ._result
@@ -265,7 +268,7 @@ object Pareto {
             .setMode(lines)
             .line(line
               .width(8)
-              .color(colors(i)/*.opacity(1.0)*/)
+              .color(colors(i))
             )
             .hoverinfo("skip")
             ._result
@@ -293,39 +296,17 @@ object Pareto {
           if(polarComponentVector.radius == 0) {
             None
           } else {
-            val l = 0.05
-            val r = 0.01
-            lazy val segment = Seq(-90, +90).map { angleDelta =>
+            val segment = Seq(-90, +90).map { angleDelta =>
               cartesianFromPolar(
-                Seq(l, polarComponentVector.angle + angleDelta)
+                Seq(tickRadius, polarComponentVector.angle + angleDelta)
               ).add(cartesianComponentVector)
             }
-            lazy val quad = Seq(-r, +r).map { radiusDelta =>
-              Seq(-90, +90).map { angleDelta =>
-                cartesianFromPolar(
-                  polarFromCartesian(
-                    cartesianFromPolar(
-                      Seq(l, polarComponentVector.angle + angleDelta)
-                    ).add(cartesianComponentVector)
-                  ).add(Seq(radiusDelta, 0))
-                )
-              }
-            }
-            lazy val rectangularQuad = Seq(quad(0)(0), quad(1)(0), quad(1)(1), quad(0)(1))
-            lazy val doubleTriangleQuad = Seq(quad(0)(0), quad(1)(0), quad(0)(1), quad(1)(1))
-            lazy val closedQuad = rectangularQuad :+ rectangularQuad.head//doubleTriangleQuad :+ doubleTriangleQuad.head
-            val coordinates = segment.transpose//closedQuad.transpose
+            val coordinates = segment.transpose
             Some(scatter
               .x(coordinates(0).toJSArray)
               .y(coordinates(1).toJSArray)
               .setMode(lines)
-              .line(tickLine
-                .shape("spline")
-                //.color(colors(i))
-              )
-              //.fill("toself")
-              //.fillcolor(/*colors(i)*/referenceColor.toOMColor.toJS.toString)
-              //.fillcolor(colors(i).toOMColor.toJS.toString)
+              .line(tickLine)
               .hoverinfo("skip")
               ._result
             )
@@ -358,7 +339,7 @@ object Pareto {
                 .y(coordinates(1).toJSArray)
                 .setMode(lines)
                 .line(arcLine
-                  .color(colors(i)/*.opacity(1.0)*/)
+                  .color(colors(i))
                   .shape("spline")
                 )
                 .hoverinfo("skip")
@@ -425,7 +406,7 @@ object Pareto {
     plotDiv.ref.on("plotly_click", pointsData => skipOnBusy.skipOnBusy("click", () => {
       eventHandler(pointsData, improvementHelp = Toggle)
     }))
-    plotDiv.ref.on("plotly_relayout", _ => skipOnBusy.skipOnBusy("relayout", () => {
+    plotDiv.ref.on("plotly_relayout", () => skipOnBusy.skipOnBusy("relayout", () => {
       extraTraceManager.deleteAllTraces()
     }))
     //

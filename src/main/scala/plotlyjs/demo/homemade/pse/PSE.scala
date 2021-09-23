@@ -30,8 +30,8 @@ object PSE {
     outcome.outputs.zip(dimensions).map { case (o, d) => d.bounds.lastIndexWhere(_ <= o.value) }
   }
 
-  def sliceToString(basis: MultiScaleBasis, slice: IntVector): String = {
-    slice.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1}-${c + 1}" }.reduceOption(_ + ", " + _).getOrElse("")
+  def sliceToString(basis: MultiScaleBasis, sliceIndex: IntVector): String = {
+    sliceIndex.zipWithIndex.map { case (c, i) => s"d${i + basis.destinationDimension + 1}-${c + 1}" }.reduceOption(_ + ", " + _).getOrElse("")
   }
 
   def plot(dimensions: Seq[PSEDimension], basis: MultiScaleBasis, discovered: Seq[Outcome], pseDisplay: PSEDisplay, sliceOption: Option[IntVector] = None): ReactiveHtmlElement[html.Div] = {
@@ -70,7 +70,8 @@ object PSE {
       .color(0.5 at 4)
 
     val (frameShapeSeqSeq, hitboxDataSeq) = {
-      val frameSeq = {
+
+      val sliceIndexSeq = {
         val sliceSpaceDimension = basis.sourceDimension - basis.destinationDimension
         if (sliceSpaceDimension == 0) {
           Seq(Seq())
@@ -79,56 +80,53 @@ object PSE {
         }
       }
 
-      frameSeq
-        .map((0.0 at basis.destinationDimension) ++ _.vector)
-        .map { frame =>
-          val s00 = frame
-          val s10 = s00 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0))
-          val s01 = s00 + (0.0 at basis.sourceDimension).replace(1, basis.subdivisions(1))
-          val s11 = s00 + (0.0 at basis.sourceDimension).replace(0, basis.subdivisions(0)).replace(1, basis.subdivisions(1))
+      sliceIndexSeq.map { sliceIndex =>
+        val (s0, sx, sy, sxy) = sliceVertices(sliceIndex)
 
-          val points = Seq(s00, s11).map(basis.transform)
+        val frameShape = {
+          val points = Seq(s0, sxy).map(basis.transform)
           val (x0, y0) = (points(0)(0), points(0)(1))
           val (x1, y1) = (points(1)(0), points(1)(1))
-
-          val frameShape = Shape
+          Shape
             .`type`(rect)
             .x0(x0).x1(x1).y0(y0).y1(y1)
             .line(customLine)
             ._result
+        }
 
-          val gridShapeSeq = if (basis.sourceDimension != 2) Seq() else {
-            val lowSBound = 0
-            val highSBound = basis.subdivisions
-            (lowSBound + 1 until highSBound(1)).map(s => {
-              val p0 = basis.transform(frame.replace(0, lowSBound).replace(1, s))
-              val p1 = basis.transform(frame.replace(0, highSBound(0)).replace(1, s))
+        val gridShapeSeq = if (basis.sourceDimension != 2) Seq() else {
+          val lowSBound = 0
+          val highSBound = basis.subdivisions
+          (lowSBound + 1 until highSBound(1)).map(s => {
+            val p0 = basis.transform(s0.replace(0, lowSBound).replace(1, s))
+            val p1 = basis.transform(s0.replace(0, highSBound(0)).replace(1, s))
+            Shape
+              .`type`("line")
+              .x0(p0(0))
+              .y0(p0(1))
+              .x1(p1(0))
+              .y1(p1(1))
+              .line(customLine)
+              ._result
+            }) ++ (lowSBound + 1 until highSBound(0))
+            .map(s => {
+              val p0V = basis.transform(s0.replace(0, s).replace(1, lowSBound))
+              val p1V = basis.transform(s0.replace(0, s).replace(1, highSBound(1)))
               Shape
                 .`type`("line")
-                .x0(p0(0))
-                .y0(p0(1))
-                .x1(p1(0))
-                .y1(p1(1))
+                .x0(p0V(0))
+                .y0(p0V(1))
+                .x1(p1V(0))
+                .y1(p1V(1))
                 .line(customLine)
                 ._result
-              }) ++ (lowSBound + 1 until highSBound(0))
-              .map(s => {
-                val p0V = basis.transform(frame.replace(0, s).replace(1, lowSBound))
-                val p1V = basis.transform(frame.replace(0, s).replace(1, highSBound(1)))
-                Shape
-                  .`type`("line")
-                  .x0(p0V(0))
-                  .y0(p0V(1))
-                  .x1(p1V(0))
-                  .y1(p1V(1))
-                  .line(customLine)
-                  ._result
-              })
-          }
+            })
+        }
 
-          val coordinates = Seq(s00, s10, s11, s01).map(basis.transform).transpose
-
-          val hitboxData = scatter
+        val hitboxData = {
+          val points = Seq(s0, sx, sxy, sy).map(basis.transform)
+          val coordinates = points.transpose
+          scatter
             .x(coordinates(0).toJSArray)
             .y(coordinates(1).toJSArray)
             .setMode(lines)
@@ -139,11 +137,12 @@ object PSE {
             .fill("toself")
             .fillcolor((0 at 3).opacity(0.0).toOMColor.toJS.toString) //TODO fillcolor(ColorType)
             .hoverinfo("text")
-            .text(sliceToString(basis, frame.drop(basis.destinationDimension)) + " – click to zoom")
+            .text(sliceToString(basis, sliceIndex) + " – click to zoom")
             ._result
+        }
 
-          (frameShape +: gridShapeSeq, hitboxData)
-        }.unzip
+        (frameShape +: gridShapeSeq, hitboxData)
+      }.unzip
     }
     val frameShapeSeq = frameShapeSeqSeq.flatten
 
@@ -195,14 +194,14 @@ object PSE {
                   .xref("paper").yref("paper")
                   .x(1).xanchor("right")
                   .y(0).yanchor("bottom")
-                  .text("d" + (i + 1))
+                  .text(dimensions(i).name)
                   .showarrow(false)
                   ._result
                 case 1 => Annotation
                   .xref("paper").yref("paper")
                   .x(0).xanchor("left")
                   .y(1).yanchor("top")
-                  .text("d" + (i + 1))
+                  .text(dimensions(i).name)
                   .showarrow(false)
                   ._result
                 case _ => Annotation.showarrow(false)._result
@@ -274,7 +273,7 @@ object PSE {
     if(sliceOption.isEmpty) {
       val zoom = Var(div())
       val extraTraceManager = new ExtraTraceManager(plotDiv, plotDataSeq.size)
-      var focusedFrameRef: Option[ExtraTracesRef] = None
+      var focusedFrameRef = ExtraTraceManager.nullRef
       plotDiv.ref.on("plotly_click", pointsData => {
         val curveNumber = pointsData.points(0).curveNumber
         val sliceIndex = basis.sourceDimension match {
@@ -301,7 +300,7 @@ object PSE {
             .hoverinfo("skip")
             ._result
         }
-        focusedFrameRef = extraTraceManager.updateTraces(focusedFrameRef, Some(Seq(focusedFrameData)))
+        extraTraceManager.updateTraces(focusedFrameRef, Some(Seq(focusedFrameData)))
 
         val filteredDiscovered = discovered.filter(outcome => subdivisionIndexOf(dimensions, outcome).takeRight(sliceIndex.vector.dimension).equals(sliceIndex))
         zoom.set(plot(
@@ -320,7 +319,10 @@ object PSE {
           )
         )
       } else {
-        div(plotDiv, child <-- zoom.signal)
+        div(containerFluid, justifyContent:="center", //not effective
+          plotDiv,
+          child <-- zoom.signal
+        )
       }
     } else {
       plotDiv

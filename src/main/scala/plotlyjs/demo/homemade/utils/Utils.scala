@@ -43,32 +43,58 @@ object Utils {
     private var extraSize = 0
     private var refs = Seq[ExtraTracesRef]()
 
-    def addTraces(plotDataSeq: Seq[PlotData]): ExtraTracesRef = {
-      refs = refs :+ new ExtraTracesRef(extraSize, extraSize + plotDataSeq.size)
+    private def removeRef(ref: ExtraTracesRef): Unit = {
+      ref.isNull = true
+      refs = refs.filterNot(_.isNull)
+    }
 
-      Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
-      extraSize = refs.last.to
+    private def addRef(ref: ExtraTracesRef): Unit = {
+      removeRef(ref)
+      ref.isNull = false
+      refs = refs :+ ref
+    }
 
-      refs.last
+    private def clearRefs(): Unit = {
+      refs.foreach(_.isNull = true)
+      refs = Seq[ExtraTracesRef]()
     }
 
     def deleteTraces(ref: ExtraTracesRef): Unit = {
-      val size = ref.size
-      Plotly.deleteTraces(
-        plotDiv.ref,
-        (ref.from until ref.to)
-          .map(_ + initialTraceCount)
-          .map(_.toDouble)
-          .toJSArray
-      )
-      extraSize -= size
+      if(!ref.isNull) {
+        val size = ref.size
 
-      refs = refs.filterNot(_ == ref)
-      refs
-        .filter(ref.to <= _.from)
-        .foreach { nextRef =>
-          nextRef.from -= size
-          nextRef.to -= size
+        Plotly.deleteTraces(
+          plotDiv.ref,
+          (ref.from until ref.to)
+            .map(_ + initialTraceCount)
+            .map(_.toDouble)
+            .toJSArray
+        )
+        extraSize -= size
+
+        removeRef(ref)
+        refs
+          .filter(ref.to <= _.from)
+          .foreach { nextRef =>
+            nextRef.from -= size
+            nextRef.to -= size
+          }
+      }
+    }
+
+    def updateTraces(ref: ExtraTracesRef, optionDataSeq: Option[Seq[PlotData]]): Unit = {
+      deleteTraces(ref)
+      optionDataSeq match {
+        case Some(plotDataSeq) => {
+          ref.from = extraSize
+          ref.to = extraSize + plotDataSeq.size
+
+          Plotly.addTraces(plotDiv.ref, plotDataSeq.map(Option(_).orUndefined).toJSArray)
+          extraSize = ref.to
+
+          addRef(ref)
+        }
+        case _ =>
       }
     }
 
@@ -81,20 +107,24 @@ object Utils {
           .toJSArray
       )
       extraSize = 0
-      refs = Seq[ExtraTracesRef]()
-    }
 
-    def updateTraces(optionRef: Option[ExtraTracesRef], optionDataSeq: Option[Seq[PlotData]]): Option[ExtraTracesRef] = {
-      optionRef.foreach(deleteTraces)
-      optionDataSeq.map(addTraces)
+      clearRefs()
     }
 
   }
 
   object ExtraTraceManager {
 
+    //need some access restriction for vars
     class ExtraTracesRef(var from: Int, var to: Int) {
+      var isNull: Boolean = false
       def size: Int = to - from
+    }
+
+    def nullRef: ExtraTracesRef = {
+      val ref = new ExtraTracesRef(-1, -1)
+      ref.isNull = true
+      ref
     }
 
   }

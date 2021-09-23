@@ -13,7 +13,7 @@ object PSEAPIDemo {
     import plotlyjs.demo.homemade.api.PSE.PSEDimension
     import plotlyjs.demo.homemade.utils.Vectors._
 
-    val dimensions = (0 until 4).map(i => PSEDimension("dimension " + i, (0 to 5 + 2*i).map(_.toDouble)))
+    val dimensions = (0 until 4).map(i => PSEDimension("dimension " + (i + 1), (0 to 5 + 2*i).map(_.toDouble)))
     val outcomes = (0 until 1024)
       .map(_ => Outcome(
         (0.0 at 4).map(Input("", _)),

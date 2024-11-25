@@ -32,11 +32,11 @@ object Pareto3dDemo {
     var maxNormL1 = 0.0
     for(p <- enhancedResults) maxNormL1 = Math.max(maxNormL1, p._4)
 
-    val allData = for(p <- enhancedResults) yield scatterternary
+    val allData = for(p <- enhancedResults) yield scatterTernary
       .a(Seq(p._1).toJSArray)
       .b(Seq(p._2).toJSArray)
       .c(Seq(p._3).toJSArray)
-      .set(markers).set(marker
+      .setMode(markers).set(marker
         .size(4 + 16*(maxNormL1 - p._4)/maxNormL1)
         .color(Color.rgb(0, 0, 0))
         .symbol(circle)

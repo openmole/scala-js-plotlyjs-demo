@@ -4,7 +4,6 @@ import org.openmole.plotlyjs._
 import org.openmole.plotlyjs.all._
 import org.openmole.plotlyjs.PlotlyImplicits._
 import org.openmole.plotlyjs.plotlyConts._
-import org.scalajs.dom.raw.Element
 import com.raquo.laminar.api.L._
 
 import scala.scalajs._
@@ -39,7 +38,7 @@ object BoxDemo {
     val data1 = box
       .y(Utils.randomInts(50, 50))
       .marker(marker
-        .color(all.color.rgba(180,180,0,0.5))
+        .color(org.openmole.plotlyjs.all.color.rgba(180,180,0,0.5))
         .sizeMode(sizemode.area)
       )
       .name("First set")
@@ -47,7 +46,7 @@ object BoxDemo {
     val data2 = box
       .y(Utils.randomInts(50, 40))
       .marker(marker
-        .color(all.color.rgba(180,0,180,1))
+        .color(org.openmole.plotlyjs.all.color.rgba(180,0,180,1))
         .sizeMode(sizemode.area))
       .name("Second set")
 

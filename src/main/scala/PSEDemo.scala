@@ -36,13 +36,13 @@ object PSEDemo {
 
     val plotDiv = div()
 
-    val data = scatterternary.
+    val data = scatterTernary.
       a(Data.idealPSE("area").map{_._1}.toJSArray).
       b(Data.idealPSE("compacity").map{_._2}.toJSArray).
       c(Data.idealPSE("convexity").map{_._3}.toJSArray).
       text(js.Array(Data.area, Data.compacity, Data.convexity)).
       textPosition(TextPosition.topCenter).
-      set(markers).set(
+      setMode(markers).set(
       marker.size(5).color(Color.rgb(122, 122, 122)).symbol(circle).opacity(0.5)
     )._result
 
@@ -51,23 +51,23 @@ object PSEDemo {
       else p.values
     }
 
-    val data2 = scatterternary.
+    val data2 = scatterTernary.
       a(values(0).toJSArray).
       b(values(1).toJSArray).
       c(values(2).toJSArray).
       text(js.Array("area", "compacity", "convexity")).
       textPosition(TextPosition.topCenter).
-      set(markers).set(
+      setMode(markers).set(
       marker.size(8).color(Color.rgb(122, 0, 0)).symbol(circle)
     )._result
 
-    val data3 = scatterternary.
+    val data3 = scatterTernary.
       a(js.Array(0.1).toJSArray).
       b(js.Array(0.1).toJSArray).
       c(js.Array(0.1).toJSArray).
       text(js.Array("area", "compacity", "convexity")).
       textPosition(TextPosition.topCenter).
-      set(markers).set(
+      setMode(markers).set(
       marker.size(15).color(Color.rgb(0, 0, 122)).symbol(circle)
     )._result
 

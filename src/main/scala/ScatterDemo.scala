@@ -40,14 +40,14 @@ object ScatterDemo {
       })
       .marker(marker
         .sizeMode(sizemode.area)
-        .size(colorDim)
-        .color(all.color.array(colorDim))
-        .colorScale(colorscale.jet)
-        .symbol(circlecross)
+        .size(12)
+        .color(org.openmole.plotlyjs.all.color.rgba(60, 90, 140, 0.5))
+        .symbol(circle)
+        .line(line.color(org.openmole.plotlyjs.all.color.rgb(60, 90, 140)).width(2))
       )
 
     val config = Config.displayModeBar(false)
-    Plotly.plot(plotDiv.ref, js.Array(data), config = config)
+    Plotly.newPlot(plotDiv.ref, js.Array(data), config = config)
 
 
     plotDiv.ref.on(PlotEvent.HOVER, (d: PointsData) => {

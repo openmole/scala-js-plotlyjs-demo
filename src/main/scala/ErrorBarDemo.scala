@@ -42,7 +42,7 @@ object ErrorBarDemo {
       .x((0 to 14).toJSArray)
       .y(Utils.randomDoubles(15, 10))
       .errorY(ErrorY.array(Utils.randomDoubles(15,5)))
-      .marker(marker.size(12.0).color(all.color.rgb(180,0,0)).symbol(square))
+      .marker(marker.size(12.0).color(org.openmole.plotlyjs.all.color.rgb(180,0,0)).symbol(square))
       .name("Reds")
 
 

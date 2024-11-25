@@ -11,3 +11,6 @@ tmp
 /.project
 /.settings
 /.bsp
+/.metals
+/.vscode
+.scalafmt.conf

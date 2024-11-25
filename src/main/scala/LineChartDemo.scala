@@ -42,7 +42,7 @@ object LineChartDemo {
     val dataRef = data
       .x((0 to 14).toJSArray)
       .y(ref)
-      .marker(marker.symbol(square).color(all.color.rgb(180, 0, 0)).size(12.0))
+      .marker(marker.symbol(square).color(org.openmole.plotlyjs.all.color.rgb(180, 0, 0)).size(12.0))
       .name("Reds")
 
 
@@ -50,7 +50,8 @@ object LineChartDemo {
       data
         .x((0 to 14).toJSArray)
         .y(ref.map { x => x + Utils.rng.nextDouble * 2 - 1 }.toJSArray)
-        .marker(marker.size(10.0).color(all.color.rgb(200, 136, 170)))
+        .marker(marker.size(10.0).color(org.openmole.plotlyjs.all.color.rgb(200, 136, 170)))
+        .line(line.width(5))
         ._result
     }).toJSArray
 

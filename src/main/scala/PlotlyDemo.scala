@@ -23,13 +23,12 @@ import org.scalajs
  */
 object PlotlyDemo {
 
-  def main(argv: Array[String]): Unit = {
-
+  def main(argv: Array[String]): Unit =
     scaladget.highlightjs.scalamode
-    HighlightJS.initHighlightingOnLoad()
+  HighlightJS.initHighlightingOnLoad()
 
-    def imports =
-      """
+  def imports =
+    """
     import com.definitelyscala.plotlyjs._
     import com.definitelyscala.plotlyjs.all._
     import com.definitelyscala.plotlyjs.PlotlyImplicits._
@@ -40,16 +39,28 @@ object PlotlyDemo {
     import scala.scalajs._
       """.stripMargin
 
-
-    lazy val content =
-      div(containerFluid, marginLeft := "15", marginTop := "25",
-        h3("Build"),
-        div(row,
-          div(colSM, "Details on construction on ", a(href := "https://github.com/openmole/scala-js-plotlyjs", target := "_blank", "the scala-js-plotlyjs facade Github page"))
-        ),
-        h3("Imports"),
-        div(colSM, pre(code(cls("scala"), imports))),
-        Tabs.tabs(
+  lazy val content =
+    div(
+      containerFluid,
+      marginLeft := "15",
+      marginTop := "25",
+      h3("Build"),
+      div(
+        row,
+        div(
+          colSM,
+          "Details on construction on ",
+          a(
+            href := "https://github.com/openmole/scala-js-plotlyjs",
+            target := "_blank",
+            "the scala-js-plotlyjs facade Github page"
+          )
+        )
+      ),
+      h3("Imports"),
+      div(colSM, pre(code(cls("scala"), imports))),
+      Tabs
+        .tabs(
           for {
             demo <- Seq(
               LineChartDemo.elementDemo,
@@ -62,15 +73,24 @@ object PlotlyDemo {
               PSESubPlots.elementDemo,
               PSESVGDemo.elementDemo,
               PSEDemo.elementDemo,
-              ParetoDemo.elementDemo,
+              ParetoDemo.elementDemo
             )
           } yield {
-            Tab(demo.title,
+            Tab(
+              "",
+              div(demo.title),
               div(
                 h3(demo.title),
-                div(containerFluid,
-                  div(row, marginLeft := "15", marginTop := "25",
-                    div(colBS(demo.codeWidth), pre(code(cls := "scala", demo.cleanCode))),
+                div(
+                  containerFluid,
+                  div(
+                    row,
+                    marginLeft := "15",
+                    marginTop := "25",
+                    div(
+                      colBS(demo.codeWidth),
+                      pre(code(cls := "scala", demo.cleanCode))
+                    ),
                     div(colBS(12 - demo.codeWidth), demo.element)
                   )
                 )
@@ -78,12 +98,15 @@ object PlotlyDemo {
             )
           },
           tabStyle = navbar_pills
-        ).build.render
-      )
+        )
+        .build
+        .render
+    )
 
-    documentEvents.onDomContentLoaded.foreach { _ =>
-      render(scalajs.dom.document.body, content)
-    }(unsafeWindowOwner)
-    // dom.document.body.appendChild(tags.script("hljs.initHighlighting();"))
-  }
+  // documentEvents.onDomContentLoaded.foreach { _ =>
+  renderOnDomContentLoaded(scalajs.dom.document.body, content)
+
+  //render(scalajs.dom.document.body, content)
+  //  }(unsafeWindowOwner)
+  // dom.document.body.appendChild(tags.script("hljs.initHighlighting();"))
 }
